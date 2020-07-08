@@ -1,0 +1,25 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "build": "webpack" 
+  },
+  "author": "BillXu",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.17.15",
+    "ws": "^7.3.1"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.157",
+    "@types/node": "^14.0.14",
+    "@types/ws": "^7.2.6",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.6",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12"
+  }
+}
