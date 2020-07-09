@@ -46,13 +46,10 @@
   
         "name": "CenterSvr",
   
-        "program": "${workspaceFolder}/Server/build/CenterServer/centerSvr.js",
-  
-        //"program": "${workspaceFolder}/Server/dist/bundle.js",
-  
-        //"preLaunchTask": "tsc: build - tsconfig.json",
-  
-        //"outFiles": ["${workspaceFolder}/Server/build/**/*.js"]
+        "program": "${workspaceFolder}/centerServer/CenterSvr.ts",
+        "preLaunchTask": "tsc: build - centerServer/tsconfig.json",
+        //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
+        "outFiles": ["${workspaceFolder}/build/**/*.js"]
   
       }
   
