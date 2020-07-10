@@ -12,7 +12,7 @@ class TestSever implements IServerNetworkDelegate
 
     secondsForWaitReconnect() : number 
     {
-        return 5 ;
+        return 1 ;
     }
 
     cacheMsgCntWhenWaitingReconnect() : number 

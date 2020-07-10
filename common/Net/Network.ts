@@ -19,7 +19,7 @@ export class Network extends LocalEventEmitter{
     static EVENT_RECONNECT : string = "reconnect";
     static EVENT_RECONNECTED_FAILED : string = "reconnectFailed" ;
 
-    static TIME_HEAT_BEAT : number = 13 ; 
+    static TIME_HEAT_BEAT : number = 3 ; 
     static MSG_ID : string = "msgID" ;
     static MSG_DATA : string = "msgData" ;
 
@@ -126,7 +126,7 @@ export class Network extends LocalEventEmitter{
     protected onError( ev : WebSocket.ErrorEvent )
     {
         this.isSkipOnCloseEnvet = true ;
-        XLogger.debug(" on error  " );
+        XLogger.debug(" on error =  " + ev.message );
         if ( null != this.nPingCheckAlive )
         {
             clearInterval(this.nPingCheckAlive) ;
@@ -171,12 +171,12 @@ export class Network extends LocalEventEmitter{
         this.emit(Network.EVENT_CLOSED) ;
         if ( null == this.nReconnectInterval )
         {
-            this.doConnect();
-            this.doTryReconnect();
+            //this.doConnect();
+            //this.doTryReconnect();
         }
     }
 
-    protected close( ev : WebSocket.CloseEvent )
+    protected close()
     {
         XLogger.debug( "self colse" );
         this.mWebSocket.terminate();
@@ -199,19 +199,20 @@ export class Network extends LocalEventEmitter{
             clearInterval(this.nPingCheckAlive) ;
         }
         this.isRecievedHeatBet = true ;
-        this.nPingCheckAlive = setInterval(this.doSendHeatBet.bind(this),Network.TIME_HEAT_BEAT * 1000 );
+        let self = this ;
+        this.nPingCheckAlive = setInterval(self.doSendHeatBet.bind(this),Network.TIME_HEAT_BEAT * 1000 );
 
         this.emit( Network.EVENT_OPEN) ;
         // verify client ;
         let jsMsg = {} ;
         jsMsg["pwd"] = "123" ;
-        let self = this ;
+        
         this.sendMsg(eMsgType.MSG_VERIFY,jsMsg,( jsm :any)=>
         {
             //let pEvent : any ;
             if ( jsm["ret"] != 0 )
             {
-                XLogger.error("can not verify this client ret :" + jsm["ret"] );
+                XLogger.warn("can not verify this client ret :" + jsm["ret"] );
                 self.emit( Network.EVENT_AUTHORITY_FAILED) ;
                 return true;
             }
@@ -226,6 +227,8 @@ export class Network extends LocalEventEmitter{
             }
             
             // we need do reconnect 
+            XLogger.debug("verifyed session id = " + jsm["sessionID"] + " ret =" + jsm["ret"] + "do reconnect" );
+
             let jsRec = {};
             jsRec["sessionID"] = self.getSessionID();
             self.sendMsg( eMsgType.MSG_RECONNECT,jsRec,( jsRet : any)=>{
@@ -236,7 +239,6 @@ export class Network extends LocalEventEmitter{
                 return true ;
             } ) ;
             
-            XLogger.debug("verifyed session id = " + jsm["nSessionID"] + " ret =" + jsm["nRet"] + "do reconnect" );
             return true ;
         } ) ;      
     }
@@ -289,7 +291,8 @@ export class Network extends LocalEventEmitter{
 
         if ( this.isRecievedHeatBet == false )
         {
-            this.onClose(null) ;
+            //this.onClose(null) ;
+            this.close() ;
             return ;
         }
         this.isRecievedHeatBet = false ;
@@ -298,6 +301,11 @@ export class Network extends LocalEventEmitter{
 
     protected doTryReconnect()
     {
+       if ( null != this.nReconnectInterval )
+       {
+           XLogger.warn( "already interval reconect " ) ;
+           return ;
+       } 
        let self = this ;
        this.nReconnectInterval = setInterval(()=>{ XLogger.debug("interval try connect"); self.doConnect();},4000);
     }

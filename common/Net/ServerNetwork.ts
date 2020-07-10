@@ -12,7 +12,7 @@ interface IClientPeerDelegate
 
 class ClientPeer
 {
-    static TIME_HEAT_BEAT_ClIENT : number = 3 ;
+    static TIME_HEAT_BEAT_ClIENT : number = 13 ;
     protected mSocketPeer : WebSocket = null ;
     protected mIP : string = null ;
     protected mSessionID : number = 0 ;
@@ -52,6 +52,8 @@ class ClientPeer
             if ( self.mIsKeepLive == false )
             {
                 XLogger.debug( "head bet timeout on close" ) ;
+                //self.mSocketPeer.terminate();
+                XLogger.debug( "self.onClose() head bet timeout on close" ) ;
                 self.onClose();
                 return ;
             }
@@ -99,7 +101,9 @@ class ClientPeer
         this.mHeatBeatTimer = setInterval( ()=>{ 
             if ( self.mIsKeepLive == false )
             {
-                XLogger.debug( "head bet timeout on close" ) ;
+                XLogger.debug( "head bet timeout on close1" ) ;
+                self.mSocketPeer.terminate();
+                XLogger.debug( "self.onClose() head bet timeout on close1" ) ;
                 self.onClose();
                 return ;
             }
@@ -132,7 +136,6 @@ class ClientPeer
         if ( msgID == eMsgType.MSG_VERIFY )
         {
             let ret = this.checkVerify( js["pwd"] )
-            this.mDelegate.onVerifyResult( this.mSessionID,ret ) ;
             if ( this.mWaitVerifyTimer != null  )
             {
                 clearTimeout( this.mWaitVerifyTimer ) ;
@@ -143,6 +146,7 @@ class ClientPeer
             jsBack["ret"] = ret ? 0 : 1 ;
             jsBack["sessionID"] = this.mSessionID ;
             this.sendMsg(jsBack) ;
+            this.mDelegate.onVerifyResult( this.mSessionID,ret ) ;
             return ;
         }
 
@@ -169,7 +173,7 @@ class ClientPeer
 
     protected checkVerify( pwd : string ) : boolean
     {
-        XLogger.debug("pass all connection : pwd = " + pwd )
+        XLogger.debug("not pass all connection : pwd = " + pwd )
         return true ;
     }
 
@@ -244,7 +248,7 @@ export class ServerNetwork implements IClientPeerDelegate
         this.mWebSocket = new WebSocket.Server({ port : port }) ;
         this.mWebSocket.on( "connection", this.onConnect.bind(this) ) ;
         this.mWebSocket.on("close" , ()=>{ XLogger.error( "why sever closed ? " )} ) ;
-        this.mWebSocket.on("error", ()=>{ "websocket svr error "} ) ;
+        this.mWebSocket.on("error", ( er : Error)=>{ XLogger.error("websocket svr error = " + er.message ) ; } ) ;
         this.mDelegate = pdelegate ;
         this.mlpfSessionIDGenerator = lpfSessionIDGenerator ; 
         return true ;
@@ -289,6 +293,8 @@ export class ServerNetwork implements IClientPeerDelegate
         p.init( socket, request.socket.remoteAddress, this , this.mCurMaxSessionID , this.mDelegate.cacheMsgCntWhenWaitingReconnect() ) ;
         this.mClients[this.mCurMaxSessionID] = p ;
         XLogger.debug( "new peer session id = " + this.mCurMaxSessionID + " ip : " + p.ip  ) ;
+
+        XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + Object.keys( this.mClients ).length ) ;
     }
 
     onMsg( nSessionID : number , msgID : number, jsMsg : Object ) : void 
@@ -310,7 +316,12 @@ export class ServerNetwork implements IClientPeerDelegate
             target.doReconnect( this.mClients[nSessionID] ) ;
             this.mDelegate.onPeerReconnected( targetSessionID, this.mClients[targetSessionID].ip, nSessionID );
             delete this.mClients[nSessionID] ;
-            XLogger.debug( "reconnect ok session id = " + targetSessionID + this.mClients[targetSessionID].ip + nSessionID  ) ;
+            XLogger.debug( "reconnect ok session id = " + targetSessionID + " ip = " + this.mClients[targetSessionID].ip + " sessionid = " + nSessionID  ) ;
+
+            let js = {} ;
+            js["ret"] = 0 ;
+            js["sessionID"] = targetSessionID ;
+            this.sendMsg(targetSessionID, msgID, js ) ;
             return ;
         }
 
@@ -331,6 +342,7 @@ export class ServerNetwork implements IClientPeerDelegate
             client.close();
             delete this.mClients[nSessionID] ;
             XLogger.debug( "peer still waiting verify , direct closed = " + nSessionID ) ;
+            XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + Object.keys( this.mClients ).length ) ;
             return ;
         }
 
@@ -343,7 +355,9 @@ export class ServerNetwork implements IClientPeerDelegate
             this.mDelegate.onPeerDisconnected(nSessionID) ;
             client.close();
             delete this.mClients[nSessionID] ;
+            XLogger.debug( "peer no need wait reconnect , direct closed = " + nSessionID ) ;
         }
+        XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + Object.keys( this.mClients ).length ) ;
     }
 
     onVerifyResult( nSessionID : number , isPass : boolean ) : void 
@@ -359,7 +373,7 @@ export class ServerNetwork implements IClientPeerDelegate
         {
             client.close();
             delete this.mClients[nSessionID] ;
-            XLogger.debug( "session id verify not pass id = " + nSessionID ) ;
+            XLogger.debug( "session id verify not pass delete ite id = " + nSessionID ) ;
         }
         else
         {
@@ -377,6 +391,7 @@ export class ServerNetwork implements IClientPeerDelegate
             this.mDelegate.onPeerDisconnected( nSessionID ) ;
             client.close();
             delete this.mClients[nSessionID] ;
+            XLogger.debug( "wait reconnect time out session do delete it = " + nSessionID ) ;
         }
         else
         {
