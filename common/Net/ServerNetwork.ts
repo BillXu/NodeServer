@@ -1,6 +1,6 @@
+import { XLogger } from './../Logger';
 import { eMsgType } from './../../shared/MessageIdentifer';
 import WebSocket from "ws";
-import { Http2ServerRequest } from "http2";
 import { IncomingMessage } from 'http';
 interface IClientPeerDelegate
 {
@@ -51,7 +51,7 @@ class ClientPeer
         this.mHeatBeatTimer = setInterval( ()=>{ 
             if ( self.mIsKeepLive == false )
             {
-                console.log( "head bet timeout on close" ) ;
+                XLogger.debug( "head bet timeout on close" ) ;
                 self.onClose();
                 return ;
             }
@@ -75,7 +75,7 @@ class ClientPeer
         {
             clearTimeout( this.mWaitReconnectTimer ) ;
             this.mWaitReconnectTimer = null ;
-            console.error("why already have waiting reconnect timer ? ") ;
+            XLogger.error("why already have waiting reconnect timer ? ") ;
         }
 
         let self = this ;
@@ -99,7 +99,7 @@ class ClientPeer
         this.mHeatBeatTimer = setInterval( ()=>{ 
             if ( self.mIsKeepLive == false )
             {
-                console.log( "head bet timeout on close" ) ;
+                XLogger.debug( "head bet timeout on close" ) ;
                 self.onClose();
                 return ;
             }
@@ -119,7 +119,7 @@ class ClientPeer
     {
         if ( this.mCacherMsg.length > 0 )
         {
-            console.log( "do send cacher msg " ) ;
+            XLogger.debug( "do send cacher msg " ) ;
             let self = this ;
             this.mSocketPeer.send(this.mCacherMsg.shift(),()=>{ self.sendCacherMsg() ;}) ;
         }
@@ -148,7 +148,7 @@ class ClientPeer
 
         if ( null != this.mWaitVerifyTimer )
         {
-            console.log("first msg must verify msg, so you are wrong, regard as verify false ") ;
+            XLogger.debug("first msg must verify msg, so you are wrong, regard as verify false ") ;
             this.mDelegate.onVerifyResult(this.mSessionID, false ) ;
             return ;
         }
@@ -157,7 +157,7 @@ class ClientPeer
 
     protected onClose()
     {
-        console.log( "websocket on close callback sessionid = " + this.mSessionID ) ;
+        XLogger.debug( "websocket on close callback sessionid = " + this.mSessionID ) ;
         if ( this.mHeatBeatTimer != null )
         {
             clearInterval( this.mHeatBeatTimer ) ;
@@ -169,13 +169,13 @@ class ClientPeer
 
     protected checkVerify( pwd : string ) : boolean
     {
-        console.log("pass all connection : pwd = " + pwd )
+        XLogger.debug("pass all connection : pwd = " + pwd )
         return true ;
     }
 
     close()
     {
-        console.log( "i do close sessionid = " + this.mSessionID ) ;
+        XLogger.debug( "i do close sessionid = " + this.mSessionID ) ;
         if ( this.mHeatBeatTimer != null )
         {
             clearInterval( this.mHeatBeatTimer ) ;
@@ -207,14 +207,14 @@ class ClientPeer
             if ( this.mCacherMsg.length > this.mMaxCacherMsgCnt )
             {
                 let p = this.mCacherMsg.shift();
-                console.warn("cacher too many msg : shift one : " + p ) ;
+                XLogger.warn("cacher too many msg : shift one : " + p ) ;
             }
-            console.log( "send msg but we put it in cacha queue" ) ;
+            XLogger.debug( "send msg but we put it in cacha queue" ) ;
         }
         else
         {
             this.mSocketPeer.send(strmsg) ;
-            console.log( "send msg directed" ) ;
+            XLogger.debug( "send msg directed" ) ;
         }
     }
 }
@@ -243,7 +243,7 @@ export class ServerNetwork implements IClientPeerDelegate
     {
         this.mWebSocket = new WebSocket.Server({ port : port }) ;
         this.mWebSocket.on( "connection", this.onConnect.bind(this) ) ;
-        this.mWebSocket.on("close" , ()=>{ console.error( "why sever closed ? " )} ) ;
+        this.mWebSocket.on("close" , ()=>{ XLogger.error( "why sever closed ? " )} ) ;
         this.mWebSocket.on("error", ()=>{ "websocket svr error "} ) ;
         this.mDelegate = pdelegate ;
         this.mlpfSessionIDGenerator = lpfSessionIDGenerator ; 
@@ -255,7 +255,7 @@ export class ServerNetwork implements IClientPeerDelegate
         let peer = this.mClients[targetSessionID] ;
         if ( peer == null )
         {
-            console.log( "invalid session id = " + targetSessionID + " msg = " + msgID + " c = " + jsMsg );
+            XLogger.debug( "invalid session id = " + targetSessionID + " msg = " + msgID + " c = " + jsMsg );
             return false;
         }
 
@@ -279,7 +279,7 @@ export class ServerNetwork implements IClientPeerDelegate
             let session = this.mlpfSessionIDGenerator( this.mCurMaxSessionID ) ;
             if ( session <= this.mCurMaxSessionID )
             {
-                console.log( "invalid session , generator have bug" ) ;
+                XLogger.debug( "invalid session , generator have bug" ) ;
                 session = ++this.mCurMaxSessionID ;
             }
             this.mCurMaxSessionID = session ;
@@ -288,7 +288,7 @@ export class ServerNetwork implements IClientPeerDelegate
         let p = new ClientPeer();
         p.init( socket, request.socket.remoteAddress, this , this.mCurMaxSessionID , this.mDelegate.cacheMsgCntWhenWaitingReconnect() ) ;
         this.mClients[this.mCurMaxSessionID] = p ;
-        console.log( "new peer session id = " + this.mCurMaxSessionID + " ip : " + p.ip  ) ;
+        XLogger.debug( "new peer session id = " + this.mCurMaxSessionID + " ip : " + p.ip  ) ;
     }
 
     onMsg( nSessionID : number , msgID : number, jsMsg : Object ) : void 
@@ -299,7 +299,7 @@ export class ServerNetwork implements IClientPeerDelegate
             let target = this.mClients[targetSessionID] ;
             if ( target == null )
             {
-                console.warn("target session is null , can not reconnect ") ;
+                XLogger.warn("target session is null , can not reconnect ") ;
                 let js = {} ;
                 js["ret"] = 1 ;
                 js["sessionID"] = nSessionID ;
@@ -310,7 +310,7 @@ export class ServerNetwork implements IClientPeerDelegate
             target.doReconnect( this.mClients[nSessionID] ) ;
             this.mDelegate.onPeerReconnected( targetSessionID, this.mClients[targetSessionID].ip, nSessionID );
             delete this.mClients[nSessionID] ;
-            console.log( "reconnect ok session id = " + targetSessionID + this.mClients[targetSessionID].ip + nSessionID  ) ;
+            XLogger.debug( "reconnect ok session id = " + targetSessionID + this.mClients[targetSessionID].ip + nSessionID  ) ;
             return ;
         }
 
@@ -322,7 +322,7 @@ export class ServerNetwork implements IClientPeerDelegate
         let client = this.mClients[nSessionID] ;
         if ( null == client )
         {
-            console.warn( "when close , why session id is null ? = " + nSessionID ) ;
+            XLogger.warn( "when close , why session id is null ? = " + nSessionID ) ;
             return ;
         }
 
@@ -330,7 +330,7 @@ export class ServerNetwork implements IClientPeerDelegate
         {
             client.close();
             delete this.mClients[nSessionID] ;
-            console.log( "peer still waiting verify , direct closed = " + nSessionID ) ;
+            XLogger.debug( "peer still waiting verify , direct closed = " + nSessionID ) ;
             return ;
         }
 
@@ -351,7 +351,7 @@ export class ServerNetwork implements IClientPeerDelegate
         let client = this.mClients[nSessionID] ;
         if ( null == client )
         {
-            console.warn( "onverify result but client is null id = " + nSessionID + " pass = " + isPass ) ;
+            XLogger.warn( "onverify result but client is null id = " + nSessionID + " pass = " + isPass ) ;
             return ;
         }
 
@@ -359,18 +359,18 @@ export class ServerNetwork implements IClientPeerDelegate
         {
             client.close();
             delete this.mClients[nSessionID] ;
-            console.log( "session id verify not pass id = " + nSessionID ) ;
+            XLogger.debug( "session id verify not pass id = " + nSessionID ) ;
         }
         else
         {
-            console.log( "session id passed, id = " + nSessionID ) ; 
+            XLogger.debug( "session id passed, id = " + nSessionID ) ; 
             this.mDelegate.onPeerConnected(nSessionID, client.ip ) ;
         }
     }
 
     onWaitReconnectTimeout( nSessionID : number ) : void
     {
-        console.log( "wait reconnect time out session = " + nSessionID ) ;
+        XLogger.debug( "wait reconnect time out session = " + nSessionID ) ;
         let client = this.mClients[nSessionID] ;
         if ( client != null )
         {
@@ -380,7 +380,7 @@ export class ServerNetwork implements IClientPeerDelegate
         }
         else
         {
-            console.error( "reconnect time out , why client is null ? session id = " + nSessionID ) ;
+            XLogger.error( "reconnect time out , why client is null ? session id = " + nSessionID ) ;
         }
     }
 }

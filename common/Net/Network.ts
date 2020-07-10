@@ -1,5 +1,6 @@
+import { XLogger } from './../Logger';
 import { LocalEventEmitter } from './../LocalEventEmitter';
-import { eMsgPort, eMsgType } from './../../shared/MessageIdentifer';
+import { eMsgType } from './../../shared/MessageIdentifer';
 import WebSocket from "ws";
 
 export interface IOneMsgCallback
@@ -8,7 +9,7 @@ export interface IOneMsgCallback
     (jsmsg : Object) : boolean ;  
 } ;
 
-export class ClientNetwork extends LocalEventEmitter{
+export class Network extends LocalEventEmitter{
 
     static EVENT_OPEN : string = "open";
     static EVENT_FAILED : string = "failed";
@@ -22,7 +23,7 @@ export class ClientNetwork extends LocalEventEmitter{
     static MSG_ID : string = "msgID" ;
     static MSG_DATA : string = "msgData" ;
 
-    private static s_pNetwork : ClientNetwork = null ;
+    private static s_pNetwork : Network = null ;
     protected mWebSocket : WebSocket = null;
     protected mDstIP : string = "";
     protected vMsgCallBack : [number,IOneMsgCallback][] = [];
@@ -34,13 +35,13 @@ export class ClientNetwork extends LocalEventEmitter{
     // we only error one time is ok ;  
     protected isSkipOnCloseEnvet : boolean = false ; 
 
-    static getInstance() : ClientNetwork
+    static getInstance() : Network
     {
-        if ( ClientNetwork.s_pNetwork == null )
+        if ( Network.s_pNetwork == null )
         {
-            ClientNetwork.s_pNetwork = new ClientNetwork();
+            Network.s_pNetwork = new Network();
         }
-        return ClientNetwork.s_pNetwork ;
+        return Network.s_pNetwork ;
     }
     
     getSessionID()
@@ -57,7 +58,7 @@ export class ClientNetwork extends LocalEventEmitter{
     connect( dstIP : string ) 
     {
        this.mDstIP = dstIP ;
-       console.log( "direct connect to svr" );
+       XLogger.debug( "direct connect to svr" );
        this.doConnect(); 
     }
 
@@ -65,13 +66,13 @@ export class ClientNetwork extends LocalEventEmitter{
     {
         if ( this.mWebSocket == null )
         {
-            console.warn( "not set up network" );
+            XLogger.warn( "not set up network" );
             return false;
         }
 
         if ( this.mWebSocket.readyState != WebSocket.OPEN )
         {
-            console.error( "socket is not open , can not send msgid = " + msgID );
+            XLogger.error( "socket is not open , can not send msgid = " + msgID );
             return false;
         }
 
@@ -80,10 +81,10 @@ export class ClientNetwork extends LocalEventEmitter{
             jsMsg = {} ;
         }
 
-        jsMsg[ClientNetwork.MSG_ID] = msgID ;
+        jsMsg[Network.MSG_ID] = msgID ;
         this.mWebSocket.send(JSON.stringify(jsMsg)) ;
 
-        console.log( "send msg : " + JSON.stringify(jsMsg) );
+        XLogger.debug( "send msg : " + JSON.stringify(jsMsg) );
         if ( callBack != null ) // reg call back ;
         {
             let p : [ number , IOneMsgCallback] ;
@@ -102,12 +103,12 @@ export class ClientNetwork extends LocalEventEmitter{
     {
         if ( this.mWebSocket != null && ( this.mWebSocket.readyState == WebSocket.CONNECTING || WebSocket.OPEN == this.mWebSocket.readyState ) )
         {
-            console.log( "ok = " + WebSocket.OPEN + "ing = " + WebSocket.CONNECTING );
-            console.error( "alredy doing reconnect , so need not connect state : " + this.mWebSocket.readyState  );
+            XLogger.debug( "ok = " + WebSocket.OPEN + "ing = " + WebSocket.CONNECTING );
+            XLogger.error( "alredy doing reconnect , so need not connect state : " + this.mWebSocket.readyState  );
             return ;
         }
 
-        console.log( "do connecting..." );
+        XLogger.debug( "do connecting..." );
         this.mWebSocket = new WebSocket(this.mDstIP) ;
         this.mWebSocket.onclose = this.onClose.bind(this) ; 
         this.mWebSocket.onopen = this.onOpen.bind(this); ;
@@ -125,14 +126,14 @@ export class ClientNetwork extends LocalEventEmitter{
     protected onError( ev : WebSocket.ErrorEvent )
     {
         this.isSkipOnCloseEnvet = true ;
-        console.log(" on error  " );
+        XLogger.debug(" on error  " );
         if ( null != this.nPingCheckAlive )
         {
             clearInterval(this.nPingCheckAlive) ;
             this.nPingCheckAlive = null ;
         }
 
-        this.emit(ClientNetwork.EVENT_FAILED) ;
+        this.emit(Network.EVENT_FAILED) ;
         if ( null == this.nReconnectInterval )
         {
             this.doConnect();
@@ -144,20 +145,20 @@ export class ClientNetwork extends LocalEventEmitter{
     {
         if ( this.mWebSocket != null && WebSocket.OPEN == this.mWebSocket.readyState )
         {
-            console.error( "socke already open , should not recived close event" );
+            XLogger.error( "socke already open , should not recived close event" );
             return ;
         }
 
         if ( this.isSkipOnCloseEnvet )
         {
-            console.log( "skip on close event" );
+            XLogger.debug( "skip on close event" );
             return ;
         }
 
-        console.log( "on colse " );
+        XLogger.debug( "on colse " );
         this.isSkipOnCloseEnvet = true ; // we do on close event invoke twice , before connected success ;
 
-        console.log("stop heat beat");
+        XLogger.debug("stop heat beat");
         //clearTimeout(this.nTimeoutHandleNum); // sytem tell or heatbeat time out , lead to on close ,we should stop heatBet ;
         //this.nTimeoutHandleNum = null ;
         if ( null != this.nPingCheckAlive )
@@ -167,7 +168,7 @@ export class ClientNetwork extends LocalEventEmitter{
         }
 
         // dispatch event ;
-        this.emit(ClientNetwork.EVENT_CLOSED) ;
+        this.emit(Network.EVENT_CLOSED) ;
         if ( null == this.nReconnectInterval )
         {
             this.doConnect();
@@ -177,16 +178,16 @@ export class ClientNetwork extends LocalEventEmitter{
 
     protected close( ev : WebSocket.CloseEvent )
     {
-        console.log( "self colse" );
+        XLogger.debug( "self colse" );
         this.mWebSocket.terminate();
     }
 
     protected onOpen( ev : WebSocket.OpenEvent )
     {
-        console.log(" on open +  " + this.mWebSocket.readyState );
+        XLogger.debug(" on open +  " + this.mWebSocket.readyState );
         if ( this.nReconnectInterval != null )
         {
-            console.log("clear time out ");
+            XLogger.debug("clear time out ");
             clearInterval(this.nReconnectInterval);
             this.nReconnectInterval = null ;
         }
@@ -198,9 +199,9 @@ export class ClientNetwork extends LocalEventEmitter{
             clearInterval(this.nPingCheckAlive) ;
         }
         this.isRecievedHeatBet = true ;
-        this.nPingCheckAlive = setInterval(this.doSendHeatBet.bind(this),ClientNetwork.TIME_HEAT_BEAT * 1000 );
+        this.nPingCheckAlive = setInterval(this.doSendHeatBet.bind(this),Network.TIME_HEAT_BEAT * 1000 );
 
-        this.emit( ClientNetwork.EVENT_OPEN) ;
+        this.emit( Network.EVENT_OPEN) ;
         // verify client ;
         let jsMsg = {} ;
         jsMsg["pwd"] = "123" ;
@@ -210,16 +211,16 @@ export class ClientNetwork extends LocalEventEmitter{
             //let pEvent : any ;
             if ( jsm["ret"] != 0 )
             {
-                console.error("can not verify this client ret :" + jsm["ret"] );
-                self.emit( ClientNetwork.EVENT_AUTHORITY_FAILED) ;
+                XLogger.error("can not verify this client ret :" + jsm["ret"] );
+                self.emit( Network.EVENT_AUTHORITY_FAILED) ;
                 return true;
             }
 
             // decide if need reconnect 
             if ( self.getSessionID() == 0 ) // we need not reconnect 
             {
-                self.emit( ClientNetwork.EVENT_OPEN) ;
-                console.log("verifyed session id = " + jsm["sessionID"] + " ret =" + jsm["ret"] );
+                self.emit( Network.EVENT_OPEN) ;
+                XLogger.debug("verifyed session id = " + jsm["sessionID"] + " ret =" + jsm["ret"] );
                 self.setSessionID( jsm["sessionID"] );
                 return ;
             }
@@ -230,27 +231,27 @@ export class ClientNetwork extends LocalEventEmitter{
             self.sendMsg( eMsgType.MSG_RECONNECT,jsRec,( jsRet : any)=>{
                 self.setSessionID(jsRet["sessionID"]);
                 let ret : number = jsRet["ret"];
-                let ev = 0 == ret ?  ClientNetwork.EVENT_RECONNECT : ClientNetwork.EVENT_RECONNECTED_FAILED ;
+                let ev = 0 == ret ?  Network.EVENT_RECONNECT : Network.EVENT_RECONNECTED_FAILED ;
                 self.emit(ev,self.getSessionID() ) ;
                 return true ;
             } ) ;
             
-            console.log("verifyed session id = " + jsm["nSessionID"] + " ret =" + jsm["nRet"] + "do reconnect" );
+            XLogger.debug("verifyed session id = " + jsm["nSessionID"] + " ret =" + jsm["nRet"] + "do reconnect" );
             return true ;
         } ) ;      
     }
 
     protected onMsg( ev : WebSocket.MessageEvent )
     {
-        console.log(" on msg " + ev.data );
+        XLogger.debug(" on msg " + ev.data );
         let msg = JSON.parse(ev.data.toString() ) ;
         if ( msg == null )
         {
-            console.error("can not pase set msg : " + ev.data );
+            XLogger.error("can not pase set msg : " + ev.data );
             return ;
         }
 
-        let nMsgID : number = msg[ClientNetwork.MSG_ID];
+        let nMsgID : number = msg[Network.MSG_ID];
         // check call back 
         for ( let idx = 0 ; idx < this.vMsgCallBack.length; ++idx )
         {
@@ -267,9 +268,9 @@ export class ClientNetwork extends LocalEventEmitter{
 
         }
     
-       //console.log("dispath msg id " + msg );
+       //XLogger.debug("dispath msg id " + msg );
         /// dispatch event ;
-        this.emit(ClientNetwork.EVENT_MSG,nMsgID,msg ) ;
+        this.emit(Network.EVENT_MSG,nMsgID,msg ) ;
     }
 
     protected onPong()
@@ -282,7 +283,7 @@ export class ClientNetwork extends LocalEventEmitter{
         // send heat bet ;
         if ( this.mWebSocket.readyState != WebSocket.OPEN )
         {
-            console.error( "socket is not open , can not send heat bet " );
+            XLogger.error( "socket is not open , can not send heat bet " );
             return ;
         }
 
@@ -298,6 +299,6 @@ export class ClientNetwork extends LocalEventEmitter{
     protected doTryReconnect()
     {
        let self = this ;
-       this.nReconnectInterval = setInterval(()=>{ console.log("interval try connect"); self.doConnect();},3000);
+       this.nReconnectInterval = setInterval(()=>{ XLogger.debug("interval try connect"); self.doConnect();},4000);
     }
 }

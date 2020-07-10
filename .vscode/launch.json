@@ -23,7 +23,7 @@
             //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
             "outFiles": ["${workspaceFolder}/build/**/*.js"]
         },
-  
+        
         {
           "name": "Current TS File",
           "type": "node",
