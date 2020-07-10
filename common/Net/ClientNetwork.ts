@@ -8,16 +8,17 @@ export interface IOneMsgCallback
     (jsmsg : Object) : boolean ;  
 } ;
 
-export default class ClientNetwork extends LocalEventEmitter{
+export class ClientNetwork extends LocalEventEmitter{
 
     static EVENT_OPEN : string = "open";
     static EVENT_FAILED : string = "failed";
+    static EVENT_AUTHORITY_FAILED : string = "AUTHORITY_FAILED";
     static EVENT_MSG : string = "msg";
     static EVENT_CLOSED : string = "close";
     static EVENT_RECONNECT : string = "reconnect";
     static EVENT_RECONNECTED_FAILED : string = "reconnectFailed" ;
 
-    static TIME_HEAT_BEAT : number = 3 ; 
+    static TIME_HEAT_BEAT : number = 13 ; 
     static MSG_ID : string = "msgID" ;
     static MSG_DATA : string = "msgData" ;
 
@@ -53,14 +54,14 @@ export default class ClientNetwork extends LocalEventEmitter{
     }
 
     // can ony invoke in init method , only invoke one time , connect other ip ,please use function : tryNewDstIP()
-    connect( dstIP : string, targetPort : number , selfPort : number ) 
+    connect( dstIP : string ) 
     {
        this.mDstIP = dstIP ;
        console.log( "direct connect to svr" );
        this.doConnect(); 
     }
 
-    sendMsg( jsMsg : Object , msgID : number, targetPort : number , targetID : number , callBack? : IOneMsgCallback ):boolean
+    sendMsg( msgID : number,jsMsg? : Object ,  callBack? : IOneMsgCallback ):boolean
     {
         if ( this.mWebSocket == null )
         {
@@ -73,15 +74,16 @@ export default class ClientNetwork extends LocalEventEmitter{
             console.error( "socket is not open , can not send msgid = " + msgID );
             return false;
         }
-        let jsPacket = { } ;
+
+        if ( null == jsMsg )
+        {
+            jsMsg = {} ;
+        }
+
         jsMsg[ClientNetwork.MSG_ID] = msgID ;
+        this.mWebSocket.send(JSON.stringify(jsMsg)) ;
 
-        jsPacket["cSysIdentifer"] = targetPort ;
-        jsPacket["nTargetID"] = targetID ;
-        jsPacket["JS"] = JSON.stringify(jsMsg);
-        this.mWebSocket.send(JSON.stringify(jsPacket)) ;
-
-        console.log( "send msg : " + JSON.stringify(jsPacket) );
+        console.log( "send msg : " + JSON.stringify(jsMsg) );
         if ( callBack != null ) // reg call back ;
         {
             let p : [ number , IOneMsgCallback] ;
@@ -201,39 +203,34 @@ export default class ClientNetwork extends LocalEventEmitter{
         this.emit( ClientNetwork.EVENT_OPEN) ;
         // verify client ;
         let jsMsg = {} ;
+        jsMsg["pwd"] = "123" ;
         let self = this ;
-        this.sendMsg(jsMsg,eMsgType.MSG_VERIFY_CLIENT,eMsgPort.ID_MSG_PORT_GATE,0 , ( jsm :any)=>
+        this.sendMsg(eMsgType.MSG_VERIFY,jsMsg,( jsm :any)=>
         {
             //let pEvent : any ;
-            if ( jsm["nRet"] != 0 )
+            if ( jsm["ret"] != 0 )
             {
-                console.error("can not verify this client ret :" + jsm["nRet"] );
-                //pEvent = new cc.Event.EventCustom(Network.EVENT_FAILED,true) ;
-                //cc.systemEvent.dispatchEvent(pEvent);
-                self.emit( ClientNetwork.EVENT_FAILED) ;
+                console.error("can not verify this client ret :" + jsm["ret"] );
+                self.emit( ClientNetwork.EVENT_AUTHORITY_FAILED) ;
                 return true;
             }
 
-            self.emit( ClientNetwork.EVENT_OPEN) ;
-            console.log("verifyed session id = " + jsm["nSessionID"] + " ret =" + jsm["nRet"] );
             // decide if need reconnect 
             if ( self.getSessionID() == 0 ) // we need not reconnect 
             {
-                self.setSessionID( jsm["nSessionID"] );
+                self.emit( ClientNetwork.EVENT_OPEN) ;
+                console.log("verifyed session id = " + jsm["sessionID"] + " ret =" + jsm["ret"] );
+                self.setSessionID( jsm["sessionID"] );
                 return ;
             }
             
             // we need do reconnect 
             let jsRec = {};
-            jsRec["nSessionID"] = self.getSessionID();
-            self.sendMsg(jsRec,eMsgType.MSG_RECONNECT,eMsgPort.ID_MSG_PORT_GATE,0,( jsRet : any)=>{
-                let ret : number = jsRet["nRet"];
+            jsRec["sessionID"] = self.getSessionID();
+            self.sendMsg( eMsgType.MSG_RECONNECT,jsRec,( jsRet : any)=>{
                 self.setSessionID(jsRet["sessionID"]);
-                let ev : any = ClientNetwork.EVENT_RECONNECT ;
-                if ( 0 != ret ) // reconnect ok 
-                {
-                    ev = ClientNetwork.EVENT_RECONNECTED_FAILED ;
-                }
+                let ret : number = jsRet["ret"];
+                let ev = 0 == ret ?  ClientNetwork.EVENT_RECONNECT : ClientNetwork.EVENT_RECONNECTED_FAILED ;
                 self.emit(ev,self.getSessionID() ) ;
                 return true ;
             } ) ;

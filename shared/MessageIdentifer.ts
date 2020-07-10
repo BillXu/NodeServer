@@ -5,29 +5,6 @@ export enum eMsgPort
 	ID_MSG_PORT_GATE,
 	ID_MSG_PORT_CENTER,
 	ID_MSG_PORT_VERIFY,
-	ID_MSG_PORT_RECORDER_DB,
-	ID_MSG_PORT_DATA,
-	ID_MSG_PORT_CLUB = ID_MSG_PORT_DATA,
-	ID_MSG_PORT_DB,
-	ID_MSG_PORT_MJ,
-	ID_MSG_PORT_BI_JI,
-	ID_MSG_PORT_NIU_NIU,
-	ID_MSG_PORT_DOU_DI_ZHU,
-	ID_MSG_PORT_GOLDEN,
-	ID_MSG_PORT_SCMJ,
-	ID_MSG_PORT_MQMJ,
-	ID_MSG_PORT_LUOMJ,
-	ID_MSG_PORT_FXMJ,
-	ID_MSG_PORT_CFMJ,
-	ID_MSG_PORT_AHMJ,
-	ID_MSG_PORT_NCMJ,
-	ID_MSG_PORT_DDMJ,
-	ID_MSG_PORT_SZMJ,
-	ID_MSG_PORT_SDMJ,
-	ID_MSG_PORT_YZMJ,
-	ID_MSG_PORT_NJMJ,
-	ID_MSG_PORT_GUAN_DAN,
-	ID_MSG_PORT_ARQMJ,
 	ID_MSG_PORT_ALL_SERVER,
 	ID_MSG_PORT_MAX,
 };
@@ -38,13 +15,20 @@ export enum eMsgType
 	//--new define begin---
 	// the msg title used between servers 
 	MSG_SERVERS_USE,
-	MSG_VERIFY_SERVER,   // used between svr , not by transfer data ;
-	MSG_VERIFY_CLIENT, // verify that is client ;
+    MSG_VERIFY,   // used between svr ;
+    // client : { pwd : aa }
+    // svr : { ret : 0 , sessionID : 2345 } 
+
+    MSG_RECONNECT,   // client with gate 
+    // client : { sessionID : 234 } // reconnect to sessionID ;
+    // svr : { ret : 0 , sessionID : 234 } 
+    // ret : 0 means ok , other value means failed , 
+    // sessionID , means current session , in use . 
+    
 	MSG_TRANSER_DATA, // tranfer data between servers ;
 	MSG_SERVER_DISCONNECT, // some svr disconnected ;  // svr recived , send by center svr , not by transfer data ;
 	MSG_ASYNC_REQUEST, // asyn request 
 	MSG_JSON_CONTENT,
-	MSG_RECONNECT,   // client with gate 
 	MSG_TELL_CLIENT_SVR_DISCONNECT, // tell client svr
 	MSG_CLIENT_CONNECT_STATE_CHANGED,  // client connect state changed ;  // send by gate 
 	MSG_GATE_SVR_IS_FULL, // gate connect is full , let client change other gate ;
