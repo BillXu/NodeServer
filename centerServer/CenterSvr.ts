@@ -50,6 +50,7 @@ class TestSever implements IServerNetworkDelegate
     onPeerMsg( nSessionID : number , msgID : eMsgType , jsMsg : Object) : void 
     {
         XLogger.debug( "recieved a msg from player session id = " + nSessionID + "id " + msgID + "content : " + jsMsg ) ;
+        this.pSvr.sendMsg(nSessionID, msgID, jsMsg ) ;
     }
 }
 

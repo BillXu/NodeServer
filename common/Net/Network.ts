@@ -42,6 +42,13 @@ export class Network extends LocalEventEmitter{
     // we only error one time is ok ;  
     protected isSkipOnCloseEnvet : boolean = false ; 
     protected mDelegate : INetworkDelegate = null ;
+    protected mPingDelayMiniSeconds : number = 0;
+
+    get pingDelayMlliSeconds() : number
+    {
+        return this.mPingDelayMiniSeconds ;
+    }
+
     static getInstance() : Network
     {
         if ( Network.s_pNetwork == null )
@@ -67,6 +74,11 @@ export class Network extends LocalEventEmitter{
        this.mDstIP = dstIP ;
        XLogger.debug( "direct connect to svr" );
        this.doConnect(); 
+    }
+
+    setDelegate( del : INetworkDelegate )
+    {
+        this.mDelegate = del ;
     }
 
     sendMsg( msgID : number,jsMsg? : Object ,  callBack? : IOneMsgCallback ):boolean
@@ -221,8 +233,7 @@ export class Network extends LocalEventEmitter{
 
         // verify client ;
         let jsMsg = {} ;
-        jsMsg["pwd"] = "123" ;
-        
+        jsMsg["pwd"] = this.getSecrectKeyForVerify() ;
         this.sendMsg(eMsgType.MSG_VERIFY,jsMsg,( jsm :any)=>
         {
             //let pEvent : any ;
@@ -299,6 +310,10 @@ export class Network extends LocalEventEmitter{
 
         }
     
+        if ( eMsgType.MSG_RECONNECT == nMsgID || eMsgType.MSG_VERIFY == nMsgID )
+        {
+            return ;
+        }
        //XLogger.debug("dispath msg id " + msg );
         /// dispatch event ;
         this.emit(Network.EVENT_MSG,nMsgID,msg ) ;
@@ -308,9 +323,16 @@ export class Network extends LocalEventEmitter{
         }
     }
 
-    protected onPong()
+    protected onPong( data : Buffer )
     {
         this.isRecievedHeatBet = true ;
+        let offset = Date.now() % (1000*10*1000) - parseInt( data.toString() );
+        XLogger.debug( "ping value = " +  data.toString() + "offset = " + offset );
+        if ( offset <= 0 )
+        {
+            offset = 2 ;
+        }
+        this.mPingDelayMiniSeconds = offset ;
     }
 
     protected doSendHeatBet()
@@ -330,7 +352,9 @@ export class Network extends LocalEventEmitter{
             return ;
         }
         this.isRecievedHeatBet = false ;
-        this.mWebSocket.ping() ;
+        let ping = Date.now() % (1000*10*1000) + "";
+        XLogger.debug( "ping befor value = " +  ping );
+        this.mWebSocket.ping(ping) ;
     }
 
     protected doTryReconnect()
@@ -342,5 +366,10 @@ export class Network extends LocalEventEmitter{
        } 
        let self = this ;
        this.nReconnectInterval = setInterval(()=>{ XLogger.debug("interval try connect"); self.doConnect();},4000);
+    }
+
+    protected getSecrectKeyForVerify() : string
+    {
+        return "1" ;
     }
 }

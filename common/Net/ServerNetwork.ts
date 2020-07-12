@@ -200,8 +200,8 @@ class ClientPeer
 
     protected checkVerify( pwd : string ) : boolean
     {
-        XLogger.debug("not pass all connection : pwd = " + pwd )
-        return true ;
+        XLogger.debug(" pass all connection : pwd = " + pwd )
+        return pwd == "1" ;
     }
 
     protected close()
