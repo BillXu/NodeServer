@@ -10,6 +10,8 @@
   "author": "BillXu",
   "license": "ISC",
   "dependencies": {
+    "@types/hashmap": "^2.3.0",
+    "hashmap": "^2.4.0",
     "lodash": "^4.17.15",
     "log4js": "^6.3.0",
     "ws": "^7.3.1"

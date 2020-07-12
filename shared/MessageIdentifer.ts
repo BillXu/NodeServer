@@ -23,10 +23,21 @@ export enum eMsgType
     // client : { sessionID : 234 } // reconnect to sessionID ;
     // svr : { ret : 0 , sessionID : 234 } 
     // ret : 0 means ok , other value means failed , 
-    // sessionID , means current session , in use . 
-    
-	MSG_TRANSER_DATA, // tranfer data between servers ;
+	// sessionID , means current session , in use . 
+	
+	MSG_REGISTER_SERVER_PORT_TO_CENTER,
+	// subSvr : { port : eMsgPort, suggestIdx : number } 
+	// centerSvr : { idx : number }  
+	// if idx < 0 , means group is full ;
+	
 	MSG_SERVER_DISCONNECT, // some svr disconnected ;  // svr recived , send by center svr , not by transfer data ;
+	// centerSvr : { port : eMsgPort , idx : number } 
+	// idx means server idx ;
+	
+	MSG_TRANSER_DATA, // tranfer data between servers ;
+	// { dstPort : eMsgPort, dstID : number , orgPort : eMsgPort , orgID : number ,msg : Object }
+
+	
 	MSG_ASYNC_REQUEST, // asyn request 
 	MSG_JSON_CONTENT,
 	MSG_TELL_CLIENT_SVR_DISCONNECT, // tell client svr
