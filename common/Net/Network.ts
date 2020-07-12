@@ -9,15 +9,22 @@ export interface IOneMsgCallback
     (jsmsg : Object) : boolean ;  
 } ;
 
+export interface INetworkDelegate
+{
+    onVerifyResult( isOk : boolean ) : void;
+    onConnectResult( isOK : boolean ) : void ;
+    onDisconnected() : void ;
+    onMsg( msgID : eMsgType , msg : Object ) : void ;
+    onReconectedResult( isOk : boolean ) : void ;
+}
+
 export class Network extends LocalEventEmitter{
 
-    static EVENT_OPEN : string = "open";
-    static EVENT_FAILED : string = "failed";
-    static EVENT_AUTHORITY_FAILED : string = "AUTHORITY_FAILED";
-    static EVENT_MSG : string = "msg";
+    static EVENT_CONNECT_RESULT : string = "connect_result"; // arg , isok : bool
+    static EVENT_VERIFY_RESULT : string = "AUTHORITY_result"; // arg , isok : bool
+    static EVENT_MSG : string = "msg"; // arg, msgID : eMsgType , msg : Object ;
     static EVENT_CLOSED : string = "close";
-    static EVENT_RECONNECT : string = "reconnect";
-    static EVENT_RECONNECTED_FAILED : string = "reconnectFailed" ;
+    static EVENT_RECONNECT_RESULT : string = "reconnect_result"; // arg , isok : bool
 
     static TIME_HEAT_BEAT : number = 3 ; 
     static MSG_ID : string = "msgID" ;
@@ -34,7 +41,7 @@ export class Network extends LocalEventEmitter{
     // when client side close connect , or reconnect error , onClose always be invoked , so we don't want this result ,
     // we only error one time is ok ;  
     protected isSkipOnCloseEnvet : boolean = false ; 
-
+    protected mDelegate : INetworkDelegate = null ;
     static getInstance() : Network
     {
         if ( Network.s_pNetwork == null )
@@ -133,7 +140,12 @@ export class Network extends LocalEventEmitter{
             this.nPingCheckAlive = null ;
         }
 
-        this.emit(Network.EVENT_FAILED) ;
+        this.emit(Network.EVENT_CONNECT_RESULT,false ) ;
+        if ( null != this.mDelegate )
+        {
+            this.mDelegate.onConnectResult( false ) ;
+        }
+
         if ( null == this.nReconnectInterval )
         {
             this.doConnect();
@@ -169,10 +181,15 @@ export class Network extends LocalEventEmitter{
 
         // dispatch event ;
         this.emit(Network.EVENT_CLOSED) ;
+        if ( null != this.mDelegate )
+        {
+            this.mDelegate.onDisconnected();
+        }
+
         if ( null == this.nReconnectInterval )
         {
-            //this.doConnect();
-            //this.doTryReconnect();
+            this.doConnect();
+            this.doTryReconnect();
         }
     }
 
@@ -202,7 +219,6 @@ export class Network extends LocalEventEmitter{
         let self = this ;
         this.nPingCheckAlive = setInterval(self.doSendHeatBet.bind(this),Network.TIME_HEAT_BEAT * 1000 );
 
-        this.emit( Network.EVENT_OPEN) ;
         // verify client ;
         let jsMsg = {} ;
         jsMsg["pwd"] = "123" ;
@@ -210,19 +226,29 @@ export class Network extends LocalEventEmitter{
         this.sendMsg(eMsgType.MSG_VERIFY,jsMsg,( jsm :any)=>
         {
             //let pEvent : any ;
+            self.emit( Network.EVENT_VERIFY_RESULT, jsm["ret"] == 0 ) ;
+            if ( null != this.mDelegate )
+            {
+                this.mDelegate.onVerifyResult( jsm["ret"] == 0 ) ;
+            }
+
             if ( jsm["ret"] != 0 )
             {
                 XLogger.warn("can not verify this client ret :" + jsm["ret"] );
-                self.emit( Network.EVENT_AUTHORITY_FAILED) ;
                 return true;
             }
 
             // decide if need reconnect 
             if ( self.getSessionID() == 0 ) // we need not reconnect 
             {
-                self.emit( Network.EVENT_OPEN) ;
                 XLogger.debug("verifyed session id = " + jsm["sessionID"] + " ret =" + jsm["ret"] );
                 self.setSessionID( jsm["sessionID"] );
+
+                self.emit( Network.EVENT_CONNECT_RESULT,true) ;
+                if ( null != self.mDelegate )
+                {
+                    self.mDelegate.onConnectResult( true ) ;
+                }
                 return ;
             }
             
@@ -234,8 +260,11 @@ export class Network extends LocalEventEmitter{
             self.sendMsg( eMsgType.MSG_RECONNECT,jsRec,( jsRet : any)=>{
                 self.setSessionID(jsRet["sessionID"]);
                 let ret : number = jsRet["ret"];
-                let ev = 0 == ret ?  Network.EVENT_RECONNECT : Network.EVENT_RECONNECTED_FAILED ;
-                self.emit(ev,self.getSessionID() ) ;
+                self.emit(Network.EVENT_RECONNECT_RESULT,0 == ret , self.getSessionID() ) ;
+                if ( null != self.mDelegate )
+                {
+                    self.mDelegate.onReconectedResult( 0 == ret )
+                }
                 return true ;
             } ) ;
             
@@ -273,6 +302,10 @@ export class Network extends LocalEventEmitter{
        //XLogger.debug("dispath msg id " + msg );
         /// dispatch event ;
         this.emit(Network.EVENT_MSG,nMsgID,msg ) ;
+        if ( null != this.mDelegate )
+        {
+            this.mDelegate.onMsg( nMsgID , msg ) ;
+        }
     }
 
     protected onPong()
@@ -292,6 +325,7 @@ export class Network extends LocalEventEmitter{
         if ( this.isRecievedHeatBet == false )
         {
             //this.onClose(null) ;
+            XLogger.debug( "heat time out , so close it " ) ;
             this.close() ;
             return ;
         }

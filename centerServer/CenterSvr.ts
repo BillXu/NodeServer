@@ -1,3 +1,4 @@
+import { XLogger } from './../common/Logger';
 import { eMsgType } from './../shared/MessageIdentifer';
 import { IServerNetworkDelegate, ServerNetwork } from "../common/Net/ServerNetwork";
 
@@ -12,7 +13,7 @@ class TestSever implements IServerNetworkDelegate
 
     secondsForWaitReconnect() : number 
     {
-        return 1 ;
+        return 10 ;
     }
 
     cacheMsgCntWhenWaitingReconnect() : number 
@@ -27,27 +28,28 @@ class TestSever implements IServerNetworkDelegate
 
     onPeerConnected( nSessionID : number, ip : string ) : void 
     {
-        console.log( "a player connected ip =  " + ip + " session id = " + nSessionID ) ;
+        
+        XLogger.debug( "a player connected ip =  " + ip + " session id = " + nSessionID ) ;
     }
 
     onPeerReconnected( nSessionID : number, ip : string, fromSessionID : number ) : void 
     {
-        console.log( "a player reconnected ip =  " + ip + " session id = " + nSessionID + "from session id = " + fromSessionID ) ;
+        XLogger.debug( "a player reconnected ip =  " + ip + " session id = " + nSessionID + "from session id = " + fromSessionID ) ;
     }
 
     onPeerWaitingReconect( nSessionID : number ) : void 
     {
-        console.log( "a player is waiting reconnect session id = " + nSessionID ) ;
+        XLogger.debug( "a player is waiting reconnect session id = " + nSessionID ) ;
     }
 
     onPeerDisconnected( nSessionID : number ) : void 
     {
-        console.log( "a player disconnect sessionID = " + nSessionID ) ;
+        XLogger.debug( "a player disconnect sessionID = " + nSessionID ) ;
     }
 
     onPeerMsg( nSessionID : number , msgID : eMsgType , jsMsg : Object) : void 
     {
-        console.log( "recieved a msg from player session id = " + nSessionID + "id " + msgID + "content : " + jsMsg ) ;
+        XLogger.debug( "recieved a msg from player session id = " + nSessionID + "id " + msgID + "content : " + jsMsg ) ;
     }
 }
 
