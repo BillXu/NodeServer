@@ -27,18 +27,25 @@ export enum eMsgType
 	
 	MSG_REGISTER_SERVER_PORT_TO_CENTER,
 	// subSvr : { port : eMsgPort, suggestIdx : number } 
-	// centerSvr : { idx : number }  
+	// centerSvr : { idx : number, maxCnt : 1  }  
 	// if idx < 0 , means group is full ;
 	
 	MSG_SERVER_DISCONNECT, // some svr disconnected ;  // svr recived , send by center svr , not by transfer data ;
-	// centerSvr : { port : eMsgPort , idx : number } 
+	// centerSvr : { port : eMsgPort , idx : number , maxCnt : number} 
 	// idx means server idx ;
-	
+
 	MSG_TRANSER_DATA, // tranfer data between servers ;
 	// { dstPort : eMsgPort, dstID : number , orgPort : eMsgPort , orgID : number ,msg : Object }
-
 	
-	MSG_ASYNC_REQUEST, // asyn request 
+	MSG_RPC_REQUEST, // asyn request
+	// send : { sieralNum : 23455 , funcID : eRpcFuncID, arg : {}  }
+
+	MSG_RPC_RESULT, // asyn request
+	// send : { sieralNum : 23452 , state : 0 , errMsg : "only state = 2 , have this key value " , result : {} } 
+	// state : 0 , success , 1 delay respone , 2 error ;
+	// only when state = 0 , " result " " key value  will exist ;
+	
+
 	MSG_JSON_CONTENT,
 	MSG_TELL_CLIENT_SVR_DISCONNECT, // tell client svr
 	MSG_CLIENT_CONNECT_STATE_CHANGED,  // client connect state changed ;  // send by gate 

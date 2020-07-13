@@ -88,6 +88,7 @@ class CenterSvr implements IServerNetworkDelegate
         let jsInfoDisconnect = {} ;
         jsInfoDisconnect["port"] = port ;
         jsInfoDisconnect["idx"] = idx ;
+        jsInfoDisconnect["maxCnt"] = this.mSvrInfoGroups.get(port).mMaxCnt;
         this.brocastAllServer( eMsgType.MSG_SERVER_DISCONNECT, jsInfoDisconnect , nSessionID ) ;
         return ;
     }
@@ -132,6 +133,7 @@ class CenterSvr implements IServerNetworkDelegate
             }
             let jsBack = {} ;
             jsBack["idx"] = gsvr.addSvr(nSessionID, suggestIdx ) ;
+            jsBack["maxCnt"] = gsvr.mMaxCnt ;
             this.mSvr.sendMsg(nSessionID, msgID, jsBack ) ;
             XLogger.info( "register a server : " + port + " idx : " + jsBack["idx"]  ) ;
             return ;

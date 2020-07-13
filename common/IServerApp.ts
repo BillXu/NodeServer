@@ -1,14 +1,28 @@
+import { IModule } from './IModule';
+import  HashMap  from 'hashmap';
 import { XLogger } from './Logger';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { Network, INetworkDelegate } from './Net/Network';
+
+export interface IFuncMsgCallBack
+{
+    // return true means , processed this message , and will remove this callback ;
+    (msgID : eMsgType , msg : Object, orgID : number , orgPort : eMsgPort , opts : { canOtherProcess : boolean }  ) : boolean ;
+}
+
 export class IServerApp implements INetworkDelegate
 {
     protected mNet : Network = null ;
+    protected mCurSvrIdx : number = 0 ;
+    protected mCurSvrPortMaxCnt : number = 0 ;
+    protected mCallBacks : HashMap<number,Array<IFuncMsgCallBack> > = new HashMap<number,Array<IFuncMsgCallBack> >();
+    protected mModules : Array<IModule> = new Array<IModule>();
     init( jsCfg : Object )
     {
         this.mNet = new Network();
         this.mNet.setDelegate(this) ;
         this.mNet.connect( jsCfg["dstIP"] ) ;
+        this.mCallBacks.clear();
     }
 
     // network delegate ;
@@ -20,11 +34,22 @@ export class IServerApp implements INetworkDelegate
     onConnectResult( isOK : boolean ) : void 
     {
         XLogger.info( "server onConnectResult : " + isOK ? "ok" : "failed" ) ;
+        if ( isOK )
+        {
+            let js = {} ;
+            js["port"] = this.getLocalPortType();
+            js["suggestIdx"] = this.getCurSvrIdx();
+            this.mNet.sendMsg( eMsgType.MSG_REGISTER_SERVER_PORT_TO_CENTER, js ) ;
+        }
     }
 
     onDisconnected() : void 
     {
         XLogger.info( "server disconnect" ) ;
+        for ( let v of this.mModules )
+        {
+            this.onDisconnected();
+        }
     }
 
     onMsg( msgID : eMsgType , msg : Object ) : void 
@@ -33,20 +58,84 @@ export class IServerApp implements INetworkDelegate
         {
             this.onLogicMsg(msg["msg"][Network.MSG_ID], msg["msg"], msg["orgID"], msg["orgPort"] ) ;
         }
+        else if ( msgID == eMsgType.MSG_SERVER_DISCONNECT )
+        {
+            this.onOtherServerDisconnect(msg["port"], msg["idx"], msg["maxCnt"] ) ;
+        }
+        else if ( msgID == eMsgType.MSG_REGISTER_SERVER_PORT_TO_CENTER )
+        {
+            let idx = msg["idx"] ;
+            if ( idx == -1 )
+            {
+                XLogger.warn( "svr port type is full " ) ;
+                process.exit(1) ;
+            }
+
+            let cnt = msg["maxCnt"] ;
+            this.onRegistedToCenter( idx , cnt ) ;
+            this.mCurSvrIdx = idx ;
+            this.mCurSvrPortMaxCnt = cnt ;
+        }
     }
 
     onReconectedResult( isOk : boolean ) : void 
     {
         XLogger.info( "server reconnect : " + isOk ? "ok" : "failed" ) ;
+        if ( false == isOk )
+        {
+            let js = {} ;
+            js["port"] = this.getLocalPortType();
+            js["suggestIdx"] = this.getCurSvrIdx();
+            this.mNet.sendMsg( eMsgType.MSG_REGISTER_SERVER_PORT_TO_CENTER, js ) ;
+        }
+        else
+        {
+            this.mCallBacks.clear();
+        }
     }
 
     // self method 
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number , orgPort : eMsgPort )
     {
+        let callBacks = this.mCallBacks.get( msgID ) ;
+        if ( callBacks != null && callBacks.length > 0 )
+        {
+            let opts = { canOtherProcess : false } ;
+            let vRemoveFunc = [] ;
+            for ( let idx = 0 ; idx < callBacks.length ; ++idx )
+            {
+                if ( callBacks[idx](msgID,msg,orgID,orgPort,opts ) )
+                {
+                    if ( opts.canOtherProcess == false )
+                    {
+                        callBacks.splice( idx,1 ) ;
+                        XLogger.debug( "msgID = " + msgID + " reserve callback cnt = " + callBacks.length ) ;
+                        return ;
+                    }
+                    else
+                    {
+                        vRemoveFunc.push( callBacks[idx] ) ;
+                    }                 
+                }
+            }
 
+            for ( let v of vRemoveFunc )
+            {
+                callBacks.splice( callBacks.indexOf(v),1 );
+            }
+            XLogger.debug( "below msgID = " + msgID + " reserve callback cnt = " + callBacks.length ) ;
+        }
+
+        for ( let v of this.mModules )
+        {
+            if ( v.onLogicMsg(msgID, msg, orgID, orgPort) )
+            {
+                break ;
+            }
+        }
     }
 
-    sendMsg( msgID : number , msg : Object , dstPort : eMsgPort, dstID : number , orgID : number )
+    sendMsg( msgID : number , msg : Object , dstPort : eMsgPort, dstID : number , orgID : number, lpfCallBack? : IFuncMsgCallBack  )
     {
         if ( msg == null )
         {
@@ -61,15 +150,74 @@ export class IServerApp implements INetworkDelegate
         jsTransfer["orgPort"] = this.getLocalPortType() ;
         jsTransfer["msg"] = msg ;
         this.mNet.sendMsg(eMsgType.MSG_TRANSER_DATA,jsTransfer ) ;
+
+        if ( lpfCallBack != null )
+        {
+            let a = this.mCallBacks.get( msgID ) ;
+            if ( a == null )
+            {
+                a = new Array<IFuncMsgCallBack>();
+                this.mCallBacks.set( msgID, a ) ;
+            }
+            a.push( lpfCallBack ) ;
+            if ( a.length > 400 )
+            {
+                XLogger.warn( "why a message cacher so many call back ? msgid = " + msgID ) ;
+            }
+
+            if ( a.length > 500 )
+            {
+                a.shift();
+            }
+        }
     }
 
-    onOtherServerDisconnect( port : eMsgPort , idx : number )
+    onOtherServerDisconnect( port : eMsgPort , idx : number, maxCnt : number )
     {
+        XLogger.warn( "svr port = " + port + " disconnected idx = " + idx + " maxCnt = " + maxCnt  ) ;
+        for ( let v of this.mModules )
+        {
+            this.onOtherServerDisconnect(port, idx, maxCnt ) ;
+        }
+    }
 
+    onRegistedToCenter( svrIdx : number , svrMaxCnt : number )
+    {
+        XLogger.info( "registed to center , svrIdx = " + svrIdx + " maxCnt = " + svrMaxCnt ) ;
+        for ( let v of this.mModules )
+        {
+            this.onRegistedToCenter(svrIdx, svrMaxCnt) ;
+        }
     }
 
     getLocalPortType() : eMsgPort 
     {
         return eMsgPort.ID_MSG_PORT_MAX ;
+    }
+
+    getCurSvrIdx() : number
+    {
+        return this.mCurSvrIdx ;
+    }
+
+    getCurPortMaxCnt()
+    {
+        return this.mCurSvrPortMaxCnt ;
+    }
+
+    registerModule( pModule : IModule ) : boolean 
+    {
+        let strType = pModule.getModuleType();
+        for ( let v of this.mModules )
+        {
+            if ( v.getModuleType() == strType )
+            {
+                XLogger.warn( "should not register a moudle twice name = " + strType ) ;
+                return false ;
+            }
+        }
+        this.mModules.push( pModule ) ;
+        pModule.onRegisterToSvrApp(this) ;
+        return true ;
     }
 }
