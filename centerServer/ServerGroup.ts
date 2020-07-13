@@ -16,8 +16,8 @@ class ServerInfo
 
 export class ServerGroup
 {
-    protected mSvrs : HashMap<number,ServerInfo> = new HashMap<number,ServerInfo>() ;
-    protected mPortType : eMsgPort = eMsgPort.ID_MSG_PORT_MAX ;
+    protected mSvrInfos : HashMap<number,ServerInfo> = new HashMap<number,ServerInfo>() ;
+    mPortType : eMsgPort = eMsgPort.ID_MSG_PORT_MAX ;
     protected mMaxCnt : number = 1 ;
     init( portType : eMsgPort, maxCnt : number = 200  )
     {
@@ -30,22 +30,23 @@ export class ServerGroup
         let v = [] ;
         if ( -1 == targetID ) // brocast all ;
         {
-            let vk = Object.keys(this.mSvrs) ;
+            let vk = this.mSvrInfos.values();
             for ( let s of vk )
             {
-                v.push( this.mSvrs[s].sessionID ) ;
+                v.push( s.sessionID ) ;
             }
             return v ;
         }
 
         let idx = targetID % this.mMaxCnt ;
-        if ( this.mSvrs[idx] == null )
+        if ( this.mSvrInfos.has(idx) == false )
         {
             XLogger.warn("target svr idx is null , id = " + targetID + " max cnt = " + this.mMaxCnt ) ;
             idx = -1 ; // sign not find a proper target ; 
             for ( let i = 0 ; i < this.mMaxCnt ; ++i )
             {
-                if ( this.mSvrs[i] != null && this.mSvrs[i].isWaitingReconnect == false )
+                let tmp = this.mSvrInfos.get(i) ;
+                if ( tmp != null && tmp.isWaitingReconnect == false )
                 {
                     idx = i ;
                     break ;
@@ -55,26 +56,25 @@ export class ServerGroup
 
         if ( idx != -1 )
         {
-            return [ this.mSvrs[idx].sessionID ] ;
+            v.push( this.mSvrInfos.get( idx ).sessionID ) ;
         }
-        return null ;
+        return v ;
     }
 
     isSvrEmpty( idx : number )
     {
-        return this.mSvrs[idx] == null ;
+        return this.mSvrInfos.has(idx) == false ;
     }
 
     getSvrIdxBySessionID( sessionID : number ) : number
     {
-        let vk = Object.keys(this.mSvrs) ;
+        let vk = this.mSvrInfos.entries() ;
         for ( let v of vk )
         {
-            if ( this.mSvrs[v] != null && this.mSvrs[v].sessionID == sessionID )
+            if ( v[1].sessionID == sessionID )
             {
-                delete this.mSvrs[v] ;
-                XLogger.debug( "do remove svr session id = " + sessionID + " portType = " + this.mPortType ) ;
-                return v;
+                //XLogger.debug( "do remove svr session id = " + sessionID + " portType = " + this.mPortType ) ;
+                return v[0];
             }
         }
 
@@ -83,17 +83,18 @@ export class ServerGroup
 
     addSvr( sessionID : number , sugustIdx : number ) : number 
     {
-        if ( this.mSvrs[ sugustIdx ] == null )
+
+        if ( this.mSvrInfos.has(sugustIdx) == false )
         {
-            this.mSvrs[sugustIdx] = new ServerInfo(sessionID,sugustIdx) ;
+            this.mSvrInfos.set( sugustIdx, new ServerInfo(sessionID,sugustIdx) )
             return sugustIdx ;
         }
 
         for ( let idx = 0 ; idx < this.mMaxCnt ; ++idx )
         {
-            if ( this.mSvrs[idx] == null )
+            if ( this.mSvrInfos.has(idx) == false )
             {
-                this.mSvrs[idx] = new ServerInfo( sessionID , idx );
+                this.mSvrInfos.set( idx, new ServerInfo(sessionID,idx) )
                 return idx ;
             }
         }
@@ -104,14 +105,14 @@ export class ServerGroup
 
     removeSvr( sessionID : number ) : boolean 
     {
-        let vk = Object.keys(this.mSvrs) ;
+        let vk = this.mSvrInfos.entries() ;
         for ( let v of vk )
         {
-            if ( this.mSvrs[v] != null && this.mSvrs[v].sessionID == sessionID )
+            if ( v[1].sessionID == sessionID )
             {
-                delete this.mSvrs[v] ;
                 XLogger.debug( "do remove svr session id = " + sessionID + " portType = " + this.mPortType ) ;
-                return true;
+                this.mSvrInfos.delete(v[0]);
+                return true ;
             }
         }
 
@@ -120,12 +121,12 @@ export class ServerGroup
 
     onSvrWaittingReconnectState( sessionID : number , isWaiting : boolean ) : boolean
     {
-        let vk = Object.keys(this.mSvrs) ;
+        let vk = this.mSvrInfos.values() ;
         for ( let v of vk )
         {
-            if ( this.mSvrs[v] != null && this.mSvrs[v].sessionID == sessionID )
+            if ( v.sessionID == sessionID )
             {
-                this.mSvrs[v].isWaitingReconnect = isWaiting ;
+                v.isWaitingReconnect = isWaiting ;
                 XLogger.debug( "refresh reconnect state svr session id = " + sessionID + " portType = " + this.mPortType ) ;
                 return true;
             }

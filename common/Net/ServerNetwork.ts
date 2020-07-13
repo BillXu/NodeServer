@@ -1,3 +1,4 @@
+import HashMap  from 'hashmap';
 import { XLogger } from './../Logger';
 import { eMsgType } from './../../shared/MessageIdentifer';
 import WebSocket from "ws";
@@ -248,7 +249,7 @@ export class ServerNetwork implements IClientPeerDelegate
 {
     static MSG_ID : string = "msgID" ;
     protected mWebSocket : WebSocket.Server = null ;
-    protected mClients : { [key : number ] : ClientPeer } = { } ;
+    protected mClientPeers : HashMap<number,ClientPeer> = new HashMap<number,ClientPeer>() ;
     protected mCurMaxSessionID : number = 0 ;
     protected mlpfSessionIDGenerator : ( curMaxSessionID : number )=>number = null ;
     protected mDelegate : IServerNetworkDelegate = null ;
@@ -265,7 +266,7 @@ export class ServerNetwork implements IClientPeerDelegate
 
     sendMsg( targetSessionID : number, msgID : number , jsMsg : Object ) : boolean
     {
-        let peer = this.mClients[targetSessionID] ;
+        let peer = this.mClientPeers.get(targetSessionID) ;
         if ( peer == null )
         {
             XLogger.warn( "invalid session id = " + targetSessionID + " msg = " + msgID + " c = " + jsMsg );
@@ -300,10 +301,10 @@ export class ServerNetwork implements IClientPeerDelegate
 
         let p = new ClientPeer();
         p.init( socket, request.socket.remoteAddress, this , this.mCurMaxSessionID , this.mDelegate.cacheMsgCntWhenWaitingReconnect() ) ;
-        this.mClients[this.mCurMaxSessionID] = p ;
+        this.mClientPeers.set( this.mCurMaxSessionID, p ) ;
         XLogger.debug( "new peer session id = " + this.mCurMaxSessionID + " ip : " + p.ip  ) ;
 
-        XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + Object.keys( this.mClients ).length ) ;
+        XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + this.mClientPeers.count() ) ;
     }
 
     onMsg( nSessionID : number , msgID : number, jsMsg : Object ) : void 
@@ -311,7 +312,7 @@ export class ServerNetwork implements IClientPeerDelegate
         if ( msgID == eMsgType.MSG_RECONNECT )
         {
             let targetSessionID = jsMsg["sessionID"] ;
-            let target = this.mClients[targetSessionID] ;
+            let target = this.mClientPeers.get(targetSessionID) ;
             if ( target == null )
             {
                 XLogger.warn("target session is null , can not reconnect ") ;
@@ -322,11 +323,11 @@ export class ServerNetwork implements IClientPeerDelegate
                 return ;
             }
 
-            target.doReconnect( this.mClients[nSessionID] ) ;
-            this.mDelegate.onPeerReconnected( targetSessionID, this.mClients[targetSessionID].ip, nSessionID );
-            this.mClients[nSessionID].clear();
-            delete this.mClients[nSessionID] ;
-            XLogger.debug( "reconnect ok session id = " + targetSessionID + " ip = " + this.mClients[targetSessionID].ip + " sessionid = " + nSessionID  ) ;
+            target.doReconnect( this.mClientPeers.get(nSessionID) ) ;
+            this.mDelegate.onPeerReconnected( targetSessionID, this.mClientPeers.get(targetSessionID).ip, nSessionID );
+            this.mClientPeers.get(nSessionID).clear();
+            this.mClientPeers.delete(nSessionID) ;
+            XLogger.debug( "reconnect ok session id = " + targetSessionID + " ip = " + this.mClientPeers.get(targetSessionID).ip + " sessionid = " + nSessionID  ) ;
 
             let js = {} ;
             js["ret"] = 0 ;
@@ -340,7 +341,7 @@ export class ServerNetwork implements IClientPeerDelegate
 
     onClosed( nSessionID : number ) : void 
     {
-        let client = this.mClients[nSessionID] ;
+        let client = this.mClientPeers.get(nSessionID) ;
         if ( null == client )
         {
             XLogger.warn( "when close , why session id is null ? = " + nSessionID ) ;
@@ -349,9 +350,9 @@ export class ServerNetwork implements IClientPeerDelegate
 
         if ( client.isVerifyed() == false )
         {
-            delete this.mClients[nSessionID] ;
+            this.mClientPeers.delete( nSessionID ) ;
             XLogger.debug( "peer still waiting verify , direct closed = " + nSessionID ) ;
-            XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + Object.keys( this.mClients ).length ) ;
+            XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + this.mClientPeers.count() ) ;
             return ;
         }
 
@@ -362,15 +363,15 @@ export class ServerNetwork implements IClientPeerDelegate
         else
         {
             this.mDelegate.onPeerDisconnected(nSessionID) ;
-            delete this.mClients[nSessionID] ;
+            this.mClientPeers.delete( nSessionID ) ;
             XLogger.debug( "peer no need wait reconnect , direct closed = " + nSessionID ) ;
         }
-        XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + Object.keys( this.mClients ).length ) ;
+        XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + this.mClientPeers.count() ) ;
     }
 
     onVerifyResult( nSessionID : number , isPass : boolean ) : void 
     {
-        let client = this.mClients[nSessionID] ;
+        let client = this.mClientPeers.get( nSessionID ) ;
         if ( null == client )
         {
             XLogger.warn( "onverify result but client is null id = " + nSessionID + " pass = " + isPass ) ;
@@ -379,7 +380,7 @@ export class ServerNetwork implements IClientPeerDelegate
 
         if ( false == isPass )
         {
-            delete this.mClients[nSessionID] ;
+            this.mClientPeers.delete( nSessionID ) ;
             XLogger.debug( "session id verify not pass delete ite id = " + nSessionID ) ;
         }
         else
@@ -392,11 +393,11 @@ export class ServerNetwork implements IClientPeerDelegate
     onWaitReconnectTimeout( nSessionID : number ) : void
     {
         XLogger.debug( "wait reconnect time out session = " + nSessionID ) ;
-        let client = this.mClients[nSessionID] ;
+        let client = this.mClientPeers.get( nSessionID ) ;
         this.mDelegate.onPeerDisconnected( nSessionID ) ;
         if ( client != null )
         {
-            delete this.mClients[nSessionID] ;
+            this.mClientPeers.delete( nSessionID ) ;
             XLogger.debug( "wait reconnect time out session do delete it = " + nSessionID ) ;
         }
         else
@@ -404,6 +405,6 @@ export class ServerNetwork implements IClientPeerDelegate
             XLogger.error( "reconnect time out , why client is null ? session id = " + nSessionID ) ;
         }
 
-        XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + Object.keys( this.mClients ).length ) ;
+        XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + this.mClientPeers.count() ) ;
     }
 }
