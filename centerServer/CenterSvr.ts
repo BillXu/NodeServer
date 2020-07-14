@@ -100,6 +100,10 @@ class CenterSvr implements IServerNetworkDelegate
         {
             let targetPort = jsMsg["dstPort"] ;
             let targetID = jsMsg["dstID"] ;
+            if ( targetPort == eMsgPort.ID_MSG_PORT_CLIENT )
+            {
+                targetPort = eMsgPort.ID_MSG_PORT_GATE ;
+            }
             let targetGroup = this.mSvrInfoGroups.get(targetPort) ;
             if ( null == targetGroup )
             {
@@ -135,7 +139,7 @@ class CenterSvr implements IServerNetworkDelegate
             jsBack["idx"] = gsvr.addSvr(nSessionID, suggestIdx ) ;
             jsBack["maxCnt"] = gsvr.mMaxCnt ;
             this.mSvr.sendMsg(nSessionID, msgID, jsBack ) ;
-            XLogger.info( "register a server : " + port + " idx : " + jsBack["idx"]  ) ;
+            XLogger.info( "registered a server : " + eMsgPort[port] + " idx : " + jsBack["idx"]  ) ;
             return ;
         }
     }

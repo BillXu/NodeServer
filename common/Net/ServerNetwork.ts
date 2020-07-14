@@ -407,4 +407,14 @@ export class ServerNetwork implements IClientPeerDelegate
 
         XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + this.mClientPeers.count() ) ;
     }
+
+    getSessionIP( sessionID : number ) : string
+    {
+        let p = this.mClientPeers.get(sessionID ) ;
+        if ( p == null )
+        {
+            return "-" ;
+        }
+        return p.ip ;
+    }
 }

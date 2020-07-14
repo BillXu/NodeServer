@@ -5,6 +5,8 @@ export enum eMsgPort
 	ID_MSG_PORT_GATE,
 	ID_MSG_PORT_CENTER,
 	ID_MSG_PORT_VERIFY,
+	ID_MSG_PORT_DB,
+	ID_MSG_PORT_DATA,
 	ID_MSG_PORT_ALL_SERVER,
 	ID_MSG_PORT_MAX,
 };
@@ -45,13 +47,22 @@ export enum eMsgType
 	// state : 0 , success , 1 delay respone , 2 error ;
 	// only when state = 0 , " result " " key value  will exist ;
 	
+	MSG_PLAYER_REGISTER,     // register an account ;
+	// client : { account : "adfag" , type : eAccountType, nickeName : "name" , headIconUrl : "", sex : eSex }
+	// svr : { ret : 0 , account : "adfag" , type : eAccountType }
+	// ret : 0 means success , 1 duplicate account , 2  invalid account type error ;
 
+	MSG_PLAYER_LOGIN,  // check an account is valid ;
+	// client : { account : "234" , type : eAccountType }
+	// svr : { ret : 0 }
+	// ret : 0 success , 1 account error with your type ;
+	
+	///------above is new ;
 	MSG_JSON_CONTENT,
 	MSG_TELL_CLIENT_SVR_DISCONNECT, // tell client svr
 	MSG_CLIENT_CONNECT_STATE_CHANGED,  // client connect state changed ;  // send by gate 
 	MSG_GATE_SVR_IS_FULL, // gate connect is full , let client change other gate ;
-	MSG_PLAYER_REGISTER,     // register an account ;
-	MSG_PLAYER_LOGIN,  // check an account is valid ;
+
 	MSG_TELL_GATE_PLAYER_OTHER_LOGIN,
 
 	MSG_REQUEST_PLAYER_DATA, // request player brif data 

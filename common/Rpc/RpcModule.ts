@@ -32,7 +32,7 @@ export interface IRPCFunc
 
 export interface IRPCResultFunc
 {
-    ( sieralNum : number, result : Object ,jsUserData : any ) : void ;  // return null , means delay respone 
+    ( result : Object , sieralNum? : number ,jsUserData? : any ) : void ; 
 }
 
 export class RpcModule extends IModule
@@ -44,6 +44,12 @@ export class RpcModule extends IModule
     protected mRetryTimer : NodeJS.Timeout = null ;
 
     static TIME_RETRY : number = 8000 ;
+    static MODULE_NAME : string = "RpcModule";
+
+    getModuleType() : string
+    {
+        return RpcModule.MODULE_NAME ;
+    }
 
     registerRPC( rpcFuncID : eRpcFuncID , rpcFunc : IRPCFunc ) : boolean 
     {
@@ -70,7 +76,7 @@ export class RpcModule extends IModule
                 }
             }
         }
-        
+
         let req = new RPCRequest();
         req.arg = arg ;
         req.funcID = funcID ;
@@ -272,7 +278,10 @@ export class RpcModule extends IModule
             {
                 case 0: 
                 {
-                    req.resultCallBack(sieralNum,msg["result"],req.jsUserData );
+                    if ( req.resultCallBack != null )
+                    {
+                        req.resultCallBack(msg["result"],sieralNum,req.jsUserData );
+                    }
                     this.mSendingRequests.delete( sieralNum ) ;
                 }
                 break ;

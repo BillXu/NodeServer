@@ -1,6 +1,6 @@
 import { IServerApp, IFuncMsgCallBack } from './IServerApp';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
-export class IModule
+export abstract class IModule
 {
     protected mSvrApp : IServerApp = null ;
 
@@ -9,10 +9,7 @@ export class IModule
         this.mSvrApp = svrApp ;
     }
 
-    getModuleType() : string 
-    {
-        return "default" ;
-    }
+    abstract getModuleType() : string ;
 
     getSvrApp() : IServerApp 
     {
@@ -27,7 +24,7 @@ export class IModule
     }
 
     onRegistedToCenter( svrIdx : number , svrMaxCnt : number ) : void {}
-    
+
     sendMsg( msgID : number , msg : Object , dstPort : eMsgPort, dstID : number , orgID : number, lpfCallBack? : IFuncMsgCallBack  ) : void 
     {
         this.getSvrApp().sendMsg(msgID, msg, dstPort, dstID, orgID,lpfCallBack ) ;

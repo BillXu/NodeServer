@@ -3,6 +3,7 @@ import  HashMap  from 'hashmap';
 import { XLogger } from './Logger';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { Network, INetworkDelegate } from './Net/Network';
+import { RpcModule } from './Rpc/RpcModule';
 
 export interface IFuncMsgCallBack
 {
@@ -10,7 +11,7 @@ export interface IFuncMsgCallBack
     (msgID : eMsgType , msg : Object, orgID : number , orgPort : eMsgPort , opts : { canOtherProcess : boolean }  ) : boolean ;
 }
 
-export class IServerApp implements INetworkDelegate
+export abstract class IServerApp implements INetworkDelegate
 {
     protected mNet : Network = null ;
     protected mCurSvrIdx : number = 0 ;
@@ -23,6 +24,13 @@ export class IServerApp implements INetworkDelegate
         this.mNet.setDelegate(this) ;
         this.mNet.connect( jsCfg["dstIP"] ) ;
         this.mCallBacks.clear();
+
+        this.registerModule( new RpcModule() ) ;
+    }
+
+    getRpc() : RpcModule
+    {
+        return this.getModule(RpcModule.MODULE_NAME) as RpcModule ;
     }
 
     // network delegate ;
@@ -130,9 +138,11 @@ export class IServerApp implements INetworkDelegate
         {
             if ( v.onLogicMsg(msgID, msg, orgID, orgPort) )
             {
-                break ;
+                return ;
             }
         }
+
+        XLogger.warn( "unprocessed msg id = " + eMsgType[msgID] + " orgPort = " + eMsgPort[orgPort] + " msg = " + JSON.stringify(msg) );
     }
 
     sendMsg( msgID : number , msg : Object , dstPort : eMsgPort, dstID : number , orgID : number, lpfCallBack? : IFuncMsgCallBack  )
@@ -190,10 +200,7 @@ export class IServerApp implements INetworkDelegate
         }
     }
 
-    getLocalPortType() : eMsgPort 
-    {
-        return eMsgPort.ID_MSG_PORT_MAX ;
-    }
+    abstract getLocalPortType() : eMsgPort ;
 
     getCurSvrIdx() : number
     {
@@ -219,5 +226,18 @@ export class IServerApp implements INetworkDelegate
         this.mModules.push( pModule ) ;
         pModule.onRegisterToSvrApp(this) ;
         return true ;
+    }
+
+    getModule( moudleType : string ) : IModule
+    {
+        for ( let v of this.mModules )
+        {
+            if ( moudleType == v.getModuleType() )
+            {
+                return v ;
+            }
+        }
+
+        return null ;
     }
 }
