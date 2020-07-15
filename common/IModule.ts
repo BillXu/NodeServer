@@ -18,10 +18,7 @@ export abstract class IModule
 
     onDisconnected() : void {}
     onOtherServerDisconnect( port : eMsgPort , idx : number, maxCnt : number ) : void {}
-    onLogicMsg( msgID : eMsgType , msg : Object, orgID : number , orgPort : eMsgPort ) : boolean 
-    {
-        return false ;
-    }
+    abstract onLogicMsg( msgID : eMsgType , msg : Object, orgID : number , orgPort : eMsgPort, targetID : number ) : boolean ;
 
     onRegistedToCenter( svrIdx : number , svrMaxCnt : number ) : void {}
 

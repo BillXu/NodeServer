@@ -205,7 +205,7 @@ class ClientPeer
         return pwd == "1" ;
     }
 
-    protected close()
+    close()
     {
         XLogger.debug( "i do close sessionid = " + this.mSessionID ) ;
         this.clear();
@@ -262,6 +262,25 @@ export class ServerNetwork implements IClientPeerDelegate
         this.mDelegate = pdelegate ;
         this.mlpfSessionIDGenerator = lpfSessionIDGenerator ; 
         return true ;
+    }
+
+    brocastMsg( msgID : number , jsMsg : Object )
+    {
+        if ( msgID != null )
+        {
+            jsMsg[ServerNetwork.MSG_ID] = msgID ;
+        }
+
+        let values = this.mClientPeers.values() ;
+        for ( let v of values )
+        {
+            if ( v.isVerifyed() && v.isWaitingReconnect() == false )
+            {
+                v.sendMsg(jsMsg) ;
+            }
+        }
+
+        XLogger.debug( "brocastMsg = " + JSON.stringify(jsMsg) ) ;
     }
 
     sendMsg( targetSessionID : number, msgID : number , jsMsg : Object ) : boolean
@@ -416,5 +435,17 @@ export class ServerNetwork implements IClientPeerDelegate
             return "-" ;
         }
         return p.ip ;
+    }
+
+    closeSession( sessionID : number )
+    {
+        let p = this.mClientPeers.get(sessionID) ; 
+        if ( null == p )
+        {
+            XLogger.warn( "session is null , can not close it , session id = " + sessionID ) ;
+            return ;
+        }
+        XLogger.debug( "serverNetwork close session id = " + sessionID ) ;
+        p.close();
     }
 }

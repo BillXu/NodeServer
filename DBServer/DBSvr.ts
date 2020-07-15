@@ -1,3 +1,4 @@
+import { key } from './../shared/KeyDefine';
 import { eMsgPort } from './../shared/MessageIdentifer';
 import { XLogger } from './../common/Logger';
 import { eRpcFuncID } from './../common/Rpc/RpcFuncID';
@@ -102,6 +103,22 @@ export class DBSvr extends IServerApp
             } ) ;
             return null ;
         } ) ;
+
+        rpc.registerRPC( eRpcFuncID.Func_LoadPlayerInfo ,( reqSieralNum : number , arg : Object  )=>{
+            let uid = arg[key.uid] ;
+            mysql.query( "select * from playerData where uid = " + uid, ( err : MysqlError ,result : any )=>{
+                if ( err != null )
+                {
+                    rpc.pushDelayResult(reqSieralNum, {} ) ;
+                    XLogger.error( "failed sql : " + err.sql + " error : " + err.sqlMessage ) ;
+                    return ;
+                }
+
+                XLogger.debug( "finish load player data = " + JSON.stringify( result[0] ) ) ;
+                rpc.pushDelayResult(reqSieralNum, result[0] ) ;
+            } );
+            return null ;
+        }  ) ;
     }
 }
 

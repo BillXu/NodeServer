@@ -64,7 +64,7 @@ export abstract class IServerApp implements INetworkDelegate
     {
         if ( msgID == eMsgType.MSG_TRANSER_DATA )
         {
-            this.onLogicMsg(msg["msg"][Network.MSG_ID], msg["msg"], msg["orgID"], msg["orgPort"] ) ;
+            this.onLogicMsg(msg["msg"][Network.MSG_ID], msg["msg"], msg["orgID"], msg["orgPort"],msg["dstID"] ) ;
         }
         else if ( msgID == eMsgType.MSG_SERVER_DISCONNECT )
         {
@@ -103,7 +103,7 @@ export abstract class IServerApp implements INetworkDelegate
     }
 
     // self method 
-    onLogicMsg( msgID : eMsgType , msg : Object, orgID : number , orgPort : eMsgPort )
+    onLogicMsg( msgID : eMsgType , msg : Object, orgID : number , orgPort : eMsgPort, dstID : number )
     {
         let callBacks = this.mCallBacks.get( msgID ) ;
         if ( callBacks != null && callBacks.length > 0 )
@@ -136,7 +136,7 @@ export abstract class IServerApp implements INetworkDelegate
 
         for ( let v of this.mModules )
         {
-            if ( v.onLogicMsg(msgID, msg, orgID, orgPort) )
+            if ( v.onLogicMsg(msgID, msg, orgID, orgPort,dstID ) )
             {
                 return ;
             }

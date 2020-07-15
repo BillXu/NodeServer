@@ -11,3 +11,8 @@ export enum eSex
     eSex_Female,
     eSex_Max,
 }
+
+export enum eMailType
+{
+    eMail_Max,
+}

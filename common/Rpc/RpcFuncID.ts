@@ -15,5 +15,10 @@ export enum eRpcFuncID
     // ret : 0 success , 1 account not exsit ;
     Func_DoLogin,
     // arg: { uid : 22, sessionID : 234, ip : "192.168.1.12"  } 
+    Func_OtherLogin,
+    // arg : { sessionID : 234 , uid : 234 } 
+    Func_LoadPlayerInfo,
+    // arg : { uid : 2345 }
+    // result : {  key : value } , key means table fialed ;  , if ObjectKeys() return length is 0 , means failed
     Func_Max,
 }

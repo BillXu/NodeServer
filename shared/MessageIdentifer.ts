@@ -56,7 +56,21 @@ export enum eMsgType
 	// client : { account : "234" , type : eAccountType }
 	// svr : { ret : 0 }
 	// ret : 0 success , 1 account error with your type ;
-	
+
+	MSG_PLAYER_BASE_DATA,
+	// svr: { uid : 23, nickName : "lucy" , sex : eSex , headUrl : "http://url.com", diamond : 23 , inviterUID : 20 }
+
+	MSG_PLAYER_OTHER_LOGIN, // tell player your account already logined in other device ;  client recived must disconnect from server
+	// svr : { ip : "230.32.234.2" }
+	// ip : other device 's ip ;
+
+	MSG_REQUEST_PLAYER_SIMPLE_INFO, // request player simpleInfo  
+	// client : { reqUID : 23 , selfSessionID : 234 }
+	// svr : { ret : 0 , uid : 23 , nickName : "hello" , headUrl : "http://weshg.wx.com",sex : 1 ,isOnline : 0  }
+	// ret : 0 success , 1 can not find target player , uid should equal target id ; 
+
+
+
 	///------above is new ;
 	MSG_JSON_CONTENT,
 	MSG_TELL_CLIENT_SVR_DISCONNECT, // tell client svr
@@ -65,16 +79,9 @@ export enum eMsgType
 
 	MSG_TELL_GATE_PLAYER_OTHER_LOGIN,
 
-	MSG_REQUEST_PLAYER_DATA, // request player brif data 
-	// client : { nReqID : 23  isDetail : 0 }
-	// svr : { uid : 23 , name : "hello" , headIcon : "http://weshg.wx.com",sex : 1 , ip : "1.0.0.1" , J : 23.0002, W : 232.234, isInRoom : 0 ,isOnline : 0 ,lastLoginTime : 2345234 }  // J , W : GPS positon , maybe null ;
-	// isInRoom : only when player is online , have this key .
-	// loginTime : only when player is offline , have this key .
-	MSG_PLAYER_OTHER_LOGIN,  // more than one place login , prelogin need disconnect ; client recived must disconnect from server
-	// svr : null 
-	MSG_PLAYER_BASE_DATA,
-	// svr: { uid : 23,name : "lucy" , sex : 1 , headIcon : "http://url.com",diamond : 23 , coin : 20,emojiCnt : 23, ip: "234.234.234",stayRoomID : 0  }
-	// stayRoomID , if not in any room , this key is null ;
+
+
+
 	MSG_PLAYER_UPDATE_INFO,
 	// client : { name : "lucy", sex : 1 , headIcon : "http://url.com"  }
 	// svr: { ret : 0 }
@@ -828,182 +835,4 @@ export enum eMsgType
 
 	MSG_ROOM_CFMJ_GAME_WILL_START, //赤峰麻将游戏对铺之前的消息
 	// svr : {leftCircle : 1, bankerIdx : 0}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	///------new define end---
-	MSG_SERVER_AND_CLIENT_COMMON_BEGIN,  // server and client common msg , beyond specail game 
-	MSG_PLAYER_ENTER_GAME,    // after check , enter game 
-	
-	//MSG_PLAYER_CONTINUE_LOGIN,  // contiune login prize ;
-	
-	MSG_CREATE_ROLE,
-	// player base Data 
-	
-	MSG_SHOW_CONTINUE_LOGIN_DLG,
-	MSG_GET_CONTINUE_LOGIN_REWARD,
-
-	MSG_PLAYER_UPDATE_VIP_LEVEL,
-
-
-	// slot machine 
-	MSG_PLAYER_SLOT_MACHINE, // lao hu ji ;
-
-	// item 
-	MSG_REQUEST_ITEM_LIST ,
-	MSG_SAVE_ITEM_LIST,
-	MSG_PLAYER_PAWN_ASSERT, //  dian dang zi chan
-	MSG_PLAYER_USE_GIFT,
-	// rank
-	MSG_REQUEST_RANK,
-	MSG_REQUEST_RANK_PEER_DETAIL,
-	// inform 
-	MSG_INFORM_NEW_NOTICES ,
-	MSG_PLAYER_REQUEST_NOTICE,
-	MSG_GLOBAL_BROCAST,
-	MSG_PLAYER_SAY_BROCAST,
-	// shop 
-	MSG_SAVE_SHOP_BUY_RECORD,
-	MSG_GET_SHOP_BUY_RECORD,
-	MSG_PLAYER_REQUEST_SHOP_LIST,
-	
-	MSG_PLAYER_RECIEVED_SHOP_ITEM_GIFT,
-	// mission 
-	MSG_GAME_SERVER_SAVE_MISSION_DATA,
-	MSG_GAME_SERVER_GET_MISSION_DATA,
-	MSG_PLAYER_REQUEST_MISSION_LIST,
-	MSG_PLAYER_NEW_MISSION_FINISHED,
-	MSG_PLAYER_REQUEST_MISSION_REWORD,
-
-	// online box 
-	MSG_PLAYER_REQUEST_ONLINE_BOX_REWARD,
-	MSG_PLAYER_REQUEST_ONLINE_BOX_STATE,
-
-	// room common msg ;
-	MSG_ROOM_MSG_BEGIN,
-	MSG_ROOM_RET,
-	MSG_ROOM_SPEAK,
-	MSG_ROOM_OTHER_SPEAK,  
-	MSG_ROOM_REQUEST_PEER_DETAIL,
-	MSG_ROOM_KICK_PEER,
-	MSG_ROOM_OTHER_KICK_PEER,
-	MSG_ROOM_EXE_BE_KICKED,
-	MSG_ROOM_PROCESSE_KIKED_RESULT,
-
-	MSG_ROOM_ENTER,
-	//MSG_ROOM_PLAYER_ENTER,  // MSG_ROOM_PLAYER_x means other player actions 
-	MSG_PLAYER_FOLLOW_TO_ROOM, // zhui zong pai ju 
-
-	MSG_ROOM_LEAVE,
-	//MSG_ROOM_PLAYER_LEAVE,
-	// private room 
-	MSG_PLAYER_CREATE_PRIVATE_ROOM,  // create private Room ;
-
-	// message for robot 
-	MSG_ROBOT_ORDER_TO_ENTER_ROOM = 25000,
-	MSG_ROBOT_APPLY_TO_LEAVE,
-	MSG_ROBOT_CHECK_BIGGIEST,
-	MSG_ROBOT_INFORM_IDLE,
-	
-	// all room msg above ,
-
-	// golden room 
-	MSG_GOLDEN_ROOM_ENTER,
-	MSG_GOLDEN_ROOM_LEAVE,
-	MSG_GOLDEN_ROOM_INFO,
-	MSG_GOLDEN_ROOM_STATE,
-
-	MSG_GOLDEN_ROOM_PLAYER_SHOW_CARD,
-	MSG_GOLDEN_ROOM_SHOW_CARD,
-
-	MSG_GOLDEN_ROOM_PLAYER_CHANGE_CARD,
-	MSG_GOLDEN_ROOM_CHANGE_CARD,
-
-	MSG_GOLDEN_ROOM_PLAYER_PK_TIMES,
-	MSG_GOLDEN_ROOM_PK_TIMES,
-
-	MSG_GOLDEN_ROOM_PLAYER_READY,
-	MSG_GOLDEN_ROOM_READY,
-
-	
-	MSG_GOLDEN_ROOM_INFORM_ACT,
-	
-	//MSG_GOLDEN_ROOM_PLAYER_LOOK,
-	//MSG_GOLDEN_ROOM_LOOK,
-	
-	MSG_GOLDEN_ROOM_PLAYER_GIVEUP,
-	MSG_GOLDEN_ROOM_GIVEUP,
-
-	MSG_GOLDEN_ROOM_PLAYER_FOLLOW,
-	MSG_GOLDEN_ROOM_FOLLOW,
-
-	MSG_GOLDEN_ROOM_PLAYER_ADD,
-	MSG_GOLDEN_ROOM_ADD,
-
-	MSG_GOLDEN_ROOM_PLAYER_PK,
-
-	MSG_GOLDEN_ROOM_RESULT,
 };

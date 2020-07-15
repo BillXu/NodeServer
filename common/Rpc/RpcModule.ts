@@ -209,7 +209,7 @@ export class RpcModule extends IModule
         this.mDelayRespRequest.clear();
     }
 
-    onLogicMsg( msgID : eMsgType , msg : Object, orgID : number , orgPort : eMsgPort ) : boolean 
+    onLogicMsg( msgID : eMsgType , msg : Object, orgID : number , orgPort : eMsgPort,targetID : number ) : boolean 
     {
         if ( eMsgType.MSG_RPC_REQUEST == msgID )
         {

@@ -1,3 +1,4 @@
+import { merge } from 'lodash';
 import { ePlayerNetState } from './../common/commonDefine';
 import { eRpcFuncID } from './../common/Rpc/RpcFuncID';
 import { IServerNetworkDelegate, ServerNetwork } from './../common/Net/ServerNetwork';
@@ -101,6 +102,29 @@ class GateSvr extends IServerApp implements IServerNetworkDelegate
     {
         super.init(jsCfg) ;
         this.mPort = jsCfg["port"] ;
+
+        let self = this ;
+        this.getRpc().registerRPC(eRpcFuncID.Func_OtherLogin, ( reqSieralNum : number , reqArg : Object )=>{
+            let sessionID = reqArg["sessionID"] ;
+            let uid = reqArg["uid"] ;
+            let mapUID = self.mSessionIDmapUID.get(sessionID) ;
+            if ( mapUID == null )
+            {
+                XLogger.error( "we don't have session id , why other login uid = " + uid + " session id = " + sessionID ) ;
+                return {} ;
+            } 
+
+            if ( uid != mapUID )
+            {
+                XLogger.error( "uid not the same , how to other login ? uid = " + uid + " map uid = " + mapUID ) ;
+                return {} ;
+            }
+
+            XLogger.debug( "other login do close session = " + sessionID ) ;
+            self.mSessionIDmapUID.delete(uid) ;
+            self.mNetForClients.closeSession(sessionID) ;
+            return {} ;
+        })
     }
 
     onRegistedToCenter( svrIdx : number , svrMaxCnt : number )
@@ -152,7 +176,9 @@ class GateSvr extends IServerApp implements IServerNetworkDelegate
 
     isPeerNeedWaitReconnected( nSessionID : number ) : boolean 
     {
-        return true ;
+        let isNeed = this.mSessionIDmapUID.has(nSessionID) ; 
+        XLogger.debug( "sessionID =  " + nSessionID + ( isNeed ? " need wait reconnect" : " do not need wait reconnect" ) ) ;
+        return isNeed ;
     }
 
     onPeerConnected( nSessionID : number, ip : string ) : void 
@@ -302,6 +328,24 @@ class GateSvr extends IServerApp implements IServerNetworkDelegate
             
             if ( 0 == ret )
             {
+                let lastUID = self.mSessionIDmapUID.get( nSessionID ); 
+                if ( lastUID != null )
+                {
+                    if ( lastUID == result["uid"] )
+                    {
+                        XLogger.warn( "session id already bind uid , why login twice ? uid = " + result["uid"] + "sessionID" ) ;
+                        return ;
+                    }
+                    else
+                    {
+                        XLogger.debug( "same connection , change other account , then disconnect pre account last uid = " + lastUID + " curUID = " + result["uid"] ) ;
+                        let darg = {} ;
+                        darg["uid"] = lastUID;
+                        darg["state"] = ePlayerNetState.eState_Disconnected ;
+                        this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, lastUID , eRpcFuncID.Func_InformPlayerNetState, darg ) ;
+                    }
+                }
+
                 self.mSessionIDmapUID.set( nSessionID, result["uid"] ) ;
                 let argLogin = {} ;
                 argLogin["sessionID"] = nSessionID ;
@@ -313,4 +357,3 @@ class GateSvr extends IServerApp implements IServerNetworkDelegate
         } ) ;
     }
 }
-
