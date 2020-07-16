@@ -18,18 +18,60 @@
             "name": "gateSvr",
   
             //"program": "${workspaceFolder}/build/gateServer/GateSvr.js",
-            "program": "${workspaceFolder}/gateServer/GateSvr.ts",
+            "program": "${workspaceFolder}/gateServer/index.ts",
             "preLaunchTask": "tsc: build - gateServer/tsconfig.json",
             //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
             "outFiles": ["${workspaceFolder}/build/**/*.js"]
         },
         
         {
+  
+          "type": "node",
+    
+          "request": "launch",
+    
+          "name": "CenterSvr",
+    
+          "program": "${workspaceFolder}/centerServer/index.ts",
+          "preLaunchTask": "tsc: build - centerServer/tsconfig.json",
+          //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
+          "outFiles": ["${workspaceFolder}/build/**/*.js"]
+        },
+
+        {
+  
+          "type": "node",
+    
+          "request": "launch",
+    
+          "name": "DataSvr",
+    
+          "program": "${workspaceFolder}/dataServer/index.ts",
+          "preLaunchTask": "tsc: build - dataServer/tsconfig.json",
+          //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
+          "outFiles": ["${workspaceFolder}/build/**/*.js"]
+        },
+
+        {
+  
+          "type": "node",
+    
+          "request": "launch",
+    
+          "name": "DBSvr",
+    
+          "program": "${workspaceFolder}/DBServer/index.ts",
+          "preLaunchTask": "tsc: build - DBServer/tsconfig.json",
+          //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
+          "outFiles": ["${workspaceFolder}/build/**/*.js"]
+        },
+
+        {
           "name": "Current TS File",
           "type": "node",
           "request": "launch",
           "args": [
-            "${workspaceFolder}/gateServer/GateSvr.ts" // 入口文件
+            "${workspaceFolder}/gateServer/index.ts" // 入口文件
           ],
           "runtimeArgs": [
             "-r",
@@ -37,23 +79,6 @@
             "ts-node/register"
           ]
         },
-  
-      {
-  
-        "type": "node",
-  
-        "request": "launch",
-  
-        "name": "CenterSvr",
-  
-        "program": "${workspaceFolder}/centerServer/CenterSvr.ts",
-        "preLaunchTask": "tsc: build - centerServer/tsconfig.json",
-        //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
-        "outFiles": ["${workspaceFolder}/build/**/*.js"]
-  
-      }
-  
-  
-  
+
     ]
   }

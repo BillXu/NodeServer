@@ -12,9 +12,9 @@ export class DBSvr extends IServerApp
     {
         super.init(jsCfg) ;
         this.mPoolConfig = {} ;
-        this.mPoolConfig.host = jsCfg["ip"] ;
+        this.mPoolConfig.host = jsCfg["dbhost"] ;
         this.mPoolConfig.user = jsCfg["user"] ;
-        this.mPoolConfig.password = jsCfg["password"] ;
+        this.mPoolConfig.password = jsCfg["pwd"] ;
         this.mPoolConfig.database = jsCfg["db"] ;
 
         this.getRpc().registerRPC( eRpcFuncID.Func_ExcuteSql, this.rpcExcuteSql.bind(this) ) ;
@@ -121,6 +121,3 @@ export class DBSvr extends IServerApp
         }  ) ;
     }
 }
-
-let svr = new DBSvr();
-svr.init(null) ;

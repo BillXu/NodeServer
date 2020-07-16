@@ -1,17 +1,23 @@
+import { IServer } from './../common/Application';
 import HashMap  from 'hashmap';
 import { ServerGroup } from './ServerGroup';
 import { XLogger } from './../common/Logger';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { IServerNetworkDelegate, ServerNetwork } from "../common/Net/ServerNetwork";
 
-class CenterSvr implements IServerNetworkDelegate
+export class CenterSvr implements IServerNetworkDelegate , IServer
 {
     mSvr = new ServerNetwork();
     mSvrInfoGroups : HashMap<eMsgPort,ServerGroup> = new HashMap<eMsgPort,ServerGroup>() ;
-    init()
+    init( cfg : Object )
     {
         console.log( "server setup port = 3000" ) ;
-        this.mSvr.setup(3000, this ) ;
+        this.mSvr.setup( cfg["port"] , this ) ;
+    }
+
+    getLocalPortType() : eMsgPort 
+    {
+        return eMsgPort.ID_MSG_PORT_CENTER ;
     }
 
     secondsForWaitReconnect() : number 
@@ -165,7 +171,3 @@ class CenterSvr implements IServerNetworkDelegate
         }
     }
 }
-
-let s = new CenterSvr();
-s.init() ;
-XLogger.info( "svr start" ) ;

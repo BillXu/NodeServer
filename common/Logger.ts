@@ -1,7 +1,7 @@
 import { configure, getLogger, Logger } from "log4js";
 export class XLogger
 {
-    protected static s_use_console = true ;
+    protected static s_use_console = false ;
     protected loger : Logger = null  ;
     protected static s_logger : XLogger = null ;
 
@@ -30,7 +30,7 @@ export class XLogger
 
     static debug( str : string )
     {
-        if ( this.s_use_console )
+        if ( XLogger.s_use_console )
         {
             console.log( XLogger.timeStr() + str );
         }
@@ -42,7 +42,7 @@ export class XLogger
 
     static info( str : string )
     {
-        if ( this.s_use_console )
+        if ( XLogger.s_use_console )
         {
             console.info( XLogger.timeStr() + str  );
         }
@@ -54,7 +54,7 @@ export class XLogger
 
     static warn( str : string )
     {
-        if ( this.s_use_console )
+        if ( XLogger.s_use_console )
         {
             console.info( XLogger.timeStr() + str );
         }
@@ -66,7 +66,7 @@ export class XLogger
 
     static error( str : string )
     {
-        if ( this.s_use_console )
+        if ( XLogger.s_use_console )
         {
             console.error( XLogger.timeStr() + str );
         }

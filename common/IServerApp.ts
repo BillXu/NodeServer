@@ -4,6 +4,7 @@ import { XLogger } from './Logger';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { Network, INetworkDelegate } from './Net/Network';
 import { RpcModule } from './Rpc/RpcModule';
+import { IServer } from './Application';
 
 export interface IFuncMsgCallBack
 {
@@ -11,7 +12,7 @@ export interface IFuncMsgCallBack
     (msgID : eMsgType , msg : Object, orgID : number , orgPort : eMsgPort , opts : { canOtherProcess : boolean }  ) : boolean ;
 }
 
-export abstract class IServerApp implements INetworkDelegate
+export abstract class IServerApp implements INetworkDelegate , IServer
 {
     protected mNet : Network = null ;
     protected mCurSvrIdx : number = 0 ;
@@ -22,7 +23,7 @@ export abstract class IServerApp implements INetworkDelegate
     {
         this.mNet = new Network();
         this.mNet.setDelegate(this) ;
-        this.mNet.connect( jsCfg["dstIP"] ) ;
+        this.mNet.connect( jsCfg["centerIP"] ) ;
         this.mCallBacks.clear();
 
         this.registerModule( new RpcModule() ) ;
@@ -56,7 +57,7 @@ export abstract class IServerApp implements INetworkDelegate
         XLogger.info( "server disconnect" ) ;
         for ( let v of this.mModules )
         {
-            this.onDisconnected();
+            v.onDisconnected();
         }
     }
 
@@ -187,7 +188,7 @@ export abstract class IServerApp implements INetworkDelegate
         XLogger.warn( "svr port = " + port + " disconnected idx = " + idx + " maxCnt = " + maxCnt  ) ;
         for ( let v of this.mModules )
         {
-            this.onOtherServerDisconnect(port, idx, maxCnt ) ;
+            v.onOtherServerDisconnect(port, idx, maxCnt ) ;
         }
     }
 
@@ -196,7 +197,7 @@ export abstract class IServerApp implements INetworkDelegate
         XLogger.info( "registed to center , svrIdx = " + svrIdx + " maxCnt = " + svrMaxCnt ) ;
         for ( let v of this.mModules )
         {
-            this.onRegistedToCenter(svrIdx, svrMaxCnt) ;
+            v.onRegistedToCenter(svrIdx, svrMaxCnt) ;
         }
     }
 

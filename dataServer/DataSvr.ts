@@ -1,6 +1,5 @@
 import { XLogger } from './../common/Logger';
 import { PlayerSimpleInfoCacher } from './PlayerSimpleInfoCacher';
-import { eMsgType } from './../shared/MessageIdentifer';
 import { IServerApp } from "../common/IServerApp";
 import { eMsgPort } from "../shared/MessageIdentifer";
 import { PlayerMgr } from './PlayerMgr';
@@ -11,6 +10,8 @@ export class DataSvr extends IServerApp
     init( jsCfg : Object )
     {
         super.init(jsCfg) ;
+        this.registerModule( new PlayerMgr() ) ;
+        this.registerModule( new PlayerSimpleInfoCacher() ) ;
     }
 
     onRegistedToCenter( svrIdx : number , svrMaxCnt : number )

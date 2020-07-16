@@ -1,98 +1,13 @@
-import { merge } from 'lodash';
 import { ePlayerNetState } from './../common/commonDefine';
 import { eRpcFuncID } from './../common/Rpc/RpcFuncID';
 import { IServerNetworkDelegate, ServerNetwork } from './../common/Net/ServerNetwork';
 import { IServerApp } from './../common/IServerApp';
-import { TestPwd } from './TestPwd';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { XLogger } from './../common/Logger';
-import { Network, INetworkDelegate } from './../common/Net/Network';
+import { Network } from './../common/Net/Network';
 import HashMap from "hashmap"
-export class TestClientNet implements INetworkDelegate
-{
-    mNet : Network = null ;
-    mSendmsgTimer : NodeJS.Timeout = null ;
-    mT : HashMap<number,string> = new HashMap<number,string>() ;
-    mc : TestPwd = new TestPwd(); ;
-    init()
-    {
-        this.mc.printC();
 
-        this.mNet = new Network();
-        this.mNet.connect("ws://localhost:3000" ) ;
-        this.mNet.setDelegate(this) ;
-
-        this.mT.set(1, "hello" ) ;
-        this.mT.set(3, "hello 2222" ) ;
-        this.mT.forEach( ( value , key )=>{
-            XLogger.debug( "value = " + value + "  key out = " + key + " type = " + typeof key )  ;
-        } );
-
-        let tp = this.mT.get(10) ;
-        let hk = this.mT.has(10) ;
-        if ( tp == null )
-        {
-            XLogger.debug( "key with 10 is null : " + hk  ) ;
-        }
-        //XLogger.debug( "value is = " + this.mT[1] + "  " + this.mT["1"] ) ;
-    }
-
-    onVerifyResult( isOk : boolean ) : void
-    {
-        XLogger.debug( "connect verify result :  " + ( isOk ? "ok" : "failed") ) ;
-        if ( false == isOk )
-        {
-            {
-                clearTimeout( this.mSendmsgTimer ) ;
-            }
-        }
-    }
-
-    onConnectResult( isOK : boolean ) : void 
-    {
-        XLogger.debug( "onConnectResult result :  " + ( isOK ? "ok" : "failed") ) ;
-        if ( isOK )
-        {
-            let self = this ;
-            let js = { a : "this is a test mesg" } ;
-            this.mSendmsgTimer = setInterval( ()=>{ self.mNet.sendMsg(12,js)}, 5000 ) ;
-        }
-        else
-        {
-            clearTimeout( this.mSendmsgTimer ) ;
-        }
-    }
-
-    onDisconnected() : void 
-    {
-        XLogger.debug( "disconencted " ) ;
-    }
-
-    onMsg( msgID : eMsgType , msg : Object ) : void 
-    {
-       XLogger.debug( "recieved msg : " + msg ) ; 
-    }
-
-    onReconectedResult( isOk : boolean ) : void 
-    {
-        XLogger.debug( "onReconectedResult result :  " + ( isOk ? "ok" : "failed") ) ;
-
-        if ( isOk )
-        {
-            let self = this ;
-            let js = { a : "onReconectedResult this is a test mesg" } ;
-            this.mSendmsgTimer = setInterval( ()=>{ self.mNet.sendMsg(12,js)}, 5000 ) ;
-        }
-        else
-        {
-            clearTimeout( this.mSendmsgTimer ) ;
-        }
-    }
-}
-
-
-///-------use full
-class GateSvr extends IServerApp implements IServerNetworkDelegate
+export class GateSvr extends IServerApp implements IServerNetworkDelegate
 {
     protected mNetForClients : ServerNetwork = null ;
     protected mPort : number = 0 ;
@@ -357,3 +272,4 @@ class GateSvr extends IServerApp implements IServerNetworkDelegate
         } ) ;
     }
 }
+
