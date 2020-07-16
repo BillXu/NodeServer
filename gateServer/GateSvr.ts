@@ -1,3 +1,4 @@
+import { key } from './../shared/KeyDefine';
 import { ePlayerNetState } from './../common/commonDefine';
 import { eRpcFuncID } from './../common/Rpc/RpcFuncID';
 import { IServerNetworkDelegate, ServerNetwork } from './../common/Net/ServerNetwork';
@@ -205,18 +206,18 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
     protected doPlayerRegister( nSessionID : number , jsRegInfo : Object )
     {
         let arg = {} ;
-        arg["account"] = jsRegInfo["account"] ;
-        arg["nickeName"] = jsRegInfo["nickeName"] ;
-        arg["headIconUrl"] = jsRegInfo["headIconUrl"] ;
-        arg["type"] = jsRegInfo["type"] ;
-        arg["sex"] = jsRegInfo["sex"] ;
-        arg["ip"] = this.mNetForClients.getSessionIP( nSessionID ) ;
+        arg[key.account] = jsRegInfo[key.account] ;
+        arg[key.nickeName] = jsRegInfo[key.nickeName] ;
+        arg[key.headIcon] = jsRegInfo[key.headIcon] ;
+        arg[key.type] = jsRegInfo[key.type] ;
+        arg[key.sex] = jsRegInfo[key.sex] ;
+        arg[key.ip] = this.mNetForClients.getSessionIP( nSessionID ) ;
         let self = this ;
         this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DB , Math.ceil( Math.random() * 1000 )  % 1000, eRpcFuncID.Func_Register, arg,( result : Object )=>{
-            let ret = result["ret"] ;
+            let ret = result[key.ret] ;
             XLogger.debug( "session id = " + nSessionID + " registert " + ( ret == 0 ? "success" : "failed" )  ) ;
             jsRegInfo["ret"] = ret ;
-            delete jsRegInfo["nickeName"] ; delete jsRegInfo["headIconUrl"] ;
+            delete jsRegInfo[key.nickeName] ; delete jsRegInfo[key.headIcon] ;
             self.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_PLAYER_REGISTER, jsRegInfo ) ;
             // if ( 0 == ret )
             // {
@@ -234,10 +235,11 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
         let self = this ;
         this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DB , Math.ceil( Math.random() * 1000 )  % 1000, eRpcFuncID.Func_Login, arg,( result : Object )=>{
             let ret = result["ret"] ;
-            XLogger.debug( "session id = " + nSessionID + " login " + ( ret == 0 ? "success" : "failed" )  ) ;
+            let sate = result[key.state] ;
+            XLogger.debug( "session id = " + nSessionID + " login " + ( ret == 0 && sate == 0 ? "success" : "failed" + "ret = " + ret )  ) ;
             if ( 0 != ret )
             {
-                self.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_PLAYER_REGISTER, { ret : ret } ) ;
+                self.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_PLAYER_LOGIN, { ret : ret , state : sate } ) ;
                 return ;
             }
             

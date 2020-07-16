@@ -12,7 +12,7 @@ export enum eRpcFuncID
     Func_Login,
     // arg : { account : "dfagadf" , type : eAccountType } 
     // result: { ret : 0 , uid : 233 }
-    // ret : 0 success , 1 account not exsit ;
+    // ret : 0 success , 1 account not exsit ,2 account was forbiten ;
     Func_DoLogin,
     // arg: { uid : 22, sessionID : 234, ip : "192.168.1.12"  } 
     Func_OtherLogin,

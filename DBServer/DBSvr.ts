@@ -16,18 +16,16 @@ export class DBSvr extends IServerApp
         this.mPoolConfig.user = jsCfg["user"] ;
         this.mPoolConfig.password = jsCfg["pwd"] ;
         this.mPoolConfig.database = jsCfg["db"] ;
-
-        this.getRpc().registerRPC( eRpcFuncID.Func_ExcuteSql, this.rpcExcuteSql.bind(this) ) ;
-        this.rpcTask();
     }
 
     onRegistedToCenter( svrIdx : number , svrMaxCnt : number )
     {
         super.onRegistedToCenter(svrIdx, svrMaxCnt) ;
-
         if ( null == this.mMysqlPool )
         {
             this.mMysqlPool = createPool( this.mPoolConfig ) ;
+            this.getRpc().registerRPC( eRpcFuncID.Func_ExcuteSql, this.rpcExcuteSql.bind(this) ) ;
+            this.rpcTask();
         }
     }
 
@@ -64,18 +62,18 @@ export class DBSvr extends IServerApp
         let mysql = this.mMysqlPool;
         rpc.registerRPC( eRpcFuncID.Func_Register, ( reqSieralNum : number , arg : Object )=>{
             // arg : { account : "dfagadf" , type : eAccountType , nickeName : "name" , headIconUrl : "http://www.baidu.com" ,sex : eSex , ip : "192.168.1.23" }
-            mysql.query( "call register(?,?,?,?,?,?);",[arg["account"],arg["type"],arg["nickeName"],arg["headIconUrl"],arg["sex"],arg["ip"]],(err : MysqlError ,result : any )=>{
+            mysql.query( "call register(?,?,?,?,?,?);",[arg[key.account],arg[key.type],arg[key.nickeName],arg[key.headIcon],arg[key.sex],arg[key.ip]],(err : MysqlError ,result : any )=>{
                 if ( err != null )
                 {
                     let js = {} ;
-                    js["ret"] = 1;
+                    js[key.ret] = 1;
                     rpc.pushDelayResult(reqSieralNum, js ) ;
                     XLogger.error( "failed sql : " + err.sql ) ;
                     return ;
                 }
     
                 let js = {} ;
-                js["ret"] = 0 ;
+                js[key.ret] = 0 ;
                 js["result"] = result[0][0]["curMaxUID"] ;
                 rpc.pushDelayResult(reqSieralNum, js ) ;
                 XLogger.debug( "register ok js = " + JSON.stringify(js) ) ;
@@ -85,21 +83,30 @@ export class DBSvr extends IServerApp
 
         rpc.registerRPC( eRpcFuncID.Func_Login, ( reqSieralNum : number , arg : Object )=>{
             // arg : { account : "dfagadf" , type : eAccountType } 
-            mysql.query( "call login(?,?);", [ arg["account"] , arg["type"] ] ,(err : MysqlError ,result : any )=>{
+            mysql.query( "call login(?,?);", [ arg[key.account] , arg[key.type] ] ,(err : MysqlError ,result : any )=>{
                 if ( err != null )
                 {
                     let js = {} ;
                     js["ret"] = 1;
                     rpc.pushDelayResult(reqSieralNum, js ) ;
-                    XLogger.error( "failed sql : " + err.sql + " error : " + err.sqlMessage ) ;
+                    XLogger.error( "failed sql : " + err.sql + " error : " + err.message ) ;
                     return ;
                 }
     
                 let js = {} ;
-                js["ret"] = 0;
-                js["uid"] = result[0][0]["uid"];
+                js[key.ret] = 0;
+                js[key.uid] = result[0][0][key.uid];
+                js[key.state] = result[0][0][key.state];
+                if ( js[key.uid] == 0 )
+                {
+                    js[key.ret] = 1 ;
+                }
+                else if ( js[key.state] != 0 )
+                {
+                    js[key.ret] = 2 ;
+                }
                 rpc.pushDelayResult(reqSieralNum, js ) ;
-                XLogger.debug("login success = " + js["uid"] ) ;
+                XLogger.debug("login finish = " + js[key.uid] + " " + JSON.stringify(result)) ;
             } ) ;
             return null ;
         } ) ;

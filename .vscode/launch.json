@@ -9,6 +9,21 @@
   
     "configurations": [
   
+          {
+
+            "type": "node",
+
+            "request": "launch",
+
+            "name": "TestClient",
+
+            //"program": "${workspaceFolder}/build/gateServer/GateSvr.js",
+            "program": "${workspaceFolder}/Test/TestClient.ts",
+            "preLaunchTask": "tsc: build - Test/tsconfig.json",
+            //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
+            "outFiles": ["${workspaceFolder}/build/**/*.js"]
+        },
+
         {
   
             "type": "node",

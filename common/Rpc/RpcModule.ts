@@ -38,7 +38,7 @@ export interface IRPCResultFunc
 export class RpcModule extends IModule
 {
     protected mSendingRequests : HashMap<number,RPCRequest> = new HashMap<number,RPCRequest>() ;
-    protected mDelayRespRequest : HashMap<number,RpcDelayRespRequest> = null ;
+    protected mDelayRespRequest : HashMap<number,RpcDelayRespRequest> = new HashMap<number,RpcDelayRespRequest>();
     protected mRPCFuncs : HashMap<eRpcFuncID,IRPCFunc> = new HashMap<eRpcFuncID,IRPCFunc>();
     protected mMaxSierlNum : number = -1 ;
     protected mRetryTimer : NodeJS.Timeout = null ;
@@ -114,6 +114,8 @@ export class RpcModule extends IModule
         jsBack["state"] = 0 ;
         jsBack["result"] = result;
         this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, dr.targetPort, dr.targetID, this.getSvrApp().getCurSvrIdx() ) ;
+
+        this.mDelayRespRequest.delete(sieralNum) ;
     }
 
     canncelRpc( sieralNum : number )
@@ -180,7 +182,7 @@ export class RpcModule extends IModule
         {
             this.mSendingRequests.delete(d) ;
         }
-        XLogger.debug( "sending request for rpc cnt = " + this.mSendingRequests.count() ) ;
+        XLogger.debug( "sending request for rpc cnt = " + this.mSendingRequests.count() + " delay respone cnt = " + this.mDelayRespRequest.count() ) ;
     }
 
     protected generateSieralNum() : number
@@ -230,6 +232,19 @@ export class RpcModule extends IModule
 
             if ( this.mDelayRespRequest.has( sieralNum ) )
             {
+                let rd = this.mDelayRespRequest.get(sieralNum);
+                if ( rd.targetID != orgID )
+                {
+                    XLogger.warn( "put delay respone again but id not equal = " + orgID + " old = " + rd.targetID ) ;
+                    rd.targetID = orgID ;
+                }
+
+                if ( rd.targetPort != orgPort )
+                {
+                    XLogger.warn( "put delay respone again but port not equal = " + orgPort + " old = " + rd.targetPort ) ;
+                    rd.targetPort = orgPort ;
+                }
+                
                 XLogger.warn( "already put in delay respone sieral = " + sieralNum ) ;
                 return true ;
             }

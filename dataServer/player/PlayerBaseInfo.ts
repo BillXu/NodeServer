@@ -44,6 +44,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
     onOtherLogin( nNewSessionID : number , ip : string ) : void
     {
         this.ip = ip ;
+        this.sendDataInfoToClient();
     }
 
     onUpdateNetState( state : ePlayerNetState , ip? : string ) : void 

@@ -327,7 +327,7 @@ export class Network extends LocalEventEmitter{
     {
         this.isRecievedHeatBet = true ;
         let offset = Date.now() % (1000*10*1000) - parseInt( data.toString() );
-        XLogger.debug( "ping value = " +  data.toString() + "offset = " + offset );
+        //XLogger.debug( "ping value = " +  data.toString() + "offset = " + offset );
         if ( offset <= 0 )
         {
             offset = 2 ;
@@ -353,7 +353,7 @@ export class Network extends LocalEventEmitter{
         }
         this.isRecievedHeatBet = false ;
         let ping = Date.now() % (1000*10*1000) + "";
-        XLogger.debug( "ping befor value = " +  ping );
+        //XLogger.debug( "ping befor value = " +  ping );
         this.mWebSocket.ping(ping) ;
     }
 

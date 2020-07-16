@@ -1,7 +1,7 @@
 import { configure, getLogger, Logger } from "log4js";
 export class XLogger
 {
-    protected static s_use_console = false ;
+    protected static s_use_console = true ;
     protected loger : Logger = null  ;
     protected static s_logger : XLogger = null ;
 

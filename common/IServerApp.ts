@@ -63,9 +63,15 @@ export abstract class IServerApp implements INetworkDelegate , IServer
 
     onMsg( msgID : eMsgType , msg : Object ) : void 
     {
+
         if ( msgID == eMsgType.MSG_TRANSER_DATA )
         {
-            this.onLogicMsg(msg["msg"][Network.MSG_ID], msg["msg"], msg["orgID"], msg["orgPort"],msg["dstID"] ) ;
+            try {
+                this.onLogicMsg(msg["msg"][Network.MSG_ID], msg["msg"], msg["orgID"], msg["orgPort"],msg["dstID"] ) ;
+            } catch (err) {
+                XLogger.error( "message : " + err.message ) ;
+                XLogger.error( "exception : " + err.stack ) ;
+            }
         }
         else if ( msgID == eMsgType.MSG_SERVER_DISCONNECT )
         {

@@ -33,7 +33,7 @@ let jsCfg =
     db : 
     {
         centerIP : "ws://localhost:3000",
-        dbhost : "localhost:3306",
+        dbhost : "localhost",
         user : "root",
         pwd : "realbull",
         db : "game",
