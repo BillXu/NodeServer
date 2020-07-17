@@ -12,7 +12,7 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
     mSvrInfoGroups : HashMap<eMsgPort,ServerGroup> = new HashMap<eMsgPort,ServerGroup>() ;
     init( cfg : Object )
     {
-        console.log( "server setup port = " + cfg["port"] ) ;
+        XLogger.info( "server setup port = " + cfg["port"] ) ;
         this.mSvr.setup( cfg["port"] , this ) ;
     }
 
@@ -77,10 +77,11 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
         let idx = -1 ;
         for ( let v of vg )
         {
-            if ( v.removeSvr( nSessionID )  )
+            idx = v.getSvrIdxBySessionID( nSessionID ) ;
+            if ( -1 != idx )
             {
+                v.removeSvr( nSessionID )
                 port = v.mPortType ;
-                idx = v.getSvrIdxBySessionID( nSessionID ) ;
                 break ;
             }
         }
@@ -95,7 +96,7 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
         jsInfoDisconnect["port"] = port ;
         jsInfoDisconnect["idx"] = idx ;
         jsInfoDisconnect["maxCnt"] = this.mSvrInfoGroups.get(port).mMaxCnt;
-        this.brocastAllServer( eMsgType.MSG_SERVER_DISCONNECT, jsInfoDisconnect , nSessionID ) ;
+        this.mSvr.brocastMsg(eMsgType.MSG_SERVER_DISCONNECT, jsInfoDisconnect );
 
         XLogger.debug( "server disconnected port = " + eMsgPort[port] + " idx = " + idx  ) ;
         this.state();
@@ -158,26 +159,27 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
         }
     }
 
-    protected brocastAllServer( msgID : eMsgType , msg : Object, exceptSesionID : number  )
-    {
-        let vg = this.mSvrInfoGroups.values();
-        let targetSessionID = [] ;
-        for ( let v of vg )
-        {
-             targetSessionID.push( v.getTargetSvrs(-1) );
-        }
+    // protected brocastAllServer( msgID : eMsgType , msg : Object, exceptSesionID : number  )
+    // {
+    //     let vg = this.mSvrInfoGroups.values();
+    //     let targetSessionID = [] ;
+    //     for ( let v of vg )
+    //     {
+    //          targetSessionID.push( v.getTargetSvrs(-1) );
+    //          targetSessionID.push()
+    //     }
 
-        let idx = targetSessionID.indexOf(exceptSesionID) ;
-        if ( idx >= 0 )
-        {
-            targetSessionID.splice(idx,1);
-        }
+    //     let idx = targetSessionID.indexOf(exceptSesionID) ;
+    //     if ( idx >= 0 )
+    //     {
+    //         targetSessionID.splice(idx,1);
+    //     }
         
-        for ( let s of targetSessionID )
-        {
-            this.mSvr.sendMsg(s , msgID, msg );
-        }
-    }
+    //     for ( let s of targetSessionID )
+    //     {
+    //         this.mSvr.sendMsg(s , msgID, msg );
+    //     }
+    // }
 
     state()
     {

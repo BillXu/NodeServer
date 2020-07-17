@@ -94,7 +94,7 @@ export class Application
         } 
         XLogger.info( "effect cfg = " + JSON.stringify(svrCfg) ) ;
         this.mSvr.init(svrCfg) ;
-        XLogger.info( "svr started" ) ;
+        //XLogger.info( "svr started" ) ;
     }
 
    protected getCfgForSvr( port : eMsgPort ) : string 

@@ -144,7 +144,7 @@ export class ServerGroup
 
     state()
     {
-        XLogger.debug("state :  port = " + eMsgPort[this.mPortType] + "svrCnt = " + this.mSvrInfos.count() + " maxCnt = " + this.mMaxCnt ) ;
+        XLogger.debug("state :  port = " + eMsgPort[this.mPortType] + " svrCnt = " + this.mSvrInfos.count() + " maxCnt = " + this.mMaxCnt ) ;
         let vs = this.mSvrInfos.values() ;
         for ( let v of vs )
         {

@@ -294,7 +294,15 @@ export class Network extends LocalEventEmitter{
     protected onMsg( ev : WebSocket.MessageEvent )
     {
         //XLogger.debug(" on msg " + ev.data );
-        let msg = JSON.parse(ev.data.toString() ) ;
+        let msg = null ;
+        try {
+             msg = JSON.parse(ev.data.toString() ) ;
+        } catch (err ) {
+            XLogger.debug( "parse msg error " )
+            XLogger.error( "message : " + err.message ) ;
+            XLogger.error( "exception : " + err.stack ) ;
+        }
+        
         if ( msg == null )
         {
             XLogger.error("can not pase set msg : " + ev.data );
@@ -348,7 +356,7 @@ export class Network extends LocalEventEmitter{
         // send heat bet ;
         if ( this.mWebSocket.readyState != WebSocket.OPEN )
         {
-            XLogger.error( "socket is not open , can not send heat bet " );
+            XLogger.error( "socket do not open , can not send heat bet " );
             return ;
         }
 

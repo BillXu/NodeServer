@@ -71,7 +71,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
                 return ;
             }
         }
-        XLogger.warn( "unprocess msg from center msgID = " + eMsgType[msgID] + " msg = " + JSON.stringify(msg) ) ;
+        //XLogger.warn( "unprocess msg from center msgID = " + eMsgType[msgID] + " msg = " + JSON.stringify(msg) ) ;
         super.onMsg(msgID, msg ) ;
     }
 
@@ -105,7 +105,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
 
     onPeerReconnected( nSessionID : number, ip : string, fromSessionID : number ) : void 
     {
-        if ( this.getUidBySessionID(fromSessionID) )
+        if ( -1 != this.getUidBySessionID(fromSessionID) )
         {
             XLogger.error( "why reconnect from a valid peer sessionid = " + fromSessionID ) ;
         }

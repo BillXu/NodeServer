@@ -42,7 +42,7 @@ export abstract class IServerApp implements INetworkDelegate , IServer
 
     onConnectResult( isOK : boolean ) : void 
     {
-        XLogger.info( "server onConnectResult : " + isOK ? "ok" : "failed" ) ;
+        XLogger.info( "server onConnectResult : " + (isOK ? "ok" : "failed") ) ;
         if ( isOK )
         {
             let js = {} ;

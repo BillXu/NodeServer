@@ -90,13 +90,13 @@ export class RpcModule extends IModule
         req.retryedTimes = 1 ;
         this.mSendingRequests.set(req.sieralNum, req ) ;
 
+        XLogger.debug( "invoke RPC = " + eRpcFuncID[funcID] + " sieral  = " + req.sieralNum + "tareget port = " + eMsgPort[targetPort] + " sending queue cnt = " + this.mSendingRequests.count() + " arg : " + JSON.stringify(arg||{}) ) ;
+
         let jsMsg = {} ;
         jsMsg["sieralNum"] = req.sieralNum;
         jsMsg["funcID"] = req.funcID ;
         jsMsg["arg"] = req.arg ;
         this.sendMsg( eMsgType.MSG_RPC_REQUEST, jsMsg, targetPort, targetID, this.getSvrApp().getCurSvrIdx() ) ;
-
-        XLogger.debug( "invoke RPC = " + eRpcFuncID[funcID] + " sieral  = " + req.sieralNum + "tareget port = " + eMsgPort[targetPort] + " sending queue cnt = " + this.mSendingRequests.count() + " arg : " + JSON.stringify(arg||{}) ) ;
         return req.sieralNum ;
     }
 
@@ -109,6 +109,8 @@ export class RpcModule extends IModule
             return ;
         }
 
+        XLogger.debug( "pushDelayResult sieral = " + sieralNum + " target port = " + eMsgPort[dr.targetPort] + " result = " + JSON.stringify(result||{}) ) ;
+
         let jsBack = {} ;
         jsBack["sieralNum"] = sieralNum ;
         jsBack["state"] = 0 ;
@@ -116,7 +118,6 @@ export class RpcModule extends IModule
         this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, dr.targetPort, dr.targetID, this.getSvrApp().getCurSvrIdx() ) ;
 
         this.mDelayRespRequest.delete(sieralNum) ;
-        XLogger.debug( "pushDelayResult sieral = " + sieralNum + " target port = " + eMsgPort[dr.targetPort] + " result = " + JSON.stringify(result||{}) ) ;
     }
 
     canncelRpc( sieralNum : number )
@@ -171,13 +172,14 @@ export class RpcModule extends IModule
                 ++v.retryedTimes;
                 v.nextRetryTime = now + RpcModule.TIME_RETRY * v.retryedTimes ;
                 // do retry ;
+                XLogger.debug( "retry rpc request sieral num = " + v.sieralNum + " funcID = " + eRpcFuncID[v.funcID] + " targetPort = " + eMsgPort[v.targetPort] + " req cnt = " + reqs.length + " arg : " + JSON.stringify(v.arg||{})) ;
+
                 let jsMsg = {} ;
                 jsMsg["sieralNum"] = v.sieralNum;
                 jsMsg["funcID"] = v.funcID ;
                 jsMsg["arg"] = v.arg ;
                 this.sendMsg( eMsgType.MSG_RPC_REQUEST, jsMsg, v.targetPort, v.targetID, this.getSvrApp().getCurSvrIdx() ) ;
-                XLogger.debug( "retry rpc request sieral num = " + v.sieralNum + " funcID = " + eRpcFuncID[v.funcID] + " targetPort = " + eMsgPort[v.targetPort] + " req cnt = " + reqs.length + " arg : " + JSON.stringify(v.arg||{})) ;
-            }
+                            }
         }
 
         for ( let d of vWillDelete )
@@ -246,7 +248,7 @@ export class RpcModule extends IModule
                     rd.targetPort = orgPort ;
                 }
                 
-                XLogger.warn( "already put in delay respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
+                XLogger.debug( "already put in delay respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
                 return true ;
             }
 
@@ -263,16 +265,16 @@ export class RpcModule extends IModule
                 dr.targetID = orgID ;
                 dr.targetPort = orgPort ;
                 this.mDelayRespRequest.set(sieralNum , dr ) ;
-                XLogger.warn( "excute rpc put in delay respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
+                XLogger.debug( "excute rpc put in delay respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
             }
             else
             {
+                XLogger.debug( "rpc respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
                 let jsBack = {} ;
                 jsBack["sieralNum"] = sieralNum ;
                 jsBack["state"] = 0 ;
                 jsBack["result"] = result;
                 this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, orgPort, orgID, this.getSvrApp().getCurSvrIdx() ) ;
-                XLogger.warn( "rpc respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
             }
             return true ;
         }

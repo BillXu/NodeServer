@@ -116,6 +116,7 @@ class ClientPeer
     doReconnect( fromPeer : ClientPeer )
     {
         this.mSocketPeer = fromPeer.mSocketPeer ;
+        this.mReconnectToken = fromPeer.reconnectToken ;
         this.mIP = fromPeer.mIP ;
         this.mSocketPeer.onmessage = this.onMessage.bind(this);
         this.mSocketPeer.onclose = this.onClose.bind(this) ;
@@ -345,7 +346,7 @@ export class ServerNetwork implements IClientPeerDelegate
             }
         }
 
-        XLogger.debug( "brocastMsg = " + JSON.stringify(jsMsg) ) ;
+        XLogger.debug( "brocastMsg msgID " + jsMsg[key.msgID] + " msg =  " + JSON.stringify(jsMsg||{}) ) ;
     }
 
     sendMsg( targetSessionID : number, msgID : number , jsMsg : Object ) : boolean
@@ -404,6 +405,7 @@ export class ServerNetwork implements IClientPeerDelegate
                 let js = {} ;
                 js[key.ret] = 1 ;
                 js[key.sessionID] = nSessionID ;
+                js[key.reconnectToken] = this.mClientPeers.get(nSessionID).reconnectToken;
                 this.sendMsg(nSessionID, msgID, js ) ;
                 return ;
             }
@@ -421,14 +423,16 @@ export class ServerNetwork implements IClientPeerDelegate
             }
 
             target.doReconnect( this.mClientPeers.get(nSessionID) ) ;
+            XLogger.debug( "reconnect ok tareget sessionID = " + targetSessionID  + " this sessionID = " + nSessionID + " ip = " + this.mClientPeers.get(targetSessionID).ip ) ;
+            
             this.mDelegate.onPeerReconnected( targetSessionID, this.mClientPeers.get(targetSessionID).ip, nSessionID );
             this.mClientPeers.get(nSessionID).clear();
             this.mClientPeers.delete(nSessionID) ;
-            XLogger.debug( "reconnect ok tareget sessionID = " + targetSessionID  + " this sessionID = " + nSessionID + " ip = " + this.mClientPeers.get(targetSessionID).ip ) ;
-
+           
             let js = {} ;
             js[key.ret] = 0 ;
             js[key.sessionID] = targetSessionID ;
+            js[key.reconnectToken] = target.reconnectToken;
             this.sendMsg(targetSessionID, msgID, js ) ;
 
             this.state();
