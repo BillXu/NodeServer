@@ -13,6 +13,11 @@ class ServerInfo
         this.svrIdx = idx ;
         this.isWaitingReconnect = false ;
     }
+
+    state()
+    {
+        XLogger.debug( "state : idx = " + this.svrIdx + " sessionID = " + this.sessionID + " isWaitingReconnect = " + this.isWaitingReconnect ) ;
+    }
 }
 
 export class ServerGroup
@@ -42,7 +47,7 @@ export class ServerGroup
         let idx = targetID % this.mMaxCnt ;
         if ( this.mSvrInfos.has(idx) == false )
         {
-            XLogger.warn("target svr idx is null , id = " + targetID + " max cnt = " + this.mMaxCnt ) ;
+           // XLogger.debug("target svr idx is null , id = " + targetID + " max cnt = " + this.mMaxCnt ) ;
             idx = -1 ; // sign not find a proper target ; 
             for ( let i = random(this.mSvrInfos.count(), false ) ; i < this.mMaxCnt * 2 ; ++i )
             {
@@ -101,7 +106,7 @@ export class ServerGroup
             }
         }
 
-        XLogger.warn("overflow max svr cnt , porttype = " + this.mPortType ) ;
+        XLogger.warn("server group is full , Port = " + eMsgPort[this.mPortType] + " maxCnt = " + this.mMaxCnt ) ;
         return -1 ;
     }
 
@@ -112,7 +117,7 @@ export class ServerGroup
         {
             if ( v[1].sessionID == sessionID )
             {
-                XLogger.debug( "do remove svr session id = " + sessionID + " portType = " + this.mPortType ) ;
+                //XLogger.debug( "do remove svr session id = " + sessionID + " portType = " + this.mPortType ) ;
                 this.mSvrInfos.delete(v[0]);
                 return true ;
             }
@@ -135,5 +140,15 @@ export class ServerGroup
         }
 
         return false ;
+    }
+
+    state()
+    {
+        XLogger.debug("state :  port = " + eMsgPort[this.mPortType] + "svrCnt = " + this.mSvrInfos.count() + " maxCnt = " + this.mMaxCnt ) ;
+        let vs = this.mSvrInfos.values() ;
+        for ( let v of vs )
+        {
+            v.state();
+        }
     }
 }

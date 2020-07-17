@@ -1,3 +1,4 @@
+import { key } from './../shared/KeyDefine';
 import { IServer } from './../common/Application';
 import HashMap  from 'hashmap';
 import { ServerGroup } from './ServerGroup';
@@ -11,7 +12,7 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
     mSvrInfoGroups : HashMap<eMsgPort,ServerGroup> = new HashMap<eMsgPort,ServerGroup>() ;
     init( cfg : Object )
     {
-        console.log( "server setup port = 3000" ) ;
+        console.log( "server setup port = " + cfg["port"] ) ;
         this.mSvr.setup( cfg["port"] , this ) ;
     }
 
@@ -22,28 +23,28 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
 
     secondsForWaitReconnect() : number 
     {
-        return 60 ;
+        return 0 ;
     }
 
     cacheMsgCntWhenWaitingReconnect() : number 
     {
-        return 100000 ;
+        return 0 ;
     }
 
     isPeerNeedWaitReconnected( nSessionID : number ) : boolean 
     {
-        return true ;
+        return false ;
     }
 
     onPeerConnected( nSessionID : number, ip : string ) : void 
     {
         
-        XLogger.debug( "a player connected ip =  " + ip + " session id = " + nSessionID ) ;
+        //XLogger.debug( "a player connected ip =  " + ip + " session id = " + nSessionID ) ;
     }
 
     onPeerReconnected( nSessionID : number, ip : string, fromSessionID : number ) : void 
     {
-        XLogger.debug( "a player reconnected ip =  " + ip + " session id = " + nSessionID + "from session id = " + fromSessionID ) ;
+        //XLogger.debug( "a player reconnected ip =  " + ip + " session id = " + nSessionID + "from session id = " + fromSessionID ) ;
         let vg = this.mSvrInfoGroups.values();
         for ( let v of vg )
         {
@@ -57,7 +58,7 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
 
     onPeerWaitingReconect( nSessionID : number ) : void 
     {
-        XLogger.debug( "a player is waiting reconnect session id = " + nSessionID ) ;
+       // XLogger.debug( "a player is waiting reconnect session id = " + nSessionID ) ;
         let vg = this.mSvrInfoGroups.values();
         for ( let v of vg )
         {
@@ -71,7 +72,6 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
 
     onPeerDisconnected( nSessionID : number ) : void 
     {
-        XLogger.debug( "a player disconnect sessionID = " + nSessionID ) ;
         let vg = this.mSvrInfoGroups.values();
         let port = eMsgPort.ID_MSG_PORT_MAX ;
         let idx = -1 ;
@@ -87,7 +87,7 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
 
         if ( idx == -1 )
         {
-            XLogger.warn( "can not find disconnect svr sessionID = " + nSessionID ) ;
+            XLogger.warn( "can not find disconnect svr with sessionID = " + nSessionID ) ;
             return ;
         }
         // tell other svr 
@@ -96,6 +96,9 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
         jsInfoDisconnect["idx"] = idx ;
         jsInfoDisconnect["maxCnt"] = this.mSvrInfoGroups.get(port).mMaxCnt;
         this.brocastAllServer( eMsgType.MSG_SERVER_DISCONNECT, jsInfoDisconnect , nSessionID ) ;
+
+        XLogger.debug( "server disconnected port = " + eMsgPort[port] + " idx = " + idx  ) ;
+        this.state();
         return ;
     }
 
@@ -113,20 +116,21 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
             let targetGroup = this.mSvrInfoGroups.get(targetPort) ;
             if ( null == targetGroup )
             {
-                XLogger.error( "targtport svr is empty port = " + targetPort + " id = " + targetID + " msg : " + JSON.stringify(jsMsg) ) ;
+                XLogger.error( "TransferData Error , can not find port = " + eMsgPort[targetPort] + " msgTargetID = " + targetID + " msg : " + JSON.stringify(jsMsg["msg"]) + " orginMsgID = " + eMsgType[jsMsg["msg"][key.msgID]] ) ;
                 return ;
             }
 
             let vSvrs = targetGroup.getTargetSvrs(targetID) ;
             if ( vSvrs == null || vSvrs.length == 0 )
             {
-                XLogger.error( "can not find proper target , with targtport svr is empty port = " + targetPort + " id = " + targetID + " msg : " + JSON.stringify(jsMsg) ) ;
+                XLogger.error( "Can not find dstSvr in portGroup = " + eMsgPort[targetPort] + "with targetID = " + targetID + " msg : " + JSON.stringify(jsMsg["msg"]) + " orginMsgID = " + eMsgType[jsMsg["msg"][key.msgID]]  ) ;
                 return ;
             }
 
             for ( let s of vSvrs )
             {
                 this.mSvr.sendMsg(s, msgID, jsMsg ) ;
+                XLogger.debug( "TransferMsg to Port = " + eMsgPort[targetPort] + " with targetID = " + targetID + " orginMsgID = " + eMsgType[jsMsg["msg"][key.msgID]] + " msg : " + JSON.stringify(jsMsg["msg"])  )
             }
             return ;
         }
@@ -145,7 +149,11 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
             jsBack["idx"] = gsvr.addSvr(nSessionID, suggestIdx ) ;
             jsBack["maxCnt"] = gsvr.mMaxCnt ;
             this.mSvr.sendMsg(nSessionID, msgID, jsBack ) ;
-            XLogger.info( "registered a server : " + eMsgPort[port] + " idx : " + jsBack["idx"]  ) ;
+            if ( -1 != jsBack["idx"] )
+            {
+                XLogger.info( "a server connected : " + eMsgPort[port] + " idx : " + jsBack["idx"] + "ip = " + this.mSvr.getSessionIP(nSessionID) ) ;
+            }
+            this.state();
             return ;
         }
     }
@@ -168,6 +176,16 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
         for ( let s of targetSessionID )
         {
             this.mSvr.sendMsg(s , msgID, msg );
+        }
+    }
+
+    state()
+    {
+        XLogger.debug( "state : svr group cnt = " + this.mSvrInfoGroups.count() ) ;
+        let vs = this.mSvrInfoGroups.values() ;
+        for ( let v of vs )
+        {
+            v.state();
         }
     }
 }
