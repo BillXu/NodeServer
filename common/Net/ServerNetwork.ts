@@ -18,7 +18,7 @@ class ClientPeer
     protected mSocketPeer : WebSocket = null ;
     protected mIP : string = null ;
     protected mSessionID : number = 0 ;
-    protected mDelegate : IClientPeerDelegate = null ;
+    protected mpDelegate : IClientPeerDelegate = null ;
     protected mWaitVerifyTimer : NodeJS.Timeout = null ;
     protected mIsVerifyed : boolean = false ;
     protected mWaitReconnectTimer : NodeJS.Timeout = null ;
@@ -27,7 +27,7 @@ class ClientPeer
     protected mCacherMsg : string[] = [] ;
     protected mMaxCacherMsgCnt : number = 0 ;
     protected mReconnectToken : number = 0 ;
-
+    
     get reconnectToken() : number
     {
         return this.mReconnectToken ;
@@ -43,7 +43,7 @@ class ClientPeer
         this.mSocketPeer = sk ;
         this.mIP = ip ;
         this.mSessionID = sessionID ;
-        this.mDelegate = pDelegate ;
+        this.mpDelegate = pDelegate ;
         this.mMaxCacherMsgCnt = cacherCnt ;
         this.mIsVerifyed = false ;
 
@@ -56,7 +56,11 @@ class ClientPeer
 
         this.mWaitVerifyTimer = setTimeout(()=>{
             self.mWaitVerifyTimer = null ;
-            self.mDelegate.onVerifyResult(self.mSessionID,false);
+            if ( self.mpDelegate )
+            {
+                self.mpDelegate.onVerifyResult(self.mSessionID,false);
+            }
+            
             XLogger.debug( "wait verify time out close it sessionID = " + self.mSessionID ) ;
             self.close();
         } ,1500) ;
@@ -70,6 +74,11 @@ class ClientPeer
             }
             self.mIsKeepLive = false ;
         }, ClientPeer.TIME_HEAT_BEAT_ClIENT * 1000 + 1500 ) ;
+    }
+
+    setDelegate( pDelegate : IClientPeerDelegate )
+    {
+        this.mpDelegate = pDelegate ;
     }
 
     isVerifyed()
@@ -96,7 +105,10 @@ class ClientPeer
             self.mCacherMsg.length = 0 ;
             self.mWaitReconnectTimer = null ;
             XLogger.debug("TimeOut: waitReonnect timeout sessionID = " + self.mSessionID ) ;
-            self.mDelegate.onWaitReconnectTimeout( self.mSessionID ) ;
+            if ( self.mpDelegate )
+            {
+                self.mpDelegate.onWaitReconnectTimeout( self.mSessionID ) ;
+            }
         }, nSeconds * 1000 );
         XLogger.debug( "enter wait reconnect state sessionID = " + this.mSessionID ) ;
     }
@@ -190,7 +202,11 @@ class ClientPeer
             jsBack[key.sessionID] = this.mSessionID ;
             jsBack[key.reconnectToken] = this.reconnectToken;
             this.sendMsg(jsBack) ;
-            this.mDelegate.onVerifyResult( this.mSessionID,ret ) ;
+            if ( this.mpDelegate )
+            {
+                this.mpDelegate.onVerifyResult( this.mSessionID,ret ) ;
+            }
+            
             if ( false == ret )
             {
                 XLogger.debug( "verify failed , so close it sessionID = " + this.mSessionID ) ; 
@@ -206,11 +222,20 @@ class ClientPeer
         if ( this.isVerifyed() == false )
         {
             XLogger.debug("first msg must verify msg, so you are wrong, regard as verify failed , sessionID = " + this.mSessionID ) ;
-            this.mDelegate.onVerifyResult(this.mSessionID, false ) ;
+            if ( this.mpDelegate )
+            {
+                this.mpDelegate.onVerifyResult(this.mSessionID, false ) ;
+            }
+            
             this.close();
             return ;
         }
-        this.mDelegate.onMsg( this.mSessionID,msgID,js ) ;
+
+        if ( this.mpDelegate )
+        {
+            this.mpDelegate.onMsg( this.mSessionID,msgID,js ) ;
+        }
+        
     }
 
     protected onClose()
@@ -228,7 +253,10 @@ class ClientPeer
         }
 
         XLogger.debug( "ClientPeer onClose callback sessionID = " + this.mSessionID ) ;
-        this.mDelegate.onClosed( this.mSessionID ) ;
+        if ( this.mpDelegate )
+        {
+            this.mpDelegate.onClosed( this.mSessionID ) ;
+        }
     }
 
     protected checkVerify( pwd : string ) : boolean
@@ -359,7 +387,7 @@ export class ServerNetwork implements IClientPeerDelegate
         p.init( socket, request.socket.remoteAddress, this , this.mCurMaxSessionID , this.mDelegate.cacheMsgCntWhenWaitingReconnect() ) ;
         this.mClientPeers.set( this.mCurMaxSessionID, p ) ;
 
-        XLogger.debug( "peer connected sessionID = " + this.mCurMaxSessionID + " ip : " + p.ip  ) ;
+        XLogger.debug( "clientPeer connected sessionID = " + this.mCurMaxSessionID + " ip : " + p.ip  ) ;
 
         this.state();
     }
@@ -416,14 +444,14 @@ export class ServerNetwork implements IClientPeerDelegate
         let client = this.mClientPeers.get(nSessionID) ;
         if ( null == client )
         {
-            XLogger.warn( "ServerNetwork onClosed callBack , clientPeer already delete , sessionID = " + nSessionID ) ;
+            XLogger.debug( "ServerNetwork onClosed callBack , clientPeer already delete , sessionID = " + nSessionID ) ;
             this.state();
             return ;
         }
 
         if ( client.isVerifyed() == false )
         {
-            this.mClientPeers.delete( nSessionID ) ;
+            this.deleteClientPeer(nSessionID) ;
             XLogger.debug( "ServerNetwork onClosed peer still waiting verify , just delete it, sessionID = " + nSessionID ) ;
             this.state();
             return ;
@@ -439,7 +467,7 @@ export class ServerNetwork implements IClientPeerDelegate
         {
             XLogger.debug( "ServerNetwork onClosed ClientPeer do not need waitReconnect, just delete it  , sessionID = " + nSessionID ) ;
             this.mDelegate.onPeerDisconnected(nSessionID) ;
-            this.mClientPeers.delete( nSessionID ) ;
+            this.deleteClientPeer(nSessionID) ;
         }
         this.state();
     }
@@ -455,7 +483,7 @@ export class ServerNetwork implements IClientPeerDelegate
 
         if ( false == isPass )
         {
-            this.mClientPeers.delete( nSessionID ) ;
+            this.deleteClientPeer(nSessionID) ;
             XLogger.debug( "onVerifyResult failed, delete it sessionID = " + nSessionID ) ;
         }
         else
@@ -469,19 +497,9 @@ export class ServerNetwork implements IClientPeerDelegate
 
     onWaitReconnectTimeout( nSessionID : number ) : void
     {
-        let client = this.mClientPeers.get( nSessionID ) ;
+        XLogger.debug( "onWaitReconnectTimeout, do delete it , sessionID  = " + nSessionID ) ;
         this.mDelegate.onPeerDisconnected( nSessionID ) ;
-        if ( client != null )
-        {
-            this.mClientPeers.delete( nSessionID ) ;
-            XLogger.debug( "onWaitReconnectTimeout, do delete it , sessionID  = " + nSessionID ) ;
-        }
-        else
-        {
-            XLogger.warn( "onWaitReconnectTimeout, clientPeer already deleted , sessionID  = " + nSessionID ) ;
-        }
-
-        XLogger.info( "core clients = " + this.mWebSocket.clients.size + " logic clients = " + this.mClientPeers.count() ) ;
+        this.deleteClientPeer(nSessionID) ;
         this.state();
     }
 
@@ -504,18 +522,23 @@ export class ServerNetwork implements IClientPeerDelegate
             return ;
         }
         XLogger.debug( "serverNetwork close sessionID = " + sessionID ) ;
-        if ( p.isWaitingReconnect() )
-        {
-            p.clear();
-            XLogger.debug( "peer already closed , direct delete it session id = " + sessionID ) ;
-            this.onWaitReconnectTimeout(sessionID) ;
-        }
-        else
-        {
-            p.close();
-        }
-
+        p.setDelegate( null ) ;
+        p.close();
+        this.deleteClientPeer(sessionID) ;
         this.state();
+    }
+
+    deleteClientPeer( sessionID : number )
+    {
+        let p = this.mClientPeers.get(sessionID) ; 
+        if ( null == p )
+        {
+            XLogger.debug( "ClientPeer already deleted , sessionID = " + sessionID ) ;
+            return ;
+        }
+        p.clear();
+        p.setDelegate(null) ;
+        this.mClientPeers.delete( sessionID ) ;
     }
 
     state()
