@@ -77,7 +77,7 @@ export class Player
         this.mCompents.forEach( ( cp : IPlayerCompent )=>{ cp.onOtherLogin(nNewSessionID,ip );} ) ;
         if ( ePlayerNetState.eState_Online != this.netState )
         {
-            this.onUpdateNetState( ePlayerNetState.eState_Online );
+            this.onUpdateNetState( ePlayerNetState.eState_Online,ip );
         }
     }
 

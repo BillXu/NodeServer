@@ -54,7 +54,7 @@ class TestClient implements INetworkDelegate
         if ( isOk == false )
         {
             XLogger.debug( "reconnect failed , just login again" ) ;
-            this.login();
+            //this.login();
         }
     }   
     
@@ -152,8 +152,6 @@ class TestClient implements INetworkDelegate
             return ;
         }
         XLogger.debug( this.mAccount + " login ok " ) ;
-
-
     }
 
 }

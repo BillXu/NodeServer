@@ -164,7 +164,7 @@ export class Network extends LocalEventEmitter{
 
         if ( null == this.nReconnectInterval )
         {
-            this.doConnect();
+            //this.doConnect();
             this.doTryReconnect();
         }
     }
@@ -204,7 +204,7 @@ export class Network extends LocalEventEmitter{
 
         if ( null == this.nReconnectInterval )
         {
-            this.doConnect();
+            //this.doConnect();
             this.doTryReconnect();
         }
     }
@@ -381,7 +381,7 @@ export class Network extends LocalEventEmitter{
            return ;
        } 
        let self = this ;
-       this.nReconnectInterval = setInterval(()=>{ XLogger.debug("interval try connect"); self.doConnect();},4000);
+       this.nReconnectInterval = setInterval(()=>{ XLogger.debug("interval try connect"); self.doConnect();},1500 );
     }
 
     protected getSecrectKeyForVerify() : string
