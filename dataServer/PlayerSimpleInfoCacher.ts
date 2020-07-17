@@ -29,7 +29,7 @@ export class PlayerSimpleInfoCacher extends IModule
         let selfSessionID = msg[key.selfSessionID] ;
         if ( reqID % this.getSvrApp().getCurPortMaxCnt() != this.getSvrApp().getCurSvrIdx() )
         {
-            XLogger.warn( "uid is not in this server , can not find target , uid = " + reqID + " target uid = " + targetID + " target id should equal uid "  ) ;
+            XLogger.warn( "uid is never in this server , uid = " + reqID + " target uid = " + targetID + " target id should equal uid "  ) ;
             this.sendMsg(msgID, { ret : 1 } , eMsgPort.ID_MSG_PORT_CLIENT, selfSessionID, orgID ) ;
             return true;
         }
@@ -65,7 +65,7 @@ export class PlayerSimpleInfoCacher extends IModule
         this.mRequestQueue.set(reqID,q ) ;
         q.add(selfSessionID) ;
         // req from db 
-        XLogger.debug("req simple info rom db reqID " + reqID ) ;
+        XLogger.debug("req simple info rom db reqID =  " + reqID ) ;
         let self = this ;
         this.getSvrApp().getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DB , random(300,false), eRpcFuncID.Func_LoadPlayerInfo,{ uid : reqID} ,( result : Object )=>{
             let jsBack = {} ;

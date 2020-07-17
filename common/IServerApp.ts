@@ -200,7 +200,7 @@ export abstract class IServerApp implements INetworkDelegate , IServer
 
     onRegistedToCenter( svrIdx : number , svrMaxCnt : number )
     {
-        XLogger.info( "registed to center , svrIdx = " + svrIdx + " maxCnt = " + svrMaxCnt ) ;
+        XLogger.info( "Connected to center , svrIdx = " + svrIdx + " maxCnt = " + svrMaxCnt ) ;
         for ( let v of this.mModules )
         {
             v.onRegistedToCenter(svrIdx, svrMaxCnt) ;

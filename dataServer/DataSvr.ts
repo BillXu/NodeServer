@@ -14,11 +14,6 @@ export class DataSvr extends IServerApp
         this.registerModule( new PlayerSimpleInfoCacher() ) ;
     }
 
-    onRegistedToCenter( svrIdx : number , svrMaxCnt : number )
-    {
-        super.onRegistedToCenter(svrIdx, svrMaxCnt) ;
-    }
-
     getLocalPortType() : eMsgPort
     {
         return eMsgPort.ID_MSG_PORT_DATA;
@@ -31,7 +26,7 @@ export class DataSvr extends IServerApp
 
     onPlayerLogin( uid : number )
     {
+        XLogger.debug( "onPlayerLogin uid = " + uid ) ;
         (this.getModule(PlayerSimpleInfoCacher.MODULE_NAME) as PlayerSimpleInfoCacher).onPlayerLogin(uid) ;
-        XLogger.debug( "player login uid = " + uid ) ;
     }
 }

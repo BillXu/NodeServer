@@ -1,3 +1,4 @@
+import { key } from './../shared/KeyDefine';
 import { DataSvr } from './DataSvr';
 import { ePlayerNetState } from './../common/commonDefine';
 import { XLogger } from './../common/Logger';
@@ -32,7 +33,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             let player = this.mPlayers.get(targetID) ;
             if ( player == null )
             {
-                XLogger.warn( "player is not on this server , canot process msg . uid = " + targetID + " msg = " + JSON.stringify(msg)  ) ;
+                XLogger.warn( "player is not on this server , canot process msg . uid = " + targetID + "msgID = " + msg[key.msgID] + " msg = " + JSON.stringify(msg)  ) ;
                 return false
             }
 
@@ -44,26 +45,26 @@ export class PlayerMgr extends IModule implements IPlayerMgr
     onOtherServerDisconnect( port : eMsgPort , idx : number , maxCnt : number )
     {
         super.onOtherServerDisconnect(port, idx, maxCnt) ;
-        // for player disconnect ;
-        if ( port == eMsgPort.ID_MSG_PORT_GATE )
-        {
-            let ps = this.mPlayers.values() ;
-            let vDis = [] ;
-            for ( let p of ps )
-            {
-                if ( idx == p.sessionID % maxCnt )
-                {
-                    p.onUpdateNetState( ePlayerNetState.eState_Disconnected )  ;
-                    vDis.push( p.uid ) ;
-                }
-            }
+        // // for player disconnect ;
+        // if ( port == eMsgPort.ID_MSG_PORT_GATE )
+        // {
+        //     let ps = this.mPlayers.values() ;
+        //     let vDis = [] ;
+        //     for ( let p of ps )
+        //     {
+        //         if ( idx == p.sessionID % maxCnt )
+        //         {
+        //             p.onUpdateNetState( ePlayerNetState.eState_Disconnected )  ;
+        //             vDis.push( p.uid ) ;
+        //         }
+        //     }
 
-            XLogger.info( "gate svr disconnected , lose player cnt = " + vDis.length + " svr idx = " + idx + " maxCnt = " + maxCnt ) ;
-            for ( let id of vDis )
-            {
-                this.onPlayerDisconnected( id );
-            }
-        }
+        //     XLogger.info( "gate svr disconnected , lose player cnt = " + vDis.length + " svr idx = " + idx + " maxCnt = " + maxCnt ) ;
+        //     for ( let id of vDis )
+        //     {
+        //         this.onPlayerDisconnected( id );
+        //     }
+        // }
     }
 
     visitPlayerSimpleInfo(  uid : number , info : Object ) : boolean
@@ -87,14 +88,15 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             let sessionID = arg["sessionID"] ;
             let ip = arg["ip"] ;
             let player = self.mPlayers.get(uid) ;
+            XLogger.debug("recived rpc, player do login sessionID = " + sessionID + "uid = " + uid ) ;
             if ( player != null )
             {
                 if ( player.sessionID == sessionID )
                 {
-                    XLogger.debug( "do not login twice one connection uid = " + player.uid + " sessionID = " + sessionID ) ;
+                    XLogger.debug( "Login twice , uid = " + player.uid + " sessionID = " + sessionID ) ;
                     return js;
                 }
-                XLogger.debug( "on player other login uid " + uid + " ip = " + ip + " sessionID = " + sessionID ) ;
+                XLogger.debug( "player other login uid = " + uid + " pre sessionID = " + player.sessionID + " new sessionID = " + sessionID + "invoke rpc, close pre session gate " ) ;
                 
                 let preSessionID = player.sessionID ;
                 player.onOtherLogin( sessionID , ip ) ;
@@ -104,11 +106,9 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 argOther["sessionID"] = preSessionID ;
                 argOther["uid"] = player.uid ;
                 rpc.invokeRpc(eMsgPort.ID_MSG_PORT_GATE, preSessionID, eRpcFuncID.Func_OtherLogin, argOther ) ;
-                XLogger.debug("invoker other login sessionID = " + preSessionID ) ;
             }
             else
             {
-                XLogger.debug( "player login uid = " + uid + "ip = " + ip + " sessionID = " + sessionID + " cnt = " + self.mPlayers.count() ) ;
                 player = self.mReservedPlayers.get(uid) ;
                 if ( player != null )
                 {
@@ -120,12 +120,12 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 {
                     player = new Player() ;
                     player.init(uid, sessionID, ip ,self ) ;
-                    XLogger.debug( "player new sessionID = " + sessionID ) ;
+                    XLogger.debug( "new player sessionID = " + sessionID ) ;
                 }
-                ( self.getSvrApp() as DataSvr ).onPlayerLogin(uid) ;
                 self.mPlayers.set(uid, player) ;
             }
-
+            ( self.getSvrApp() as DataSvr ).onPlayerLogin(uid) ;
+            self.state();
             return js ;
         } ) ;
 
@@ -134,9 +134,10 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             let uid = arg["uid"] ;
             let state = arg["state"] ;
             let player = this.mPlayers.get(uid) ;
+            XLogger.debug( "recieved rpc ,  update player netState uid = " + uid + " sessionID = " + (player == null ? "null " :  player.sessionID )+ " netState = " + ePlayerNetState[state] ) ;
             if ( null == player )
             {
-                XLogger.warn( "player not in this svr how refresh net state uid = " + uid ) ;
+                XLogger.warn( "player not find to refresh net state uid = " + uid ) ;
             }
             else
             {
@@ -146,9 +147,8 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             if ( null != player && ePlayerNetState.eState_Disconnected == state )
             {
                 self.onPlayerDisconnected( uid ) ;
-                XLogger.debug( "player disconnect session id = " + player.sessionID ) ;
+                //XLogger.debug( "player disconnect session id = " + player.sessionID ) ;
             }
-            XLogger.debug( "recieved infor net steate sessionid = " + (player == null ? "null " :  player.sessionID )+ " net = " + ePlayerNetState[state] ) ;
             return {} ;
         } ) ;
     } 
@@ -172,5 +172,18 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             }
             this.mReservedPlayers.set(uid, player) ;
         }
+
+        this.state();
+    }
+
+    protected state()
+    {
+        XLogger.debug( "state: playerMgr activePlayerCnt = " + this.mPlayers.count() + " reseverdPlayerCnt = " + this.mReservedPlayers.count() ) ;
+        let vs = this.mPlayers.values();
+        for ( let v of vs )
+        {
+            v.state();
+        }
+        XLogger.debug("state end for playerMgr ") ;
     }
 }

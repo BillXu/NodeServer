@@ -29,6 +29,11 @@ export class Player
         return this.mSessionID ;
     }
 
+    get netState() : ePlayerNetState
+    {
+        return this.getBaseInfo().netState;
+    }
+
     init( uid : number , sessionID : number , ip : string , mgr : IPlayerMgr )
     {
         this.mUID = uid ;
@@ -60,7 +65,7 @@ export class Player
             }
         }
 
-        XLogger.warn( "why player do not process msg id = " + msgID + " uid = " + this.uid + " msg = " + JSON.stringify(msg) ) ;
+        XLogger.warn( "player do not process msg id = " + eMsgType[msgID] + " sessionID " + this.sessionID + " uid = " + this.uid + " msg = " + JSON.stringify(msg) ) ;
         return false ;
     }
 
@@ -70,6 +75,10 @@ export class Player
 
         this.mSessionID = nNewSessionID ;
         this.mCompents.forEach( ( cp : IPlayerCompent )=>{ cp.onOtherLogin(nNewSessionID,ip );} ) ;
+        if ( ePlayerNetState.eState_Online != this.netState )
+        {
+            this.onUpdateNetState( ePlayerNetState.eState_Online );
+        }
     }
 
     onUpdateNetState( state : ePlayerNetState , ip? : string )
@@ -104,6 +113,11 @@ export class Player
     {
         let p = PlayerSimpleInfo.prototype.toJson.call(this.getBaseInfo());
         merge(info, p ) ;
-        XLogger.debug( "player visit info = " + JSON.stringify(info) ) ;
+        XLogger.debug( "visit player info = " + JSON.stringify(info) ) ;
+    }
+
+    state()
+    {
+        XLogger.debug( "state : player uid = " + this.uid + " sessionID = " + this.sessionID + "netState = " + this.netState + " ip = " + this.ip ) ;
     }
 }
