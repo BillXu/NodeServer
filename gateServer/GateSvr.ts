@@ -50,6 +50,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
         {
             this.mNetForClients = new ServerNetwork() ;
             this.mNetForClients.setup(this.mPort, this , this.generateSessionID.bind(this) ) ;
+            XLogger.debug( "setup network accept for clients port = " + this.mPort ) ;
         }
     }
 
@@ -63,14 +64,14 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
             {
                 if ( false == this.mNetForClients.sendMsg(targetID, msgID, msg ) )
                 {
-                    XLogger.debug( "session id = " + targetID + " player not in this gate , or disconnected msg =  " + JSON.stringify(msg)  ) ;
+                    XLogger.debug( "sessionID = " + targetID + " player not in this gate or disconnected  org msgID = " + eMsgType[msg["msg"][key.msgID]] + " msg = " + JSON.stringify(msg)  ) ;
                     // inform data svr , this player disconnect ;
                     XLogger.warn( "player disconnected , why not tell data svr sessionID = " + targetID ) ;
                 }
                 return ;
             }
         }
-
+        XLogger.warn( "unprocess msg from center msgID = " + eMsgType[msgID] + " msg = " + JSON.stringify(msg) ) ;
         super.onMsg(msgID, msg ) ;
     }
 
@@ -82,7 +83,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
     // server network delegate
     secondsForWaitReconnect() : number 
     {
-        return 20 ;
+        return 30 ;
     }
 
     cacheMsgCntWhenWaitingReconnect() : number 
@@ -104,6 +105,11 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
 
     onPeerReconnected( nSessionID : number, ip : string, fromSessionID : number ) : void 
     {
+        if ( this.getUidBySessionID(fromSessionID) )
+        {
+            XLogger.error( "why reconnect from a valid peer sessionid = " + fromSessionID ) ;
+        }
+
         let playerID = this.getUidBySessionID(nSessionID) ;
         if ( -1 == playerID )
         {
@@ -116,6 +122,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
         arg["state"] = ePlayerNetState.eState_Online ;
         arg["ip"] = ip;
         this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, playerID , eRpcFuncID.Func_InformPlayerNetState, arg ) ;
+        XLogger.debug("invoke rpc update NetState reconnected ok uid = " + playerID + " sessionID = " + nSessionID + " from sessionID = " + fromSessionID ) ;
     }
 
     onPeerWaitingReconect( nSessionID : number ) : void 
@@ -130,6 +137,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
         arg["uid"] = playerID;
         arg["state"] = ePlayerNetState.eState_WaitingReconnect ;
         this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, playerID , eRpcFuncID.Func_InformPlayerNetState, arg ) ;
+        XLogger.debug( "invoker rpc , tell data svr ,  player enter waiting reconnect sessionID = " + nSessionID  + " uid = " + playerID ) ;
     }
 
     onPeerDisconnected( nSessionID : number ) : void 
@@ -147,6 +155,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
         this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, playerID , eRpcFuncID.Func_InformPlayerNetState, arg ) ;
         
         this.mSessionIDmapUID.delete( nSessionID ) ;
+        XLogger.debug( "invoker rpc , tell data svr ,  player disconnect sessionID = " + nSessionID + " uid = " + playerID ) ;
     }
 
     onPeerMsg( nSessionID : number , msgID : eMsgType , jsMsg : Object) : void 
@@ -173,12 +182,13 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
             }
             else
             {
+                jsMsg["orgID"] = nSessionID ;  // the msg from client , orgID always sessionID 
                 this.mNet.sendMsg(msgID,jsMsg );
             }
         }
         else
         {
-            XLogger.warn( "unknown msg from client msgId = " + msgID + " session id = " + nSessionID ) ;
+            XLogger.warn( "unknown msg from client msgId = " + eMsgType[msgID] + " sessionID = " + nSessionID ) ;
         }
     }
 
@@ -213,9 +223,10 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
         arg[key.sex] = jsRegInfo[key.sex] ;
         arg[key.ip] = this.mNetForClients.getSessionIP( nSessionID ) ;
         let self = this ;
+        XLogger.debug("invoke rpc register account = " + arg[key.account] + " sessionID = " + nSessionID ) ;
         this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DB , Math.ceil( Math.random() * 1000 )  % 1000, eRpcFuncID.Func_Register, arg,( result : Object )=>{
             let ret = result[key.ret] ;
-            XLogger.debug( "session id = " + nSessionID + " registert " + ( ret == 0 ? "success" : "failed" )  ) ;
+            XLogger.debug( "sessionID = " + nSessionID + " register " + ( ret == 0 ? "success" : "failed" )  ) ;
             jsRegInfo["ret"] = ret ;
             delete jsRegInfo[key.nickeName] ; delete jsRegInfo[key.headIcon] ;
             self.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_PLAYER_REGISTER, jsRegInfo ) ;
@@ -230,13 +241,14 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
     protected doPlayerLogin( nSessionID : number , acc : string ,accType : number )
     {
         let arg = {} ;
-        arg["account"] = acc ;
-        arg["type"] = accType ;
+        arg[key.account] = acc ;
+        arg[key.type] = accType ;
         let self = this ;
+        XLogger.debug("invoke rpc login account = " + arg[key.account] + " sessionID = " + nSessionID ) ;
         this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DB , Math.ceil( Math.random() * 1000 )  % 1000, eRpcFuncID.Func_Login, arg,( result : Object )=>{
             let ret = result["ret"] ;
             let sate = result[key.state] ;
-            XLogger.debug( "session id = " + nSessionID + " login " + ( ret == 0 && sate == 0 ? "success" : "failed" + "ret = " + ret )  ) ;
+            XLogger.debug( "sessionID = " + nSessionID + " login " + ( ret == 0 && sate == 0 ? "success" : "failed" + "ret = " + ret )  ) ;
             if ( 0 != ret )
             {
                 self.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_PLAYER_LOGIN, { ret : ret , state : sate } ) ;
@@ -250,16 +262,16 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
                 {
                     if ( lastUID == result["uid"] )
                     {
-                        XLogger.warn( "session id already bind uid , why login twice ? uid = " + result["uid"] + "sessionID" ) ;
+                        XLogger.warn( "sessionID already bind uid , why login twice ? uid = " + lastUID + " sessionID = " + nSessionID ) ;
                         return ;
                     }
                     else
                     {
-                        XLogger.debug( "same connection , change other account , then disconnect pre account last uid = " + lastUID + " curUID = " + result["uid"] ) ;
+                        XLogger.debug( "invoke rpc , disconnect pre account , pre uid = " + lastUID + " curUID = " + result["uid"] ) ;
                         let darg = {} ;
                         darg["uid"] = lastUID;
                         darg["state"] = ePlayerNetState.eState_Disconnected ;
-                        this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, lastUID , eRpcFuncID.Func_InformPlayerNetState, darg ) ;
+                        self.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, lastUID , eRpcFuncID.Func_InformPlayerNetState, darg ) ;
                     }
                 }
 
@@ -269,6 +281,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
                 argLogin["uid"] = result["uid"];
                 argLogin["ip"] = self.mNetForClients.getSessionIP( nSessionID ) ;
                 self.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DATA, result["uid"], eRpcFuncID.Func_DoLogin, argLogin );
+                XLogger.debug("invoker rpc tell login ok uid = " + result[key.uid] + " sessionID = " + nSessionID ) ;
                 return ;
             }
         } ) ;
