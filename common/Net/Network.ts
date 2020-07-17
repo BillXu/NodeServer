@@ -75,7 +75,7 @@ export class Network extends LocalEventEmitter{
     connect( dstIP : string ) 
     {
        this.mDstIP = dstIP ;
-       XLogger.debug( "direct connect to svr" );
+       XLogger.debug( "Direct connect to svr ip = " + dstIP );
        this.doConnect(); 
     }
 
@@ -186,7 +186,7 @@ export class Network extends LocalEventEmitter{
         XLogger.debug( "on colse " );
         this.isSkipOnCloseEnvet = true ; // we do on close event invoke twice , before connected success ;
 
-        XLogger.debug("stop heat beat");
+        //XLogger.debug("stop heat beat");
         //clearTimeout(this.nTimeoutHandleNum); // sytem tell or heatbeat time out , lead to on close ,we should stop heatBet ;
         //this.nTimeoutHandleNum = null ;
         if ( null != this.nPingCheckAlive )
@@ -217,7 +217,7 @@ export class Network extends LocalEventEmitter{
 
     protected onOpen( ev : WebSocket.OpenEvent )
     {
-        XLogger.debug(" on open +  " + this.mWebSocket.readyState );
+        XLogger.debug(" on open "  );
         if ( this.nReconnectInterval != null )
         {
             XLogger.debug("clear time out ");
@@ -257,7 +257,7 @@ export class Network extends LocalEventEmitter{
             // decide if need reconnect 
             if ( self.getSessionID() == 0 ) // we need not reconnect 
             {
-                XLogger.debug("verifyed session id = " + jsm["sessionID"] + " ret =" + jsm["ret"] );
+                XLogger.debug("verifyed sessionID = " + jsm["sessionID"] + " reconnectToke = " + jsm[key.reconnectToken] );
                 self.setSessionID( jsm[key.sessionID],jsm[key.reconnectToken] );
 
                 self.emit( Network.EVENT_CONNECT_RESULT,true) ;
@@ -269,7 +269,7 @@ export class Network extends LocalEventEmitter{
             }
             
             // we need do reconnect 
-            XLogger.debug("verifyed session id = " + jsm["sessionID"] + " ret =" + jsm["ret"] + "do reconnect" );
+            XLogger.debug("verifyed sessionID = " + jsm["sessionID"] +  " try reconnect, reconnect token = " + self.mReconnectToken );
 
             let jsRec = {};
             jsRec[key.sessionID] = self.getSessionID();
@@ -282,6 +282,8 @@ export class Network extends LocalEventEmitter{
                 {
                     self.mDelegate.onReconectedResult( 0 == ret )
                 }
+
+                XLogger.debug( "reconnect result = " + ( 0 == ret ? "success" : "failed") + " curSessionID = " + self.nSessionID + " reconnectToken = " + self.mReconnectToken  ) ;
                 return true ;
             } ) ;
             

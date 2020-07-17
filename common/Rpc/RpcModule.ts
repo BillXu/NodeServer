@@ -96,7 +96,7 @@ export class RpcModule extends IModule
         jsMsg["arg"] = req.arg ;
         this.sendMsg( eMsgType.MSG_RPC_REQUEST, jsMsg, targetPort, targetID, this.getSvrApp().getCurSvrIdx() ) ;
 
-        XLogger.debug( "add a rpc request cur cnt = " + this.mSendingRequests.count() ) ;
+        XLogger.debug( "invoke RPC = " + eRpcFuncID[funcID] + " sieral  = " + req.sieralNum + "tareget port = " + eMsgPort[targetPort] + " sending queue cnt = " + this.mSendingRequests.count() + " arg : " + JSON.stringify(arg||{}) ) ;
         return req.sieralNum ;
     }
 
@@ -116,6 +116,7 @@ export class RpcModule extends IModule
         this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, dr.targetPort, dr.targetID, this.getSvrApp().getCurSvrIdx() ) ;
 
         this.mDelayRespRequest.delete(sieralNum) ;
+        XLogger.debug( "pushDelayResult sieral = " + sieralNum + " target port = " + eMsgPort[dr.targetPort] + " result = " + JSON.stringify(result||{}) ) ;
     }
 
     canncelRpc( sieralNum : number )
@@ -123,6 +124,7 @@ export class RpcModule extends IModule
         if ( this.mSendingRequests.has( sieralNum ) )
         {
             this.mSendingRequests.delete( sieralNum ) ;
+            XLogger.debug("canncel rpc call sieral = " + sieralNum ) ;
             return ;
         }
 
@@ -174,7 +176,7 @@ export class RpcModule extends IModule
                 jsMsg["funcID"] = v.funcID ;
                 jsMsg["arg"] = v.arg ;
                 this.sendMsg( eMsgType.MSG_RPC_REQUEST, jsMsg, v.targetPort, v.targetID, this.getSvrApp().getCurSvrIdx() ) ;
-                XLogger.debug( "retry request sieral num = " + v.sieralNum + " funcID = " + eRpcFuncID[v.funcID] + " req cnt = " + reqs.length ) ;
+                XLogger.debug( "retry rpc request sieral num = " + v.sieralNum + " funcID = " + eRpcFuncID[v.funcID] + " targetPort = " + eMsgPort[v.targetPort] + " req cnt = " + reqs.length + " arg : " + JSON.stringify(v.arg||{})) ;
             }
         }
 
@@ -182,7 +184,6 @@ export class RpcModule extends IModule
         {
             this.mSendingRequests.delete(d) ;
         }
-       // XLogger.debug( "sending request for rpc cnt = " + this.mSendingRequests.count() + " delay respone cnt = " + this.mDelayRespRequest.count() ) ;
     }
 
     protected generateSieralNum() : number
@@ -207,8 +208,8 @@ export class RpcModule extends IModule
 
     onDisconnected() : void 
     {
-        this.mSendingRequests.clear();
-        this.mDelayRespRequest.clear();
+        // this.mSendingRequests.clear();
+        // this.mDelayRespRequest.clear();
     }
 
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number , orgPort : eMsgPort,targetID : number ) : boolean 
@@ -221,11 +222,11 @@ export class RpcModule extends IModule
             let func = this.mRPCFuncs.get( funcID ) ;
             if ( func == null )
             {
-                XLogger.error( "svr do not have funcID = " + funcID + "request from port = " + orgPort + " id = " + orgID ) ;
+                XLogger.error( "svr do not have funcID = " + eRpcFuncID[funcID] + " request from port = " + eMsgPort[orgPort] + " id = " + orgID ) ;
                 let jsBack = {} ;
                 jsBack["sieralNum"] = sieralNum ;
                 jsBack["state"] = 2 ;
-                jsBack["errMsg"] = "do not have func id = " + funcID;
+                jsBack["errMsg"] = "do not have func id = " + eRpcFuncID[funcID];
                 this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, orgPort, orgID, this.getSvrApp().getCurSvrIdx() ) ;
                 return true;
             }
@@ -235,17 +236,17 @@ export class RpcModule extends IModule
                 let rd = this.mDelayRespRequest.get(sieralNum);
                 if ( rd.targetID != orgID )
                 {
-                    XLogger.warn( "put delay respone again but id not equal = " + orgID + " old = " + rd.targetID ) ;
+                    XLogger.warn( "put delay respone again but id not equal orgID = " + orgID + " old = " + rd.targetID + " func = " + eRpcFuncID[funcID] ) ;
                     rd.targetID = orgID ;
                 }
 
                 if ( rd.targetPort != orgPort )
                 {
-                    XLogger.warn( "put delay respone again but port not equal = " + orgPort + " old = " + rd.targetPort ) ;
+                    XLogger.warn( "put delay respone again but port not equal org port = " + eMsgPort[ orgPort] + " old = " + eMsgPort[rd.targetPort] + " func = " + eRpcFuncID[funcID] ) ;
                     rd.targetPort = orgPort ;
                 }
                 
-                XLogger.warn( "already put in delay respone sieral = " + sieralNum ) ;
+                XLogger.warn( "already put in delay respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
                 return true ;
             }
 
@@ -262,6 +263,7 @@ export class RpcModule extends IModule
                 dr.targetID = orgID ;
                 dr.targetPort = orgPort ;
                 this.mDelayRespRequest.set(sieralNum , dr ) ;
+                XLogger.warn( "excute rpc put in delay respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
             }
             else
             {
@@ -270,6 +272,7 @@ export class RpcModule extends IModule
                 jsBack["state"] = 0 ;
                 jsBack["result"] = result;
                 this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, orgPort, orgID, this.getSvrApp().getCurSvrIdx() ) ;
+                XLogger.warn( "rpc respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
             }
             return true ;
         }
@@ -280,14 +283,15 @@ export class RpcModule extends IModule
             let req = this.mSendingRequests.get( sieralNum ) ;
             if ( req == null )
             {
-                XLogger.warn( "request not exit , so can not process result sieral = " + sieralNum + "state = " + state ) ;
+                XLogger.warn( "request not exit , so can not process result sieral = " + sieralNum + " state = " + state ) ;
                 if ( 0 == state && msg["result"] != null )
                 {
-                    XLogger.warn( "request not exit , so can not process result sieral = " + sieralNum + "result = " + JSON.stringify(msg["result"] ) ) ;
+                    XLogger.warn( "request not exit , so can not process result sieral = " + sieralNum + " result = " + JSON.stringify(msg["result"] || {}) ) ;
                 }
                 return true;
             }
 
+            XLogger.debug( "recieved rec reuslt , func = " + eRpcFuncID[req.funcID] + " result = " + JSON.stringify(msg["result"] || {}) ) ;
             // state : 0 , success , 1 delay respone , 2 error ;
             switch ( state )
             {
@@ -307,13 +311,13 @@ export class RpcModule extends IModule
                 break ;
                 case 2: 
                 {
-                    XLogger.error( "rpc request sierl = " + sieralNum + " funcid = " + req.funcID + " error : " + msg["errMsg"] ) ;
+                    XLogger.error( "rpc request sierl = " + sieralNum + " funcid = " + eRpcFuncID[req.funcID]+ " error : " + msg["errMsg"] ) ;
                     this.mSendingRequests.delete( sieralNum ) ;
                 }
                 break ;
                 default:
                 {
-                    XLogger.error( "unknow state fo request state = " + state + " funcid = " + req.funcID ) ;
+                    XLogger.error( "unknow state fo request state = " + state + " funcid = " + eRpcFuncID[req.funcID] ) ;
                     this.mSendingRequests.delete( sieralNum ) ;
                 }
                 break ;

@@ -25,7 +25,7 @@ export abstract class IServerApp implements INetworkDelegate , IServer
         this.mNet.setDelegate(this) ;
         this.mNet.connect( jsCfg["centerIP"] ) ;
         this.mCallBacks.clear();
-
+        XLogger.info( "connecting to center ip = " + jsCfg["centerIP"] ) ;
         this.registerModule( new RpcModule() ) ;
     }
 
@@ -67,6 +67,7 @@ export abstract class IServerApp implements INetworkDelegate , IServer
         if ( msgID == eMsgType.MSG_TRANSER_DATA )
         {
             try {
+                XLogger.debug( "recieved msg msgID = " + eMsgType[msg["msg"][Network.MSG_ID]] + " msg : " + JSON.stringify(msg["msg"]||{})) ;
                 this.onLogicMsg(msg["msg"][Network.MSG_ID], msg["msg"], msg["orgID"], msg["orgPort"],msg["dstID"] ) ;
             } catch (err) {
                 XLogger.error( "message : " + err.message ) ;
@@ -75,6 +76,7 @@ export abstract class IServerApp implements INetworkDelegate , IServer
         }
         else if ( msgID == eMsgType.MSG_SERVER_DISCONNECT )
         {
+            XLogger.info( "other server disconnect port = " + eMsgPort[msg["port"]] + " idx = " + msg["idx"] + " maxCnt = " + msg["maxCnt"] ) ;
             this.onOtherServerDisconnect(msg["port"], msg["idx"], msg["maxCnt"] ) ;
         }
         else if ( msgID == eMsgType.MSG_REGISTER_SERVER_PORT_TO_CENTER )
@@ -85,8 +87,9 @@ export abstract class IServerApp implements INetworkDelegate , IServer
                 XLogger.warn( "svr port type is full " ) ;
                 process.exit(1) ;
             }
-
+    
             let cnt = msg["maxCnt"] ;
+            XLogger.debug("connected to Center svr idx = " + idx  + " maxCnt = " + cnt ) ; 
             this.onRegistedToCenter( idx , cnt ) ;
             this.mCurSvrIdx = idx ;
             this.mCurSvrPortMaxCnt = cnt ;
@@ -149,7 +152,7 @@ export abstract class IServerApp implements INetworkDelegate , IServer
             }
         }
 
-        XLogger.warn( "unprocessed msg id = " + eMsgType[msgID] + " orgPort = " + eMsgPort[orgPort] + " msg = " + JSON.stringify(msg) );
+        XLogger.warn( "unprocessed msg id = " + eMsgType[msgID] + " orgPort = " + eMsgPort[orgPort] + " msg = " + JSON.stringify(msg||{}) );
     }
 
     sendMsg( msgID : number , msg : Object , dstPort : eMsgPort, dstID : number , orgID : number, lpfCallBack? : IFuncMsgCallBack  )
@@ -168,6 +171,7 @@ export abstract class IServerApp implements INetworkDelegate , IServer
         jsTransfer["msg"] = msg ;
         this.mNet.sendMsg(eMsgType.MSG_TRANSER_DATA,jsTransfer ) ;
 
+        XLogger.debug( "send msgID = " + eMsgType[msgID] + " targetPort = " + eMsgPort[dstPort] + " msg = " + JSON.stringify(msg||{} ) ) ;
         if ( lpfCallBack != null )
         {
             let a = this.mCallBacks.get( msgID ) ;
@@ -191,7 +195,6 @@ export abstract class IServerApp implements INetworkDelegate , IServer
 
     onOtherServerDisconnect( port : eMsgPort , idx : number, maxCnt : number )
     {
-        XLogger.warn( "svr port = " + port + " disconnected idx = " + idx + " maxCnt = " + maxCnt  ) ;
         for ( let v of this.mModules )
         {
             v.onOtherServerDisconnect(port, idx, maxCnt ) ;
@@ -200,7 +203,6 @@ export abstract class IServerApp implements INetworkDelegate , IServer
 
     onRegistedToCenter( svrIdx : number , svrMaxCnt : number )
     {
-        XLogger.info( "Connected to center , svrIdx = " + svrIdx + " maxCnt = " + svrMaxCnt ) ;
         for ( let v of this.mModules )
         {
             v.onRegistedToCenter(svrIdx, svrMaxCnt) ;
