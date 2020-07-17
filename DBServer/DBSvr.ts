@@ -62,13 +62,14 @@ export class DBSvr extends IServerApp
         let mysql = this.mMysqlPool;
         rpc.registerRPC( eRpcFuncID.Func_Register, ( reqSieralNum : number , arg : Object )=>{
             // arg : { account : "dfagadf" , type : eAccountType , nickeName : "name" , headIconUrl : "http://www.baidu.com" ,sex : eSex , ip : "192.168.1.23" }
+            XLogger.debug( "recived rpc , player register account = " + arg[key.account] + " sieral = " + reqSieralNum ) ;
             mysql.query( "call register(?,?,?,?,?,?);",[arg[key.account],arg[key.type],arg[key.nickeName],arg[key.headIcon],arg[key.sex],arg[key.ip]],(err : MysqlError ,result : any )=>{
                 if ( err != null )
                 {
                     let js = {} ;
                     js[key.ret] = 1;
                     rpc.pushDelayResult(reqSieralNum, js ) ;
-                    XLogger.error( "failed sql : " + err.sql ) ;
+                    XLogger.error( "respone delay result rpc sieral = " + reqSieralNum + "register failed sql : " + err.sql + " error = " + err.message ) ;
                     return ;
                 }
     
@@ -76,20 +77,21 @@ export class DBSvr extends IServerApp
                 js[key.ret] = 0 ;
                 js["result"] = result[0][0]["curMaxUID"] ;
                 rpc.pushDelayResult(reqSieralNum, js ) ;
-                XLogger.debug( "register ok js = " + JSON.stringify(js) ) ;
+                XLogger.debug( "respone dely result rpc  sieral = " + reqSieralNum + " register ok result = " + JSON.stringify(js) ) ;
             } ) ;
             return null ;
         } ) ;
 
         rpc.registerRPC( eRpcFuncID.Func_Login, ( reqSieralNum : number , arg : Object )=>{
             // arg : { account : "dfagadf" , type : eAccountType } 
+            XLogger.debug( "recived rpc , login accoutn = " + arg[key.account] + "sieral = " + reqSieralNum );
             mysql.query( "call login(?,?);", [ arg[key.account] , arg[key.type] ] ,(err : MysqlError ,result : any )=>{
                 if ( err != null )
                 {
                     let js = {} ;
                     js["ret"] = 1;
                     rpc.pushDelayResult(reqSieralNum, js ) ;
-                    XLogger.error( "failed sql : " + err.sql + " error : " + err.message ) ;
+                    XLogger.error( "respone rpc delay sieral = " + reqSieralNum +  " failed sql : " + err.sql + " error : " + err.message ) ;
                     return ;
                 }
     
@@ -106,22 +108,23 @@ export class DBSvr extends IServerApp
                     js[key.ret] = 2 ;
                 }
                 rpc.pushDelayResult(reqSieralNum, js ) ;
-                XLogger.debug("login finish = " + js[key.uid] + " " + JSON.stringify(result)) ;
+                XLogger.debug( "respone rpc delay sieral = " + reqSieralNum  + "login result = " + js[key.uid] + " " + JSON.stringify(result)) ;
             } ) ;
             return null ;
         } ) ;
 
         rpc.registerRPC( eRpcFuncID.Func_LoadPlayerInfo ,( reqSieralNum : number , arg : Object  )=>{
             let uid = arg[key.uid] ;
+            XLogger.debug( "recived rpc loadPlayerInfo uid = " + uid + " sieral " + reqSieralNum ) ;
             mysql.query( "select * from playerData where uid = " + uid, ( err : MysqlError ,result : any )=>{
                 if ( err != null )
                 {
                     rpc.pushDelayResult(reqSieralNum, {} ) ;
-                    XLogger.error( "failed sql : " + err.sql + " error : " + err.sqlMessage ) ;
+                    XLogger.error( "respone rpc delay sieral = " + reqSieralNum + " failed sql : " + err.sql + " error : " + err.sqlMessage ) ;
                     return ;
                 }
 
-                XLogger.debug( "finish load player data = " + JSON.stringify( result[0] ) ) ;
+                XLogger.debug( "respone rpc delay sieral = " + reqSieralNum + " finish load player data = " + JSON.stringify( result[0] ) ) ;
                 rpc.pushDelayResult(reqSieralNum, result[0] ) ;
             } );
             return null ;
