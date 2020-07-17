@@ -135,6 +135,9 @@ class TestClient implements INetworkDelegate
         msg[key.account] = this.mAccount ;
         msg[key.type] = eAccountType.eAccount_Wechat ;
         this.sendMsg(eMsgPort.ID_MSG_PORT_GATE, 0, eMsgType.MSG_PLAYER_LOGIN, msg ,false ) ;
+
+        let self = this ;
+        setTimeout(()=>{ XLogger.debug("try disconnect test reconnect") ; self.mNet.close(); },3000 ) ;
     }
 
     onLogin( msg : Object )
@@ -147,6 +150,8 @@ class TestClient implements INetworkDelegate
             return ;
         }
         XLogger.debug( this.mAccount + " login ok " ) ;
+
+
     }
 
 }

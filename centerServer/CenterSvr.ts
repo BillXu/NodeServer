@@ -101,7 +101,7 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
 
     onPeerMsg( nSessionID : number , msgID : eMsgType , jsMsg : Object) : void 
     {
-        XLogger.debug( "recieved a msg from player session id = " + nSessionID + "id " + msgID + "content : " + jsMsg ) ;
+        //XLogger.debug( "recieved a msg from player session id = " + nSessionID + "id " + msgID + "content : " + jsMsg ) ;
         if ( eMsgType.MSG_TRANSER_DATA == msgID )
         {
             let targetPort = jsMsg["dstPort"] ;

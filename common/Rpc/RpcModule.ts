@@ -174,7 +174,7 @@ export class RpcModule extends IModule
                 jsMsg["funcID"] = v.funcID ;
                 jsMsg["arg"] = v.arg ;
                 this.sendMsg( eMsgType.MSG_RPC_REQUEST, jsMsg, v.targetPort, v.targetID, this.getSvrApp().getCurSvrIdx() ) ;
-                XLogger.debug( "retry request sieral num = " + v.sieralNum + " funcID = " + v.funcID + " req cnt = " + reqs.length ) ;
+                XLogger.debug( "retry request sieral num = " + v.sieralNum + " funcID = " + eRpcFuncID[v.funcID] + " req cnt = " + reqs.length ) ;
             }
         }
 
@@ -182,7 +182,7 @@ export class RpcModule extends IModule
         {
             this.mSendingRequests.delete(d) ;
         }
-        XLogger.debug( "sending request for rpc cnt = " + this.mSendingRequests.count() + " delay respone cnt = " + this.mDelayRespRequest.count() ) ;
+       // XLogger.debug( "sending request for rpc cnt = " + this.mSendingRequests.count() + " delay respone cnt = " + this.mDelayRespRequest.count() ) ;
     }
 
     protected generateSieralNum() : number
@@ -308,6 +308,12 @@ export class RpcModule extends IModule
                 case 2: 
                 {
                     XLogger.error( "rpc request sierl = " + sieralNum + " funcid = " + req.funcID + " error : " + msg["errMsg"] ) ;
+                    this.mSendingRequests.delete( sieralNum ) ;
+                }
+                break ;
+                default:
+                {
+                    XLogger.error( "unknow state fo request state = " + state + " funcid = " + req.funcID ) ;
                     this.mSendingRequests.delete( sieralNum ) ;
                 }
                 break ;

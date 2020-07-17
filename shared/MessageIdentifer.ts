@@ -18,11 +18,12 @@ export enum eMsgType
 	// the msg title used between servers 
 	MSG_SERVERS_USE,
     MSG_VERIFY,   // used between svr ;
-    // client : { pwd : aa }
-    // svr : { ret : 0 , sessionID : 2345 } 
+    // client : { pwd : aa , reconnectToken : number }
+	// svr : { ret : 0 , reconnectToken : number, sessionID : 2345 } 
+	// reconnectToken : must keep your token unique , recommond generate  = ( now() % 10000 ) * 1000 + random(1,1000) ;
 
     MSG_RECONNECT,   // client with gate 
-    // client : { sessionID : 234 } // reconnect to sessionID ;
+    // client : { sessionID : 234, reconnectToken : number } // reconnect to sessionID ;
     // svr : { ret : 0 , sessionID : 234 } 
     // ret : 0 means ok , other value means failed , 
 	// sessionID , means current session , in use . 

@@ -1,3 +1,4 @@
+import { key } from './../../shared/KeyDefine';
 import HashMap  from 'hashmap';
 import { XLogger } from './../Logger';
 import { eMsgType } from './../../shared/MessageIdentifer';
@@ -25,6 +26,13 @@ class ClientPeer
     protected mIsKeepLive : boolean = true ;
     protected mCacherMsg : string[] = [] ;
     protected mMaxCacherMsgCnt : number = 0 ;
+    protected mReconnectToken : number = 0 ;
+
+    get reconnectToken() : number
+    {
+        return this.mReconnectToken ;
+    }
+
     get ip () : string
     {
         return this.mIP ;
@@ -151,6 +159,11 @@ class ClientPeer
         {
             XLogger.debug( "do send cacher msg " ) ;
             let self = this ;
+            if ( null == this.mSocketPeer )
+            {
+                XLogger.error("null socket can not send cacher msg") ;
+                return ;
+            }
             this.mSocketPeer.send(this.mCacherMsg.shift(),()=>{ self.sendCacherMsg() ;}) ;
         }
     }
@@ -161,6 +174,7 @@ class ClientPeer
         let msgID = js[ServerNetwork.MSG_ID] ;
         if ( msgID == eMsgType.MSG_VERIFY )
         {
+            this.mReconnectToken = js[key.reconnectToken] ;
             let ret = this.checkVerify( js["pwd"] )
             this.mIsVerifyed = ret ;
             if ( this.mWaitVerifyTimer != null  )
@@ -170,8 +184,9 @@ class ClientPeer
             }
             let jsBack = {} ;
             jsBack[ServerNetwork.MSG_ID] = msgID ;
-            jsBack["ret"] = ret ? 0 : 1 ;
-            jsBack["sessionID"] = this.mSessionID ;
+            jsBack[key.ret] = ret ? 0 : 1 ;
+            jsBack[key.sessionID] = this.mSessionID ;
+            jsBack[key.reconnectToken] = this.reconnectToken;
             this.sendMsg(jsBack) ;
             this.mDelegate.onVerifyResult( this.mSessionID,ret ) ;
             if ( false == ret )
@@ -201,7 +216,7 @@ class ClientPeer
 
     protected checkVerify( pwd : string ) : boolean
     {
-        XLogger.debug(" pass all connection : pwd = " + pwd )
+        //XLogger.debug(" pass all connection : pwd = " + pwd )
         return pwd == "1" ;
     }
 
@@ -215,7 +230,7 @@ class ClientPeer
     sendMsg( jsMsg : Object )
     {
         let strmsg = JSON.stringify(jsMsg);
-        if ( this.mCacherMsg.length > 0 || ( this.mMaxCacherMsgCnt > 0 && this.isWaitingReconnect() ) )
+        if ( this.mCacherMsg.length > 0 || ( this.mMaxCacherMsgCnt > 0 && this.isWaitingReconnect() && null == this.mSocketPeer ) )
         {
             this.mCacherMsg.push( strmsg );
             if ( this.mCacherMsg.length > this.mMaxCacherMsgCnt )
@@ -227,6 +242,11 @@ class ClientPeer
         }
         else
         {
+            if ( null == this.mSocketPeer )
+            {
+                XLogger.warn( "sokcet is null can not send msg" ) ;
+                return ;
+            } 
             this.mSocketPeer.send(strmsg) ;
             XLogger.debug( "send msg directed" ) ;
         }
@@ -342,6 +362,18 @@ export class ServerNetwork implements IClientPeerDelegate
                 return ;
             }
 
+            let token = jsMsg[key.reconnectToken] ;
+            if ( token != target.reconnectToken )
+            {
+                XLogger.warn("target session Token not equal , can not reconnect ") ;
+                let js = {} ;
+                js["ret"] = 1 ;
+                js["sessionID"] = nSessionID ;
+                js[key.reconnectToken] = this.mClientPeers.get(nSessionID).reconnectToken;
+                this.sendMsg(nSessionID, msgID, js ) ;
+                return ;
+            }
+
             target.doReconnect( this.mClientPeers.get(nSessionID) ) ;
             this.mDelegate.onPeerReconnected( targetSessionID, this.mClientPeers.get(targetSessionID).ip, nSessionID );
             this.mClientPeers.get(nSessionID).clear();
@@ -378,6 +410,7 @@ export class ServerNetwork implements IClientPeerDelegate
         if ( this.mDelegate.isPeerNeedWaitReconnected(nSessionID) )
         {
             client.doWaitReconnect( this.mDelegate.secondsForWaitReconnect() ) ;
+            this.mDelegate.onPeerWaitingReconect(nSessionID) ;
         }
         else
         {
@@ -446,6 +479,15 @@ export class ServerNetwork implements IClientPeerDelegate
             return ;
         }
         XLogger.debug( "serverNetwork close session id = " + sessionID ) ;
-        p.close();
+        if ( p.isWaitingReconnect() )
+        {
+            p.clear();
+            XLogger.debug( "peer already closed , direct delete it session id = " + sessionID ) ;
+            this.onWaitReconnectTimeout(sessionID) ;
+        }
+        else
+        {
+            p.close();
+        }
     }
 }

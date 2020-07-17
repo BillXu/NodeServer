@@ -104,6 +104,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 argOther["sessionID"] = preSessionID ;
                 argOther["uid"] = player.uid ;
                 rpc.invokeRpc(eMsgPort.ID_MSG_PORT_GATE, preSessionID, eRpcFuncID.Func_OtherLogin, argOther ) ;
+                XLogger.debug("invoker other login sessionID = " + preSessionID ) ;
             }
             else
             {
@@ -111,7 +112,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 player = self.mReservedPlayers.get(uid) ;
                 if ( player != null )
                 {
-                    XLogger.debug( "player reactive uid = " + uid ) ;
+                    XLogger.debug( "player reactive sessionID = " + sessionID ) ;
                     player.onReactive(sessionID, ip ) ;
                     self.mReservedPlayers.delete(uid) ;
                 }
@@ -119,6 +120,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 {
                     player = new Player() ;
                     player.init(uid, sessionID, ip ,self ) ;
+                    XLogger.debug( "player new sessionID = " + sessionID ) ;
                 }
                 ( self.getSvrApp() as DataSvr ).onPlayerLogin(uid) ;
                 self.mPlayers.set(uid, player) ;
@@ -144,13 +146,16 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             if ( null != player && ePlayerNetState.eState_Disconnected == state )
             {
                 self.onPlayerDisconnected( uid ) ;
+                XLogger.debug( "player disconnect session id = " + player.sessionID ) ;
             }
+            XLogger.debug( "recieved infor net steate sessionid = " + (player == null ? "null " :  player.sessionID )+ " net = " + ePlayerNetState[state] ) ;
             return {} ;
         } ) ;
     } 
 
     protected onPlayerDisconnected( uid : number )
     {
+        XLogger.debug( "player disconnecct uid = " + uid ) ;
         let player = this.mPlayers.get(uid) ;
         if ( null == player )
         {

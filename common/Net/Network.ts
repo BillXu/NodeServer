@@ -1,3 +1,5 @@
+import { random } from 'lodash';
+import { key } from './../../shared/KeyDefine';
 import { XLogger } from './../Logger';
 import { LocalEventEmitter } from './../LocalEventEmitter';
 import { eMsgType } from './../../shared/MessageIdentifer';
@@ -43,6 +45,7 @@ export class Network extends LocalEventEmitter{
     protected isSkipOnCloseEnvet : boolean = false ; 
     protected mDelegate : INetworkDelegate = null ;
     protected mPingDelayMiniSeconds : number = 0;
+    protected mReconnectToken : number = 0 ;
 
     get pingDelayMlliSeconds() : number
     {
@@ -103,7 +106,7 @@ export class Network extends LocalEventEmitter{
         jsMsg[Network.MSG_ID] = msgID ;
         this.mWebSocket.send(JSON.stringify(jsMsg)) ;
 
-        XLogger.debug( "send msg : " + JSON.stringify(jsMsg) );
+        //XLogger.debug( "send msg : " + JSON.stringify(jsMsg) );
         if ( callBack != null ) // reg call back ;
         {
             let p : [ number , IOneMsgCallback] ;
@@ -113,9 +116,10 @@ export class Network extends LocalEventEmitter{
         return true;
     }
 
-    protected setSessionID( newSessionID : number )
+    protected setSessionID( newSessionID : number, reconnectToken : number )
     {
         this.nSessionID = newSessionID ;
+        this.mReconnectToken = reconnectToken ;
     }
     
     protected doConnect()
@@ -205,7 +209,7 @@ export class Network extends LocalEventEmitter{
         }
     }
 
-    protected close()
+    close()
     {
         XLogger.debug( "self colse" );
         this.mWebSocket.terminate();
@@ -234,6 +238,7 @@ export class Network extends LocalEventEmitter{
         // verify client ;
         let jsMsg = {} ;
         jsMsg["pwd"] = this.getSecrectKeyForVerify() ;
+        jsMsg[key.reconnectToken] = ( Date.now() % 10000 ) * 1000 + random(1000,false ) ;
         this.sendMsg(eMsgType.MSG_VERIFY,jsMsg,( jsm :any)=>
         {
             //let pEvent : any ;
@@ -253,7 +258,7 @@ export class Network extends LocalEventEmitter{
             if ( self.getSessionID() == 0 ) // we need not reconnect 
             {
                 XLogger.debug("verifyed session id = " + jsm["sessionID"] + " ret =" + jsm["ret"] );
-                self.setSessionID( jsm["sessionID"] );
+                self.setSessionID( jsm[key.sessionID],jsm[key.reconnectToken] );
 
                 self.emit( Network.EVENT_CONNECT_RESULT,true) ;
                 if ( null != self.mDelegate )
@@ -267,9 +272,10 @@ export class Network extends LocalEventEmitter{
             XLogger.debug("verifyed session id = " + jsm["sessionID"] + " ret =" + jsm["ret"] + "do reconnect" );
 
             let jsRec = {};
-            jsRec["sessionID"] = self.getSessionID();
+            jsRec[key.sessionID] = self.getSessionID();
+            jsRec[key.reconnectToken] = self.mReconnectToken ;
             self.sendMsg( eMsgType.MSG_RECONNECT,jsRec,( jsRet : any)=>{
-                self.setSessionID(jsRet["sessionID"]);
+                self.setSessionID(jsRet[key.sessionID],jsRet[key.reconnectToken] );
                 let ret : number = jsRet["ret"];
                 self.emit(Network.EVENT_RECONNECT_RESULT,0 == ret , self.getSessionID() ) ;
                 if ( null != self.mDelegate )
@@ -285,7 +291,7 @@ export class Network extends LocalEventEmitter{
 
     protected onMsg( ev : WebSocket.MessageEvent )
     {
-        XLogger.debug(" on msg " + ev.data );
+        //XLogger.debug(" on msg " + ev.data );
         let msg = JSON.parse(ev.data.toString() ) ;
         if ( msg == null )
         {

@@ -18,4 +18,5 @@ export class key
     static targetID = "targetID" ;
     static reqUID = "reqUID" ;
     static selfSessionID = "selfSessionID" ;
+    static reconnectToken = "reconnectToken" ;
 }

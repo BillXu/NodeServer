@@ -1,3 +1,4 @@
+import { random } from 'lodash';
 import { XLogger } from './../common/Logger';
 import { eMsgPort } from './../shared/MessageIdentifer';
 import HashMap from "hashmap"
@@ -43,12 +44,13 @@ export class ServerGroup
         {
             XLogger.warn("target svr idx is null , id = " + targetID + " max cnt = " + this.mMaxCnt ) ;
             idx = -1 ; // sign not find a proper target ; 
-            for ( let i = 0 ; i < this.mMaxCnt ; ++i )
+            for ( let i = random(this.mSvrInfos.count(), false ) ; i < this.mMaxCnt * 2 ; ++i )
             {
-                let tmp = this.mSvrInfos.get(i) ;
+                let realIdx = i % this.mMaxCnt;
+                let tmp = this.mSvrInfos.get(realIdx) ;
                 if ( tmp != null && tmp.isWaitingReconnect == false )
                 {
-                    idx = i ;
+                    idx = realIdx ;
                     break ;
                 }
             }
@@ -83,8 +85,8 @@ export class ServerGroup
 
     addSvr( sessionID : number , sugustIdx : number ) : number 
     {
-
-        if ( this.mSvrInfos.has(sugustIdx) == false )
+        let pAlready = this.mSvrInfos.get(sugustIdx) ;
+        if ( null == pAlready )
         {
             this.mSvrInfos.set( sugustIdx, new ServerInfo(sessionID,sugustIdx) )
             return sugustIdx ;

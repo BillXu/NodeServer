@@ -37,7 +37,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
             }
 
             XLogger.debug( "other login do close session = " + sessionID ) ;
-            self.mSessionIDmapUID.delete(uid) ;
+            self.mSessionIDmapUID.delete(sessionID) ;
             self.mNetForClients.closeSession(sessionID) ;
             return {} ;
         })
@@ -82,7 +82,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
     // server network delegate
     secondsForWaitReconnect() : number 
     {
-        return 60*5 ;
+        return 20 ;
     }
 
     cacheMsgCntWhenWaitingReconnect() : number 
