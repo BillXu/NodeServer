@@ -156,5 +156,11 @@ class TestClient implements INetworkDelegate
 
 }
 
-let c = new TestClient();
-c.init("ws://localhost:3001", "wechatName" ) ;
+//let c = new TestClient();
+//c.init("ws://localhost:3001", "wechatName" ) ;
+let date = new Date();
+//date.setDate(date.getDate() - 20 ) ;
+let a = date.getTime();
+let b = Date.now();
+console.log( "utc = " + a + " s = " + b + " offset = " + ( b - a) ) ;
+console.log( " str =  " + date.toLocaleString() + " day = " + date.getMonth() ) ; 

@@ -116,6 +116,12 @@ export class Player
         XLogger.debug( "visit player info = " + JSON.stringify(info) ) ;
     }
 
+    onLoadBaseInfoFinished() : void
+    {
+        XLogger.debug("player load base info finished inform compoents uid = " + this.uid ) ;
+        this.mCompents.forEach( ( cp : IPlayerCompent )=>{ cp.onLoadBaseInfoFinished();} ) ;
+    }
+
     state()
     {
         XLogger.debug( "state : player uid = " + this.uid + " sessionID = " + this.sessionID + "netState = " + this.netState + " ip = " + this.ip ) ;

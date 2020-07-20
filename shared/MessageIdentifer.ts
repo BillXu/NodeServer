@@ -53,6 +53,10 @@ export enum eMsgType
 	// svr : { ret : 0 , account : "adfag" , type : eAccountType }
 	// ret : 0 means success , 1 duplicate account , 2  invalid account type error ;
 
+	MSG_PLAYER_LOGOUT,
+	// client : null ;
+	// svr : { ret : 0 }  // ret: 0 success , 1 can not find player , 2 player is doing something , can not logout,eg: in some room ;
+
 	MSG_PLAYER_LOGIN,  // check an account is valid ;
 	// client : { account : "234" , type : eAccountType }
 	// svr : { ret : 0 }
@@ -67,8 +71,28 @@ export enum eMsgType
 
 	MSG_REQUEST_PLAYER_SIMPLE_INFO, // request player simpleInfo  
 	// client : { reqUID : 23 , selfSessionID : 234 }
-	// svr : { ret : 0 , uid : 23 , nickName : "hello" , headUrl : "http://weshg.wx.com",sex : 1 ,isOnline : 0  }
+	// svr : { ret : 0 , uid : 23 , nickeName : "hello" , headUrl : "http://weshg.wx.com",sex : 1 ,isOnline : 0  }
 	// ret : 0 success , 1 can not find target player , uid should equal target id ; 
+
+	MSG_PLAYER_UPDATE_INFO,
+	// client : { nickeName : "lucy", sex : 1 , headIcon : "http://url.com"  }
+	// svr: { ret : 0 }
+
+	MSG_PLAYER_REFRESH_MONEY,
+	// client : null ;
+	// svr { diamond : 235 }
+
+	MSG_PlAYER_INFORM_MAX_MAIL_ID,
+	// svr : { maxID : 1000 }
+
+	MSG_PLAYER_REQ_MAIL,
+	// client : { maxID : 1000 }
+	// svr : { isFinal : false,  mails : [ mailkey : value ] }   
+
+	MSG_PLAYER_PROCESS_MAIL,
+	// client : { mailID : 23 , state : eMailState } . 
+	// svr : { ret : 0 ,mailID : 23 ,state : eMailState }
+	// ret : 0 success , 1 mail state error 
 
 
 
@@ -83,18 +107,12 @@ export enum eMsgType
 
 
 
-	MSG_PLAYER_UPDATE_INFO,
-	// client : { name : "lucy", sex : 1 , headIcon : "http://url.com"  }
-	// svr: { ret : 0 }
+
 	MSG_PLAYER_UPDATE_GPS,
 	// client : { J : 23.23 , W : 2345  }   // j : jing du , w: wei du ;  
 	// svr : null 
-	MSG_PLAYER_REFRESH_MONEY,
-	// client : null ;
-	// svr { coin: 235 , diamond : 235 }
-	MSG_PLAYER_LOGOUT,
-	// client : null ;
-	// svr : { ret : 0 }  // ret: 0 success , 1 can not find player , 2 player is doing something , can not logout,eg: in some room ;
+
+
 	MSG_SHOP_MAKE_ORDER,
 	// client : { shopItemID : 23 , channel : ePayChannel }  // ePayChannel 渠道枚举
 	// svr : { ret : 0 , shopItemID : 23 , channel : ePayChannel,cPrepayId : "asdgsfh234g22jhbjadjg",cOutTradeNo : "232hlhsfhasdg" }
@@ -140,10 +158,7 @@ export enum eMsgType
 	// svr : { pageIdx : 1 , mails : [ { mailID : 234 , type : 0 ,state : 0 ,time : 234523, detail : { } }, ....  ] } 
 	// 10 cnt per page ,if mails size < 10 , means end ;
 	
-	MSG_PLAYER_PROCESS_MAIL,
-	// client : { mailID : 23 , state : eMailState, arg : {}  } . arg : can be null , depend on mail type and process type ;
-	// svr : { ret : 0 ,mailID : 23 ,state : eMailState }
-	// ret : 0 success , 1 mail state error , 2 arg invliad ;
+
 
 	MSG_PLAYER_BIND_ACCOUNT1,
 	// client : { account : 123456 , password : 123456 }

@@ -19,4 +19,11 @@ export class key
     static reqUID = "reqUID" ;
     static selfSessionID = "selfSessionID" ;
     static reconnectToken = "reconnectToken" ;
+    static id = "id" ;
+    static time = "time";
+    static content = "content";
+    static items = "items" ;
+    static title = "title" ;
+    static cnt = "cnt" ;
+    static senderID = "senderID" ;
 }

@@ -10,4 +10,5 @@ export interface IPlayerCompent
     onLogicMsg( msgID : eMsgType , msg : Object ) : boolean;
     onOtherLogin( nNewSessionID : number , ip : string ) : void;
     onUpdateNetState( state : ePlayerNetState , ip? : string ) : void ;
+    onLoadBaseInfoFinished() : void ;
 }

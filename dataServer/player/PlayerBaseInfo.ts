@@ -1,3 +1,4 @@
+import { key } from './../../shared/KeyDefine';
 import { XLogger } from './../../common/Logger';
 import { ePlayerNetState } from './../../common/commonDefine';
 import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
@@ -12,6 +13,25 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
     protected mPlayer : Player = null ;
     protected mIsLoadedData : boolean = false ;
     protected mNetState : ePlayerNetState = ePlayerNetState.eState_Online ;
+    protected mLastCheckGlobalMailID : number = -1 ;
+
+    get isLoaded() : boolean
+    {
+        return this.mIsLoadedData ;
+    }
+    
+    get lastCheckGlobalMailID() : number
+    {
+        return this.mLastCheckGlobalMailID ;
+    }
+
+    set lastCheckGlobalMailID( id : number )
+    {
+        this.mLastCheckGlobalMailID = id ;
+        let arg = { sql : "update playerData set lastCheckGlobalMailID = " + id + " where uid = " + this.uid + " limit 1 ;" } ;
+        this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false ), eRpcFuncID.Func_ExcuteSql, arg ) ;
+    }
+
     get netState() : ePlayerNetState
     {
         return this.mNetState ;
@@ -46,6 +66,25 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
 
     onLogicMsg( msgID : eMsgType , msg : Object ) : boolean
     {
+        switch ( msgID )
+        {
+            case eMsgType.MSG_PLAYER_UPDATE_INFO:
+                {
+                    this.nickName = msg[key.nickeName];
+                    this.sex = msg[key.sex] ;
+                    this.headIconUrl = msg[key.headIcon] ;
+
+                    msg[key.ret] = 0 ;
+                    this.mPlayer.sendMsgToClient(msgID, msg ) ;
+                }
+                break ;
+            case eMsgType.MSG_PLAYER_REFRESH_MONEY:
+                {
+                    msg[key.diamond] = this.diamond ;
+                    this.mPlayer.sendMsgToClient(msgID, msg) ;
+                }
+                break;
+        }
         return false ;
     }
 
@@ -81,11 +120,20 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                 return ;
             }
             self.parse(result) ;
-            self.mIsLoadedData = true ;
-            self.sendDataInfoToClient();
+            self.mLastCheckGlobalMailID = result["lastCheckGlobalMailID"] ;
             XLogger.debug( "finish load base data uid = " + self.mPlayer.uid + " sessionID = " + self.mPlayer.sessionID ) ;
+            self.onFinishLoadData();
         } );
     }
+
+    protected onFinishLoadData()
+    {
+        this.mIsLoadedData = true ;
+        this.mPlayer.onLoadBaseInfoFinished();
+        this.sendDataInfoToClient();
+    }
+
+    onLoadBaseInfoFinished() : void{}
 
     protected sendDataInfoToClient()
     {

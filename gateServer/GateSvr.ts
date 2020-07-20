@@ -186,6 +186,19 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
                 this.mNet.sendMsg(msgID,jsMsg );
             }
         }
+        else if ( eMsgType.MSG_PLAYER_LOGOUT == msgID )
+        {
+            // just as disconnect 
+            XLogger.debug("player logout , regart as disconnect . sessionID = " + nSessionID ) ;
+            let playerID = this.getUidBySessionID(nSessionID) ;
+            if ( -1 == playerID )
+            {
+                XLogger.debug( "player logout but target is null sessionID  = " + nSessionID ) ;
+                return ;
+            }
+
+            this.onPeerDisconnected(nSessionID);
+        }
         else
         {
             XLogger.warn( "unknown msg from client msgId = " + eMsgType[msgID] + " sessionID = " + nSessionID ) ;
