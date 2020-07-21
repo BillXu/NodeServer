@@ -3,6 +3,7 @@ import { PlayerSimpleInfoCacher } from './PlayerSimpleInfoCacher';
 import { IServerApp } from "../common/IServerApp";
 import { eMsgPort } from "../shared/MessageIdentifer";
 import { PlayerMgr } from './PlayerMgr';
+import { MailModule } from './MailModule';
 
 export class DataSvr extends IServerApp
 {
@@ -12,6 +13,7 @@ export class DataSvr extends IServerApp
         super.init(jsCfg) ;
         this.registerModule( new PlayerMgr() ) ;
         this.registerModule( new PlayerSimpleInfoCacher() ) ;
+        this.registerModule( new MailModule() ) ;
     }
 
     getLocalPortType() : eMsgPort

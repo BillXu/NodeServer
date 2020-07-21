@@ -60,6 +60,9 @@ export class MailModule extends IModule
             self.mMaxMailID = result[0]["maxID"] ;
             XLogger.debug( "load max mailID = " + self.mMaxMailID ) ;
         })  ;
+
+        XLogger.debug( "start load global mails" ) ;
+        this.loadMails();
     }
 
     checkNewMails( ncurMaxMailID : number ) : MailData[]
