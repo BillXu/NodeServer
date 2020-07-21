@@ -1,12 +1,15 @@
+import { eItemType, eMailType } from './../shared/SharedDefine';
+import { DataSvr } from './DataSvr';
 import { XLogger } from './../common/Logger';
 import HashMap  from 'hashmap';
 import { eRpcFuncID } from './../common/Rpc/RpcFuncID';
 import { random } from 'lodash';
 import { key } from './../shared/KeyDefine';
-import { MailData } from './../shared/playerData/PlayerMailData';
+import { MailData, eMailState } from './../shared/playerData/PlayerMailData';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { IModule } from "../common/IModule";
 import { IServerApp } from '../common/IServerApp';
+import { PlayerMail } from './player/PlayerMail';
 
 export class MailModule extends IModule
 {
@@ -37,13 +40,13 @@ export class MailModule extends IModule
 
     onRegistedToCenter( svrIdx : number , svrMaxCnt : number ) : void 
     {
+        super.onRegistedToCenter(svrIdx, svrMaxCnt) ;
         if ( this.mMaxMailID != -1 )
         {
             XLogger.debug( "maxMailID already ready load from db maxMailID = " + this.mMaxMailID ) ;
             return ;
         } 
 
-        super.onRegistedToCenter(svrIdx, svrMaxCnt) ;
         let arg = { sql : "select max(id) as maxID from playerMail " } ;
         let self = this ;
         this.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false ), eRpcFuncID.Func_ExcuteSql, arg ,( result : Object )=>{
@@ -79,7 +82,7 @@ export class MailModule extends IModule
             this.mMaxMailID = 0 ;
             XLogger.debug( "why max mailID = -1 , not load from db ? " ) ;
         } 
-        
+
         let cnt = this.getSvrApp().getCurPortMaxCnt() ;
         if ( this.mMaxMailID % cnt != this.getSvrApp().getCurSvrIdx() )
         {
@@ -90,6 +93,76 @@ export class MailModule extends IModule
 
         this.mMaxMailID += cnt ;
         return this.mMaxMailID ;
+    }
+
+    protected loadMails()
+    {
+        XLogger.debug( "load mails for mailModule" ) ;
+        let t = Date.now() - 1000 * 60 * 60 * 24 * 7 ;
+        let arg = { sql : "select * from playerMail where uid = 0 and " + key.time + " > " + t + " limit " + this.mails.count() + " , "+ PlayerMail.PAGE_CNT + ";" } ;
+        let self = this ;
+        this.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false), eRpcFuncID.Func_ExcuteSql, arg ,( result : Object )=>{
+            if ( result[key.ret] == 1 )
+            {
+                XLogger.error( "load mail data error for mailModule, already mails = " + self.mails.count() + " errMsg : " + result["errMsg"] ) ;
+                self.finishLoadMailData();
+                return ;
+            }
+            let r : Object[] = result["result"];
+            for ( let m of r )
+            {
+                let mail = new MailData();
+                mail.parse(m) ;
+                self.mails.set(mail.id, mail ) ;
+            }
+            if ( r.length < PlayerMail.PAGE_CNT )
+            {
+                XLogger.debug("load mail cnt < pageCnt finished loading mails for mailModule curCnt = " + r.length + " totalCnt = " + self.mails.count() ) ;
+                self.finishLoadMailData();
+                return ;
+             } 
+             else
+             {
+                 self.loadMails() ;
+             }   
+        } );
+    }
+
+    protected finishLoadMailData()
+    {
+        XLogger.debug( "finish load mailModule mails cnt = " + this.mails.count() ) ;
+    }
+
+    static sendNormalMail( targetID : number , titile : string , content : string , mails? : { type : eItemType , cnt : number } [] )
+    {
+        let pmail = new MailData();
+        pmail.id = this.s_Mail.generateMailID();
+        pmail.content = content ;
+        pmail.items = mails;
+        pmail.recivedTime = Date.now();
+        pmail.senderID = 0 ;
+        pmail.state = eMailState.eState_Unread ;
+        pmail.title = titile ;
+        pmail.type = eMailType.eMial_Normal ;
+        
+        MailModule.sendMail(targetID, pmail ) ;
+    }
+
+    static sendMail( targetID : number , mail : MailData )
+    {
+        MailModule.saveMailToDB(targetID, mail ) ;
+        if ( 0 == targetID )
+        {
+            this.s_Mail.mails.set(mail.id, mail ) ;
+            XLogger.debug( "recieved glob mail id = " + mail.id ) ;
+            return ;
+        }
+
+        let p = (this.getInstance().getSvrApp() as DataSvr).getPlayerMgr().getPlayerByUID(targetID, true );
+        if ( p )
+        {
+            p.onRecivedMail(mail) ;
+        }
     }
 
     static saveMailToDB( ownerUID : number , mail : MailData )

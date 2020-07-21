@@ -153,6 +153,23 @@ export class PlayerMgr extends IModule implements IPlayerMgr
         } ) ;
     } 
 
+    getPlayerByUID( uid : number , isContainReserve : boolean ) : Player
+    {
+        let p = this.mPlayers.get(uid) ;
+        if ( p )
+        {
+            return p ;
+        }
+
+        if ( !isContainReserve )
+        {
+            return null ;
+        }
+
+        p = this.mReservedPlayers.get(uid) ;
+        return p ;
+    }
+
     protected onPlayerDisconnected( uid : number )
     {
         XLogger.debug( "player disconnecct uid = " + uid ) ;

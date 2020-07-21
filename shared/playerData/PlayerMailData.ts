@@ -10,16 +10,50 @@ export enum eMailState
     eState_Max,
 }
 
-export class MailData
+export class MailData implements IShareData
 {
     id : number  = 0;
     type : eMailType = eMailType.eMail_Max;
-    recivedTime : number = Date.now();
+    recivedTime : number = 0;
     senderID : number = 0 ;
     title : string = "" ;
     content : string = "";
     state : eMailState = eMailState.eState_Unread;
     items : { type : eItemType , cnt : number } [] = null ;
+
+    toJson() : Object 
+    {
+        let jsm = {} ;
+        jsm[key.id] = this.id ;
+        jsm[key.type] = this.type ;
+        jsm[key.time] = this.recivedTime ;
+        jsm[key.title] = this.title ;
+        jsm[key.content] = this.content ;
+        jsm[key.state] = this.state ;
+        jsm[key.senderID] = this.senderID;
+        jsm[key.items] = this.items != null ? JSON.stringify(this.items) : "";
+        return jsm ;
+    }
+
+    parse( jsm : Object  ) : void 
+    {
+        this.id = jsm[key.id];
+        this.type = jsm[key.type];
+        this.recivedTime = jsm[key.time];
+        this.title = jsm[key.title];
+        this.content = jsm[key.content];
+        this.state = jsm[key.state];
+        this.senderID = jsm[key.senderID] ;
+        if ( jsm[key.items] != null && jsm[key.items].length > 3 )
+        {
+            this.items = JSON.parse( jsm[key.items] ) ;
+        }
+        else
+        {
+            this.items = null ;
+        }
+    }
+
 }
 
 export class PlayerMailData implements IShareData
@@ -30,16 +64,7 @@ export class PlayerMailData implements IShareData
     {
         let js = [] ;
         this.mails.forEach(( mail : MailData )=>{
-            let jsm = {} ;
-            jsm[key.id] = mail.id ;
-            jsm[key.type] = mail.type ;
-            jsm[key.time] = mail.recivedTime ;
-            jsm[key.title] = mail.title ;
-            jsm[key.content] = mail.content ;
-            jsm[key.state] = mail.state ;
-            jsm[key.state] = mail.senderID;
-            jsm[key.items] = mail.items != null ? JSON.stringify(mail.items) : "";
-            js.push(jsm) ;
+            js.push( mail.toJson() ) ;
         }) ;
         return js ;
     }
@@ -50,21 +75,7 @@ export class PlayerMailData implements IShareData
         let mails = this.mails;
         v.forEach( ( jsm : Object )=>{
             let mail = new MailData();
-            mail.id = jsm[key.id];
-            mail.type = jsm[key.type];
-            mail.recivedTime = jsm[key.time];
-            mail.title = jsm[key.title];
-            mail.content = jsm[key.content];
-            mail.state = jsm[key.state];
-            mail.senderID = jsm[key.senderID] ;
-            if ( jsm[key.items] != null && jsm[key.items].length > 3 )
-            {
-                mail.items = JSON.parse( jsm[key.items] ) ;
-            }
-            else
-            {
-                mail.items = null ;
-            }
+            mail.parse(jsm) ;
             mails.push(mail) ;
         } ) ;
     }

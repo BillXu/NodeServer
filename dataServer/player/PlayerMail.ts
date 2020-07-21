@@ -1,3 +1,4 @@
+import { eItemType } from './../../shared/SharedDefine';
 import { key } from './../../shared/KeyDefine';
 import { XLogger } from './../../common/Logger';
 import { random, remove } from 'lodash';
@@ -5,7 +6,7 @@ import { Player } from './Player';
 import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
 import { ePlayerNetState } from './../../common/commonDefine';
 import { IPlayerCompent } from './IPlayerCompent';
-import { PlayerMailData, MailData } from './../../shared/playerData/PlayerMailData';
+import { PlayerMailData, MailData, eMailState } from './../../shared/playerData/PlayerMailData';
 import { eRpcFuncID } from '../../common/Rpc/RpcFuncID';
 import { eMailType } from '../../shared/SharedDefine';
 import { MailModule } from '../MailModule';
@@ -13,7 +14,8 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
 {
     static NAME : string = "PlayerMail" ;
     protected mPlayer : Player = null ;
-    protected static PAGE_CNT : number = 20 ;
+    static PAGE_CNT : number = 20 ;
+    static PAGE_CLIENT_CNT : number = 10 ;
     protected mMaxMailID : number = 0 ;
     protected mCheckGlobalMailsTimer : NodeJS.Timeout = null ;
     protected mIsLoadedData : boolean = false ;
@@ -46,6 +48,144 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
 
     onLogicMsg( msgID : eMsgType , msg : Object ) : boolean
     {
+        if ( eMsgType.MSG_PLAYER_REQ_MAIL == msgID )
+        {
+            let maxMailID : number = msg["maxID"] ;
+            let sms = [] ;
+            for ( let m of this.mails )
+            {
+                if ( m.id <= maxMailID )
+                {
+                    continue ;
+                }
+                sms.push( m ) ;
+            }
+            XLogger.debug( "send back mails to player uid = " + this.mPlayer.uid + " mailCnt = " + sms.length ) ;
+            let msgBack = {} ;
+            let vMails : Object[] = [] ;
+            for ( let idx = 0 ; idx < sms.length ; ++idx )
+            {
+                let m : MailData = sms[idx] ;
+                if ( m.type == eMailType.eMail_SysRefForState )
+                {
+                    let gid = parseInt(m.content) ;
+                    let sm = MailModule.getInstance().getMailByMailID( gid ) ;
+                    if ( sm == null )
+                    {
+                        XLogger.debug( "global mail is null with mialID = " + gid + " playerUID = " + this.mPlayer.uid ) ;
+                        continue ;
+                    }
+                    let jsg = sm.toJson();
+                    jsg[key.id] = m.id ;
+                    vMails.push( jsg ) ;
+                }
+                else
+                {
+                    vMails.push( m.toJson() ) ;
+                }
+                
+                if ( vMails.length == PlayerMail.PAGE_CLIENT_CNT )
+                {
+                    let isFinal = ( idx == sms.length - 1 );
+                    msgBack["mails"] = vMails ;
+                    msgBack["isFinal"] = isFinal ? 1 : 0 ;
+                    this.mPlayer.sendMsgToClient(msgID, msgBack ) ;
+                    vMails.length = 0 ;
+                    if ( isFinal )
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            msgBack["mails"] = vMails ;
+            msgBack["isFinal"] = 1 ;
+            this.mPlayer.sendMsgToClient(msgID, msgBack ) ;
+            return true;
+        }
+        else if ( eMsgType.MSG_PLAYER_PROCESS_MAIL == msgID )
+        {
+            let mailID = msg[key.id] ;
+            let state : eMailState = msg[key.state] ;
+            
+            let mls : MailData = null ;
+            for ( let v of this.mails )
+            {
+                if ( v.id == mailID )
+                {
+                    mls = v ;
+                    break;
+                }
+            }
+
+            let ret = 0 ;
+            do
+            {
+                if ( null == mls )
+                {
+                    ret = 1 ;
+                    break ;
+                }
+
+                if ( state == mls.state )
+                {
+                    XLogger.debug( "req do set same state for mailID = " + mls.id ) ;
+                    ret = 2 ;
+                    break ;
+                }
+
+                switch ( state )
+                {
+                    case eMailState.eState_Delete:
+                        {
+                            this.setMailStateToDB(mls.id, state ) ;
+                            remove(this.mails,( m : MailData )=>{ return m.id == mls.id }) ;
+                        }
+                        break ;
+                    case eMailState.eState_GotItems :
+                        {
+                            mls.state = state ;
+                            this.setMailStateToDB(mls.id, state ) ;
+                            let items = mls.items ;
+                            if ( mls.type == eMailType.eMail_SysRefForState )
+                            {
+                                let symailID = parseInt(mls.content) ;
+                                let msys = MailModule.getInstance().getMailByMailID(symailID);
+                                if ( msys == null )
+                                {
+                                    XLogger.debug( "can not find global mail to get items , global mailID = " + symailID  ) ;
+                                    ret = 4 ;
+                                    break ;
+                                }
+                                items = msys.items ;
+                            }
+                            if ( items == null || items.length == 0 )
+                            {
+                                XLogger.debug( "why mail do not contain items , can not withdraw items mailID = " + mls.id ) ;
+                                ret = 3 ;
+                                break ;
+                            }
+                            this.gotItemsInMail(items) ;
+                        }
+                        break ;
+                    case eMailState.eState_Read:
+                        {
+                            mls.state = state ;
+                            this.setMailStateToDB(mls.id, state ) ;
+                        }
+                        break ;
+                    default:
+                        XLogger.warn( "unknown act type for mail actState = " + state + " mailID = " + mls.id ) ;
+                        ret = 2 ;
+                        break ;
+                }
+
+            }while(0) ;
+
+            msg[key.ret] = ret ;
+            this.mPlayer.sendMsgToClient(msgID, msg ) ;
+            return true  ;
+        }
         return false ;
     }
 
@@ -80,6 +220,34 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
     }
 
     // self function 
+    protected gotItemsInMail( mails : { type : eItemType , cnt : number } [] )
+    {
+
+    }
+
+    protected setMailStateToDB( mialID : number  , state : eMailState )
+    {
+        switch ( state )
+        {
+            case eMailState.eState_Delete:
+                {
+                    let arg = { sql : "update playerMail set isDelete = 1 where id = " + mialID } ;
+                    this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false ), eRpcFuncID.Func_ExcuteSql , arg ) ;
+                }
+                break ;
+            case eMailState.eState_GotItems :
+            case eMailState.eState_Read:
+                {
+                    let arg = { sql : "update playerMail set state = " + state + " where id = " + mialID } ;
+                    this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false ), eRpcFuncID.Func_ExcuteSql , arg ) ;
+                }
+                break ;
+            default:
+                XLogger.warn( "unknown state for mail actState to DB = " + state + " mailID = " + mialID ) ;
+                break ;
+        }
+    }
+
     protected startTimerCheckGlobalMail()
     {
         if ( this.mPlayer.getBaseInfo().isLoaded == false || false == this.mIsLoadedData )
@@ -150,12 +318,9 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
         }
 
         // delete processed mails ;
-        let vR = remove(this.mails,( m : MailData )=>{ return m.type < eMailType.eMial_Normal ;}) ;
-        for ( let v of vR )
-        {
-            let arg = { sql : "update playerMail set isDelete = 1 where uid = " + this.mPlayer.uid + " and isDelete = 0 and type < " + eMailType.eMial_Normal } ;
-            this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false ), eRpcFuncID.Func_ExcuteSql , arg ) ;
-        }
+        remove(this.mails,( m : MailData )=>{ return m.type < eMailType.eMial_Normal ;}) ;
+        let arg = { sql : "update playerMail set isDelete = 1 where uid = " + this.mPlayer.uid + " and isDelete = 0 and type < " + eMailType.eMial_Normal } ;
+        this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false ), eRpcFuncID.Func_ExcuteSql , arg ) ;
     }
 
     protected doProcessOfflineEventMail( mail : MailData )
@@ -185,7 +350,7 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
         }
 
         XLogger.debug( "checkGlobalMails last id = " + lastID + " uid = " + this.mPlayer.uid ) ;
-        
+
         if ( lastID == 0 ) // when new register player ;
         {
             lastID = MailModule.getInstance().generateMailID();
@@ -193,11 +358,12 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
         }
 
         let gmails = MailModule.getInstance().checkNewMails( lastID ) ;
+        XLogger.debug( "player check global mails cnt = " + gmails.length + " uid = " + this.mPlayer.uid ) ;
         if ( gmails.length == 0 )
         {
             return ;
         }
-
+        
         for ( let g of gmails )
         {
             let mail = new MailData();

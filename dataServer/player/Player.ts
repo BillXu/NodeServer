@@ -1,3 +1,5 @@
+import { MailData } from './../../shared/playerData/PlayerMailData';
+import { PlayerMail } from './PlayerMail';
 import { PlayerSimpleInfo } from './../../shared/playerData/PlayerSimpleInfo';
 import { XLogger } from './../../common/Logger';
 import { ePlayerNetState } from './../../common/commonDefine';
@@ -53,6 +55,7 @@ export class Player
     protected installCompents()
     {
         this.mCompents.push( new PlayerBaseInfo() ) ;
+        this.mCompents.push( new PlayerMail() )
     }
 
     onLogicMsg( msgID : eMsgType , msg : Object ) : boolean
@@ -109,6 +112,19 @@ export class Player
         return null ;
     }
 
+    getMail() : PlayerMail
+    {
+        for ( let v of this.mCompents )
+        {
+            if ( v.getCompentName() == PlayerMail.NAME )
+            {
+                return v as PlayerMail ;
+            }
+        }
+
+        return null ;
+    }
+
     visitPlayerSimpleInfo( info : Object ) : void
     {
         let p = PlayerSimpleInfo.prototype.toJson.call(this.getBaseInfo());
@@ -125,5 +141,10 @@ export class Player
     state()
     {
         XLogger.debug( "state : player uid = " + this.uid + " sessionID = " + this.sessionID + "netState = " + this.netState + " ip = " + this.ip ) ;
+    }
+
+    onRecivedMail( mail : MailData )
+    {
+        this.getMail().onRecivedMail(mail) ;
     }
 }

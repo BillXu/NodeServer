@@ -90,12 +90,16 @@ export enum eMsgType
 	// svr : { isFinal : false,  mails : [ mailkey : value ] }   
 
 	MSG_PLAYER_PROCESS_MAIL,
-	// client : { mailID : 23 , state : eMailState } . 
-	// svr : { ret : 0 ,mailID : 23 ,state : eMailState }
-	// ret : 0 success , 1 mail state error 
+	// client : { id : 23 , state : eMailState } . 
+	// svr : { ret : 0 ,id : 23 ,state : eMailState }
+	// ret : 0 success , 1 can not find mail , 2 can not finish operate , 3 do not contain items , 4 mail already expired; 
 
 
 
+
+
+
+	
 	///------above is new ;
 	MSG_JSON_CONTENT,
 	MSG_TELL_CLIENT_SVR_DISCONNECT, // tell client svr
