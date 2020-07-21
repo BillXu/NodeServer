@@ -4,7 +4,7 @@ export enum eRpcFuncID
     // arg : { sql : string } , // can not contain user input values ; 
     // result : { ret : 0 , errMsg : "", result : {} }  
     Func_InformPlayerNetState,
-    // arg : { uid : 244 , state : ePlayerNetState, ip : string } // only online state have ip key ;
+    // arg : { uid : 244 , state : ePlayerNetState, sessionID : 23 , ip : string } // only online state have ip key ;
     Func_Register,
     // arg : { account : "dfagadf" , type : eAccountType , nickeName : "name" , headIconUrl : "http://www.baidu.com" ,sex : eSex, ip : "192.168.1.35" } 
     // result : { ret : 0 , uid : 233 } 

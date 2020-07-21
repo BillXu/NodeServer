@@ -133,6 +133,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             // arg : { uid : 244 , state : ePlayerNetState, ip : string } // only online state have ip key ;
             let uid = arg["uid"] ;
             let state = arg["state"] ;
+            let sessionID = arg[key.sessionID] ;
             let player = this.mPlayers.get(uid) ;
             XLogger.debug( "recieved rpc ,  update player netState uid = " + uid + " sessionID = " + (player == null ? "null " :  player.sessionID )+ " netState = " + ePlayerNetState[state] ) ;
             if ( null == player )
@@ -141,10 +142,25 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             }
             else
             {
-                player.onUpdateNetState( state,arg["ip"] ) ;
+                if ( ePlayerNetState.eState_Disconnected == state || ePlayerNetState.eState_WaitingReconnect == state )
+                {
+                    if ( player.sessionID == sessionID )
+                    {
+                        player.onUpdateNetState( state,arg["ip"] ) ;
+                    }
+                    else
+                    {
+                        XLogger.debug( "not the same connection , so invalid refresh netState uid = " + player.uid ) ;
+                    }
+                }
+                else
+                {
+                    player.onUpdateNetState( state,arg["ip"] ) ;
+                }
+                
             }
 
-            if ( null != player && ePlayerNetState.eState_Disconnected == state )
+            if ( null != player && ePlayerNetState.eState_Disconnected == state && player.sessionID == sessionID )
             {
                 self.onPlayerDisconnected( uid ) ;
                 //XLogger.debug( "player disconnect session id = " + player.sessionID ) ;

@@ -121,6 +121,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
         arg["uid"] = playerID;
         arg["state"] = ePlayerNetState.eState_Online ;
         arg["ip"] = ip;
+        arg[key.sessionID] = nSessionID ;
         this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, playerID , eRpcFuncID.Func_InformPlayerNetState, arg ) ;
         XLogger.debug("invoke rpc update NetState reconnected ok uid = " + playerID + " sessionID = " + nSessionID + " from sessionID = " + fromSessionID ) ;
     }
@@ -136,6 +137,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
         let arg = {} ;
         arg["uid"] = playerID;
         arg["state"] = ePlayerNetState.eState_WaitingReconnect ;
+        arg[key.sessionID] = nSessionID ;
         this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, playerID , eRpcFuncID.Func_InformPlayerNetState, arg ) ;
         XLogger.debug( "invoker rpc , tell data svr ,  player enter waiting reconnect sessionID = " + nSessionID  + " uid = " + playerID ) ;
     }
@@ -152,6 +154,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
         let arg = {} ;
         arg["uid"] = playerID;
         arg["state"] = ePlayerNetState.eState_Disconnected ;
+        arg[key.sessionID] = nSessionID ;
         this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, playerID , eRpcFuncID.Func_InformPlayerNetState, arg ) ;
         
         this.mSessionIDmapUID.delete( nSessionID ) ;
@@ -285,6 +288,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
                         let darg = {} ;
                         darg["uid"] = lastUID;
                         darg["state"] = ePlayerNetState.eState_Disconnected ;
+                        darg[key.sessionID] = nSessionID ;
                         self.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, lastUID , eRpcFuncID.Func_InformPlayerNetState, darg ) ;
                     }
                 }
