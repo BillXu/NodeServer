@@ -110,6 +110,11 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
         {
             let targetPort = jsMsg["dstPort"] ;
             let targetID = jsMsg["dstID"] ;
+            if ( targetPort == null || targetID == null || jsMsg["orgPort"] == null || jsMsg["orgID"] == null || jsMsg["msg"] == null )
+            {
+                XLogger.error( "transfer msg lack of proper value : " + JSON.stringify( jsMsg ) ) ;
+            }
+            
             if ( targetPort == eMsgPort.ID_MSG_PORT_CLIENT )
             {
                 targetPort = eMsgPort.ID_MSG_PORT_GATE ;

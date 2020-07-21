@@ -67,7 +67,7 @@ export abstract class IServerApp implements INetworkDelegate , IServer
         if ( msgID == eMsgType.MSG_TRANSER_DATA )
         {
             try {
-                XLogger.debug( "recieved msg msgID = " + eMsgType[msg["msg"][Network.MSG_ID]] + " msg : " + JSON.stringify(msg["msg"]||{})) ;
+                XLogger.debug( "recieved msg msgID = " + eMsgType[msg["msg"][Network.MSG_ID]] + " msg : " + JSON.stringify(msg["msg"]||{}) ) ;
                 this.onLogicMsg(msg["msg"][Network.MSG_ID], msg["msg"], msg["orgID"], msg["orgPort"],msg["dstID"] ) ;
             } catch (err) {
                 XLogger.error( "message : " + err.message ) ;

@@ -182,7 +182,8 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
             }
             else
             {
-                jsMsg["orgID"] = nSessionID ;  // the msg from client , orgID always sessionID 
+                jsMsg["orgID"] = nSessionID ;  // the msg from client , orgID always sessionID
+                jsMsg["orgPort"] = eMsgPort.ID_MSG_PORT_GATE ;
                 this.mNet.sendMsg(msgID,jsMsg );
             }
         }

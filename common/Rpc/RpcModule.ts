@@ -90,7 +90,7 @@ export class RpcModule extends IModule
         req.retryedTimes = 1 ;
         this.mSendingRequests.set(req.sieralNum, req ) ;
 
-        XLogger.debug( "invoke RPC = " + eRpcFuncID[funcID] + " sieral  = " + req.sieralNum + "tareget port = " + eMsgPort[targetPort] + " sending queue cnt = " + this.mSendingRequests.count() + " arg : " + JSON.stringify(arg||{}) ) ;
+        //XLogger.debug( "invoke RPC = " + eRpcFuncID[funcID] + " sieral  = " + req.sieralNum + "tareget port = " + eMsgPort[targetPort] + " sending queue cnt = " + this.mSendingRequests.count() + " arg : " + JSON.stringify(arg||{}) ) ;
 
         let jsMsg = {} ;
         jsMsg["sieralNum"] = req.sieralNum;
@@ -248,7 +248,7 @@ export class RpcModule extends IModule
                     rd.targetPort = orgPort ;
                 }
                 
-                XLogger.debug( "already put in delay respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
+                //XLogger.debug( "already put in delay respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
                 return true ;
             }
 
@@ -265,11 +265,11 @@ export class RpcModule extends IModule
                 dr.targetID = orgID ;
                 dr.targetPort = orgPort ;
                 this.mDelayRespRequest.set(sieralNum , dr ) ;
-                XLogger.debug( "excute rpc put in delay respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
+                //XLogger.debug( "excute rpc put in delay respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
             }
             else
             {
-                XLogger.debug( "rpc respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
+                //XLogger.debug( "rpc respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
                 let jsBack = {} ;
                 jsBack["sieralNum"] = sieralNum ;
                 jsBack["state"] = 0 ;
@@ -293,7 +293,7 @@ export class RpcModule extends IModule
                 return true;
             }
 
-            XLogger.debug( "recieved rec reuslt , func = " + eRpcFuncID[req.funcID] + " result = " + JSON.stringify(msg["result"] || {}) ) ;
+            //XLogger.debug( "recieved rec reuslt , func = " + eRpcFuncID[req.funcID] + " result = " + JSON.stringify(msg["result"] || {}) ) ;
             // state : 0 , success , 1 delay respone , 2 error ;
             switch ( state )
             {

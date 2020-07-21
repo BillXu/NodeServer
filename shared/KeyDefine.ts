@@ -26,4 +26,5 @@ export class key
     static title = "title" ;
     static cnt = "cnt" ;
     static senderID = "senderID" ;
+    static maxID = "maxID" ;
 }

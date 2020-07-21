@@ -186,6 +186,7 @@ class ClientPeer
     protected onMessage( data : WebSocket.MessageEvent )
     {
         let js = JSON.parse(data.data.toString());
+        //XLogger.debug( "recived msg sessionID = " + this.mSessionID + " msg = " + data.data.toString() ) ;
         let msgID = js[ServerNetwork.MSG_ID] ;
         if ( msgID == eMsgType.MSG_VERIFY )
         {

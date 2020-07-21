@@ -60,7 +60,7 @@ export class MailModule extends IModule
             self.mMaxMailID = 0 ;
             if ( result["result"][0]["maxID"] != null )
             {
-                self.mMaxMailID = result[0]["maxID"];
+                self.mMaxMailID = result["result"][0]["maxID"];
             }
             XLogger.debug( "load max mailID = " + self.mMaxMailID ) ;
         })  ;
@@ -178,12 +178,15 @@ export class MailModule extends IModule
         + key.id + " = " + mail.id + ", "
         + key.uid + " = " + ownerUID + ", "
         + key.type + " = " + mail.type + " ,"
-        + key.content + " = " + mail.content + ", "
-        + key.items + " = " + ( (mail.items == null || mail.items.length ) <= 0 ? "" : JSON.stringify(mail.items) ) + ", "
+        + key.content + " = '" + mail.content + "', "
+        + key.items + " = '" + ( (mail.items == null || mail.items.length  <= 0 ) ? "" : JSON.stringify(mail.items) ) + "', "
         + key.senderID + " = " + mail.senderID + ", "
         + key.state + " = " + mail.state + ", "
-        + key.title + " = " + mail.title + ", "
-        + key.time + " = " + mail.recivedTime + ", "  } ;
+        + key.title + " = '" + mail.title + "', "
+        + key.time + " = " + mail.recivedTime + " ;"  } ;
         this.s_Mail.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false ), eRpcFuncID.Func_ExcuteSql, arg ) ;
     }
 }
+
+
+

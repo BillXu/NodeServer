@@ -7,6 +7,8 @@ class TestClient implements INetworkDelegate
 {
     mNet : Network = null ;
     mAccount : string = "" ;
+    mLocalMaxMailID : number = 0 ;
+    mUID : number = 0 ;
     // network delegate
     onVerifyResult( isOk : boolean ) : void
     {
@@ -70,6 +72,29 @@ class TestClient implements INetworkDelegate
     onLogicMsg( msgID : eMsgType , msg : Object )
     {
         XLogger.debug( "client recieved logic msg = " + eMsgType[msgID] + " msg = " + JSON.stringify(msg) ) ;
+        if ( eMsgType.MSG_PLAYER_OTHER_LOGIN == msgID )
+        {
+            process.exit(0) ;
+        }
+
+        if ( eMsgType.MSG_PlAYER_INFORM_MAX_MAIL_ID == msgID )
+        {
+            let mxid = msg[key.maxID] ;
+            if ( mxid <= this.mLocalMaxMailID )
+            {
+                XLogger.debug("local and remote max mail id is the same = " + mxid + " localID = " + this.mLocalMaxMailID ) ;
+                return ;
+            }
+
+            let msgreq = {} ;
+            msgreq[key.maxID] = this.mLocalMaxMailID; 
+            this.sendMsg(eMsgPort.ID_MSG_PORT_DATA, this.mUID, eMsgType.MSG_PLAYER_REQ_MAIL, msgreq );
+            XLogger.debug( "start req mail local mail id = " + this.mLocalMaxMailID ) ;
+        }
+        else if ( eMsgType.MSG_PLAYER_BASE_DATA == msgID )
+        {
+            this.mUID = msg[key.uid] ;
+        }
     }
 
     sendMsg( port : eMsgPort , targetID : number , msgID : eMsgType , msg : Object , isTransfor : boolean = true )
