@@ -187,6 +187,3 @@ export class MailModule extends IModule
         this.s_Mail.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false ), eRpcFuncID.Func_ExcuteSql, arg ) ;
     }
 }
-
-
-
