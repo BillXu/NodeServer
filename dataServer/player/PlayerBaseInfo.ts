@@ -70,12 +70,23 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         {
             case eMsgType.MSG_PLAYER_UPDATE_INFO:
                 {
+                    if ( this.nickName == msg[key.nickeName] && this.sex == msg[key.sex] && this.headIconUrl == msg[key.headIcon] )
+                    {
+                        XLogger.debug( "info is the same no need to modify uid = " + this.mPlayer.uid ) ;
+                        msg[key.ret] = 0 ;
+                        this.mPlayer.sendMsgToClient(msgID, msg ) ;
+                        break ;
+                    }
+
                     this.nickName = msg[key.nickeName];
                     this.sex = msg[key.sex] ;
                     this.headIconUrl = msg[key.headIcon] ;
 
                     msg[key.ret] = 0 ;
                     this.mPlayer.sendMsgToClient(msgID, msg ) ;
+
+                    let arg = { sql : "update playerData set nickName = '" + this.nickName + "' ," + " sex = " + this.sex + " , headUrl = '" + this.headIconUrl + "' " + " where uid = " + this.uid + " limit 1 ;" } ;
+                    this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, arg ) ;
                 }
                 break ;
             case eMsgType.MSG_PLAYER_REFRESH_MONEY:
@@ -84,8 +95,10 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     this.mPlayer.sendMsgToClient(msgID, msg) ;
                 }
                 break;
+            default:
+                return false ;
         }
-        return false ;
+        return true ;
     }
 
     onOtherLogin( nNewSessionID : number , ip : string ) : void
@@ -102,6 +115,20 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         }
         this.mNetState = state ;
         XLogger.debug( "player update netState = " + state + "sessionID = " + this.mPlayer.sessionID ) ;
+    }
+
+    onMoneyChanged( isRefreshToClient : boolean = false )
+    {
+        let arg = { sql : "update playerData set diamond = " + this.diamond + " where uid = " + this.uid + " limit 1 ;" } ;
+        this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, arg ) ;
+
+        if ( isRefreshToClient )
+        {
+            let msg = {} ;
+            msg[key.diamond] = this.diamond ;
+            this.mPlayer.sendMsgToClient(eMsgType.MSG_PLAYER_REFRESH_MONEY, msg )  ;
+        }
+
     }
 
     protected loadDataInfo()

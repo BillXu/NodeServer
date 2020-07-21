@@ -10,6 +10,7 @@ import { PlayerMailData, MailData, eMailState } from './../../shared/playerData/
 import { eRpcFuncID } from '../../common/Rpc/RpcFuncID';
 import { eMailType } from '../../shared/SharedDefine';
 import { MailModule } from '../MailModule';
+import { type } from 'os';
 export class PlayerMail extends PlayerMailData implements IPlayerCompent
 {
     static NAME : string = "PlayerMail" ;
@@ -222,7 +223,26 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
     // self function 
     protected gotItemsInMail( mails : { type : eItemType , cnt : number } [] )
     {
+        for ( let m of mails )
+        {
+            switch ( m.type )
+            {
+                case eItemType.eItem_Diamond:
+                    {
+                        if ( m.cnt <= 0 )
+                        {
+                            m.cnt = 0 ;
+                            XLogger.warn( "why give a item diamon cnt = " + m.cnt ) ;
+                        }
 
+                        this.mPlayer.getBaseInfo().diamond += m.cnt ;
+                        this.mPlayer.getBaseInfo().onMoneyChanged(true);
+                        XLogger.debug( "player a item from mail diamon cnt = " + m.cnt + " uid = " + this.mPlayer.uid ) ;
+                    }
+                    break ;
+            }
+        }
+        
     }
 
     protected setMailStateToDB( mialID : number  , state : eMailState )
@@ -264,6 +284,7 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
 
         XLogger.debug("load data finished start interval check global mails uid = " + this.mPlayer.uid ) ;
         this.mCheckGlobalMailsTimer = setInterval(this.checkGlobalMails.bind(this),60000);
+        this.checkGlobalMails();
     }
 
     protected loadMailData()

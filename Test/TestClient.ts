@@ -1,3 +1,4 @@
+import { MailData, eMailState } from './../shared/playerData/PlayerMailData';
 import { XLogger } from './../common/Logger';
 import { eAccountType, eSex } from './../shared/SharedDefine';
 import { key } from './../shared/KeyDefine';
@@ -94,6 +95,37 @@ class TestClient implements INetworkDelegate
         else if ( eMsgType.MSG_PLAYER_BASE_DATA == msgID )
         {
             this.mUID = msg[key.uid] ;
+
+            let msgUpdateInfo = {} ;
+            msgUpdateInfo[key.nickeName] = "updatedname" ;
+            msgUpdateInfo[key.sex] = eSex.eSex_Female ;
+            msgUpdateInfo[key.headIcon] = "modifyheadIcon" ;
+            this.sendMsg(eMsgPort.ID_MSG_PORT_DATA, this.mUID, eMsgType.MSG_PLAYER_UPDATE_INFO, msgUpdateInfo ) ;
+        }
+        else if ( eMsgType.MSG_PLAYER_REQ_MAIL == msgID )
+        {
+            let mails : Object[] = msg["mails"] ;
+            for ( let m of mails )
+            {
+                let ml = new MailData();
+                ml.parse(m) ;
+                let mp = {} ;
+                mp[key.id] = ml.id ;
+
+                mp[key.state] = eMailState.eState_Read ;
+                if ( ml.items != null && ml.items.length > 0  )
+                {
+                    mp[key.state] = eMailState.eState_GotItems ;
+                    XLogger.debug( "get mail items mailID = " + ml.id ) ;
+                }
+                else
+                {
+                    mp[key.state] = eMailState.eState_Delete;
+                }
+                
+                XLogger.debug( "set mail setate mail id = " + ml.id ) ;
+                this.sendMsg(eMsgPort.ID_MSG_PORT_DATA, this.mUID, eMsgType.MSG_PLAYER_PROCESS_MAIL, mp ) ;
+            }
         }
     }
 

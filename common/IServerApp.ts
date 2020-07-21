@@ -89,7 +89,7 @@ export abstract class IServerApp implements INetworkDelegate , IServer
             }
     
             let cnt = msg["maxCnt"] ;
-            XLogger.debug("connected to Center svr idx = " + idx  + " maxCnt = " + cnt ) ; 
+            XLogger.info("connected to Center svr idx = " + idx  + " maxCnt = " + cnt ) ; 
             this.mCurSvrIdx = idx ;
             this.mCurSvrPortMaxCnt = cnt ;
             this.onRegistedToCenter( idx , cnt ) ;
