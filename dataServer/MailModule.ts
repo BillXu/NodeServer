@@ -57,7 +57,11 @@ export class MailModule extends IModule
                 return ;
             }
 
-            self.mMaxMailID = result[0]["maxID"] ;
+            self.mMaxMailID = 0 ;
+            if ( result["result"][0]["maxID"] != null )
+            {
+                self.mMaxMailID = result[0]["maxID"];
+            }
             XLogger.debug( "load max mailID = " + self.mMaxMailID ) ;
         })  ;
 

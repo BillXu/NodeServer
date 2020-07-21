@@ -303,6 +303,7 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
         let self = this ;
         this.mails.forEach(( m : MailData )=>{ if ( m.id > self.mMaxMailID ){ self.mMaxMailID = m.id ; } }) ;
         this.startTimerCheckGlobalMail();
+        this.sendMaxMailID();
     }
 
     protected sysAutoProcessOfflineEvent()

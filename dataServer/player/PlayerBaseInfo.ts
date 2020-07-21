@@ -19,7 +19,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
     {
         return this.mIsLoadedData ;
     }
-    
+
     get lastCheckGlobalMailID() : number
     {
         return this.mLastCheckGlobalMailID ;
@@ -120,7 +120,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                 return ;
             }
             self.parse(result) ;
-            self.mLastCheckGlobalMailID = result["lastCheckGlobalMailID"] ;
+            self.mLastCheckGlobalMailID = result["lastCheckGlobalMailID"] || 0 ;
             XLogger.debug( "finish load base data uid = " + self.mPlayer.uid + " sessionID = " + self.mPlayer.sessionID ) ;
             self.onFinishLoadData();
         } );

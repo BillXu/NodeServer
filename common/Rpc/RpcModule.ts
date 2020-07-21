@@ -301,7 +301,15 @@ export class RpcModule extends IModule
                 {
                     if ( req.resultCallBack != null )
                     {
-                        req.resultCallBack(msg["result"],sieralNum,req.jsUserData );
+                        try
+                        {
+                            req.resultCallBack(msg["result"],sieralNum,req.jsUserData );
+                        }
+                        catch ( err )
+                        {
+                            XLogger.error( "rpc reuslt exception : " + err.message + " sieral = " + sieralNum ) ;
+                            XLogger.error( "rpc result stack exception : " + err.stack ) ;
+                        }
                     }
                     this.mSendingRequests.delete( sieralNum ) ;
                 }
