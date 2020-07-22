@@ -95,11 +95,27 @@ export enum eMsgType
 	// ret : 0 success , 1 can not find mail , 2 can not finish operate , 3 do not contain items , 4 mail already expired; 
 
 
+	MSG_PLAYER__DIAMOND_TREE_REQ_INFO,
+	// client : null ;
+	// svr : { level : 0 , diamond : [ 100,200 ], leftCD : 100, nextFertilizer : 2 , nextDiamond : [ 100,200 ] }
+	// nextFertilizer : level up need Fertilizer cnt .  nextDiamonds: next level tree will produce diamon cnt ;
+
+	MSG_PLAYER__DIAMOND_TREE_LEVEL_UP,
+	// client : null 
+	// svr :  {  ret : 0 , curFertilizer : 100 , level : 0 , diamond : [ 100,200 ], nextFertilizer : 2 , nextDiamond : [ 100,200 ] }
+	// ret : 0 level up success , 1 lack of fertilizer ; 
+
+	MSG_PLAYER__DIAMOND_TREE_GET_DIAMOND,
+	// client : null ;
+	// svr : { ret : 0 , leftCD : 0 ,recivedDiamond : 23 , finalDiamond : 235 }
+	// ret : 0 success , 1 CDing , please wait a while ;
+
+	MSG_PLAYER__DIAMOND_TREE_DECREASE_CD,
+	// client : { adTime : 10 } ;
+	// svr : { ret : 0 , leftCD : 10 } 
+	// ret: 0 success , 1 invalid action ; 
 
 
-
-
-	
 	///------above is new ;
 	MSG_JSON_CONTENT,
 	MSG_TELL_CLIENT_SVR_DISCONNECT, // tell client svr

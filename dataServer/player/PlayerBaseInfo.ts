@@ -14,6 +14,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
     protected mIsLoadedData : boolean = false ;
     protected mNetState : ePlayerNetState = ePlayerNetState.eState_Online ;
     protected mLastCheckGlobalMailID : number = -1 ;
+    treeCDEndTime : number = 0 ;
 
     get isLoaded() : boolean
     {
@@ -35,6 +36,19 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
     get netState() : ePlayerNetState
     {
         return this.mNetState ;
+    }
+
+    toJson() : Object 
+    {
+        let js = super.toJson();
+        js[key.treeCDEndTime] = this.treeCDEndTime ;
+        return js ;
+    }
+
+    parse( js : Object  ) : void 
+    {
+        super.parse(js) ;
+        this.treeCDEndTime = js[key.treeCDEndTime] * 1000;
     }
 
     init( player : Player , ip : string ) : void 
@@ -119,13 +133,14 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
 
     onMoneyChanged( isRefreshToClient : boolean = false )
     {
-        let arg = { sql : "update playerData set diamond = " + this.diamond + " where uid = " + this.uid + " limit 1 ;" } ;
+        let arg = { sql : "update playerData set diamond = " + this.diamond + " , fertilizer = " + this.fertilizer + " where uid = " + this.uid + " limit 1 ;" } ;
         this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, arg ) ;
 
         if ( isRefreshToClient )
         {
             let msg = {} ;
             msg[key.diamond] = this.diamond ;
+            msg[key.fertilizer] = this.fertilizer ;
             this.mPlayer.sendMsgToClient(eMsgType.MSG_PLAYER_REFRESH_MONEY, msg )  ;
         }
 

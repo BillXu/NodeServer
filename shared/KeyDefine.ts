@@ -27,4 +27,14 @@ export class key
     static cnt = "cnt" ;
     static senderID = "senderID" ;
     static maxID = "maxID" ;
+    static level = "level" ;
+    static leftCD = "leftCD";
+    static nextFertilizer = "nextFertilizer" ;
+    static nextDiamond = "nextDiamond" ;
+    static curFertilizer = "curFertilizer" ;
+    static recivedDiamond = "recivedDiamond" ;
+    static finalDiamond = "finalDiamond" ;
+    static fertilizer = "fertilizer" ;
+    static treeLevel = "treeLevel" ;
+    static treeCDEndTime = "treeCDEndTime" ;
 }

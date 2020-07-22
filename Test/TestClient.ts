@@ -96,11 +96,18 @@ class TestClient implements INetworkDelegate
         {
             this.mUID = msg[key.uid] ;
 
-            let msgUpdateInfo = {} ;
-            msgUpdateInfo[key.nickeName] = "updatedname" ;
-            msgUpdateInfo[key.sex] = eSex.eSex_Female ;
-            msgUpdateInfo[key.headIcon] = "modifyheadIcon" ;
-            this.sendMsg(eMsgPort.ID_MSG_PORT_DATA, this.mUID, eMsgType.MSG_PLAYER_UPDATE_INFO, msgUpdateInfo ) ;
+            // req tree info ;
+            this.sendMsg(eMsgPort.ID_MSG_PORT_DATA, this.mUID, eMsgType.MSG_PLAYER__DIAMOND_TREE_REQ_INFO, {} ) ;
+
+        }
+        else if ( eMsgType.MSG_PLAYER__DIAMOND_TREE_REQ_INFO == msgID )
+        {
+            let cnt = 100 ;
+            while ( cnt-- )
+            {
+                // req tree info ;
+                this.sendMsg(eMsgPort.ID_MSG_PORT_DATA, this.mUID, eMsgType.MSG_PLAYER__DIAMOND_TREE_GET_DIAMOND, {} ) ;
+            }
         }
         else if ( eMsgType.MSG_PLAYER_REQ_MAIL == msgID )
         {
@@ -215,6 +222,8 @@ class TestClient implements INetworkDelegate
 
 let c = new TestClient();
 c.init("ws://localhost:3001", "wechatName" ) ;
+
+
 //let date = new Date();
 //date.setDate(date.getDate() - 20 ) ;
 // let a = date.getTime();

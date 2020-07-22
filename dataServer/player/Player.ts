@@ -1,3 +1,4 @@
+import { PlayerDiamondTree } from './PlayerDiamondTree';
 import { MailData } from './../../shared/playerData/PlayerMailData';
 import { PlayerMail } from './PlayerMail';
 import { PlayerSimpleInfo } from './../../shared/playerData/PlayerSimpleInfo';
@@ -56,6 +57,7 @@ export class Player
     {
         this.mCompents.push( new PlayerBaseInfo() ) ;
         this.mCompents.push( new PlayerMail() )
+        this.mCompents.push( new PlayerDiamondTree() );
     }
 
     onLogicMsg( msgID : eMsgType , msg : Object ) : boolean
