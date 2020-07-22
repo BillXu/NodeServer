@@ -181,7 +181,20 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
             }
             else if ( eMsgType.MSG_PLAYER_LOGIN == realMsgID )
             {
-                this.doPlayerLogin( nSessionID, jsMsg["account"], jsMsg["type"] ) ;
+                this.doPlayerLogin( nSessionID, realMsg["account"], realMsg["type"] ) ;
+            } 
+            else if ( eMsgType.MSG_PLAYER_LOGOUT == realMsgID )
+            {
+                // just as disconnect 
+                XLogger.debug("player logout , regart as disconnect . sessionID = " + nSessionID ) ;
+                let playerID = this.getUidBySessionID(nSessionID) ;
+                if ( -1 == playerID )
+                {
+                    XLogger.debug( "player logout but target is null sessionID  = " + nSessionID ) ;
+                    return ;
+                }
+
+                this.onPeerDisconnected(nSessionID);
             }
             else
             {
@@ -246,7 +259,16 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
             XLogger.debug( "sessionID = " + nSessionID + " register " + ( ret == 0 ? "success" : "failed" )  ) ;
             jsRegInfo["ret"] = ret ;
             delete jsRegInfo[key.nickeName] ; delete jsRegInfo[key.headIcon] ;
-            self.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_PLAYER_REGISTER, jsRegInfo ) ;
+
+
+            let msgTransfer = {} ;
+            msgTransfer[key.msgID] = eMsgType.MSG_TRANSER_DATA ;
+            msgTransfer["dstPort"] = eMsgPort.ID_MSG_PORT_CLIENT ;
+            msgTransfer["dstID"] = nSessionID ;
+            msgTransfer["orgPort"] = eMsgPort.ID_MSG_PORT_GATE ;
+            msgTransfer["orgID"] = this.mNet.getSessionID();
+            msgTransfer["msg"] = jsRegInfo;
+            self.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_TRANSER_DATA, msgTransfer ) ;
             // if ( 0 == ret )
             // {
             //     self.mSessionIDmapUID.set( nSessionID, result["uid"] ) ;
@@ -268,7 +290,14 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
             XLogger.debug( "sessionID = " + nSessionID + " login " + ( ret == 0 && sate == 0 ? "success" : "failed" + "ret = " + ret )  ) ;
             if ( 0 != ret )
             {
-                self.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_PLAYER_LOGIN, { ret : ret , state : sate } ) ;
+                let msgTransfer = {} ;
+                msgTransfer[key.msgID] = eMsgType.MSG_TRANSER_DATA ;
+                msgTransfer["dstPort"] = eMsgPort.ID_MSG_PORT_CLIENT ;
+                msgTransfer["dstID"] = nSessionID ;
+                msgTransfer["orgPort"] = eMsgPort.ID_MSG_PORT_GATE ;
+                msgTransfer["orgID"] = this.mNet.getSessionID();
+                msgTransfer["msg"] = { ret : ret , state : sate ,msgID : eMsgType.MSG_PLAYER_LOGIN };
+                self.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_TRANSER_DATA, msgTransfer ) ;
                 return ;
             }
             

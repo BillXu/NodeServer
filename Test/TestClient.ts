@@ -41,14 +41,14 @@ class TestClient implements INetworkDelegate
             this.onLogicMsg(unpackMsg[key.msgID], unpackMsg );
             return ;
         }
-        else if ( eMsgType.MSG_PLAYER_REGISTER == msgID )
-        {
-            this.onRegistered(msg) ;
-        }
-        else if ( eMsgType.MSG_PLAYER_LOGIN == msgID )
-        {
-            this.onLogin(msg) ;
-        }
+        // else if ( eMsgType.MSG_PLAYER_REGISTER == msgID )
+        // {
+        //     this.onRegistered(msg) ;
+        // }
+        // else if ( eMsgType.MSG_PLAYER_LOGIN == msgID )
+        // {
+        //     this.onLogin(msg) ;
+        // }
     }
 
     onReconectedResult( isOk : boolean ) : void 
@@ -78,6 +78,15 @@ class TestClient implements INetworkDelegate
             process.exit(0) ;
         }
 
+         if ( eMsgType.MSG_PLAYER_REGISTER == msgID )
+        {
+            this.onRegistered(msg) ;
+        }
+        else if ( eMsgType.MSG_PLAYER_LOGIN == msgID )
+        {
+            this.onLogin(msg) ;
+        }
+
         if ( eMsgType.MSG_PlAYER_INFORM_MAX_MAIL_ID == msgID )
         {
             let mxid = msg[key.maxID] ;
@@ -102,7 +111,7 @@ class TestClient implements INetworkDelegate
         }
         else if ( eMsgType.MSG_PLAYER__DIAMOND_TREE_REQ_INFO == msgID )
         {
-            let cnt = 100 ;
+            let cnt = 3 ; 
             while ( cnt-- )
             {
                 // req tree info ;
@@ -172,7 +181,7 @@ class TestClient implements INetworkDelegate
         msg[key.nickeName] = this.mAccount + "_name" ;
         msg[key.headIcon] = this.mAccount + "_headIcon";
         msg[key.sex] = eSex.eSex_Female ;
-        this.sendMsg(eMsgPort.ID_MSG_PORT_GATE, 0, eMsgType.MSG_PLAYER_REGISTER, msg ,false ) ;
+        this.sendMsg(eMsgPort.ID_MSG_PORT_GATE, 0, eMsgType.MSG_PLAYER_REGISTER, msg ) ;
     }
 
     onRegistered( msg : Object )
@@ -198,7 +207,7 @@ class TestClient implements INetworkDelegate
         // ret : 0 success , 1 account error with your type ;
         msg[key.account] = this.mAccount ;
         msg[key.type] = eAccountType.eAccount_Wechat ;
-        this.sendMsg(eMsgPort.ID_MSG_PORT_GATE, 0, eMsgType.MSG_PLAYER_LOGIN, msg ,false ) ;
+        this.sendMsg(eMsgPort.ID_MSG_PORT_GATE, 0, eMsgType.MSG_PLAYER_LOGIN, msg ) ;
 
        // let self = this ;
         //setTimeout(()=>{ XLogger.debug("try disconnect test reconnect") ; self.mNet.close(); },3000 ) ;
@@ -221,7 +230,7 @@ class TestClient implements INetworkDelegate
 }
 
 let c = new TestClient();
-c.init("ws://localhost:3001", "wechatName" ) ;
+c.init("ws://localhost:3001", "wechatNameNew" ) ;
 
 
 //let date = new Date();
