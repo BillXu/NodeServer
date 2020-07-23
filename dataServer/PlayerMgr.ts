@@ -1,3 +1,4 @@
+import { MailModule } from './MailModule';
 import { key } from './../shared/KeyDefine';
 import { DataSvr } from './DataSvr';
 import { ePlayerNetState } from './../common/commonDefine';
@@ -9,6 +10,7 @@ import { IModule } from '../common/IModule';
 import { IServerApp } from '../common/IServerApp';
 import { Player } from './player/Player';
 import { eRpcFuncID } from '../common/Rpc/RpcFuncID';
+import { eMailType } from '../shared/SharedDefine';
 export class PlayerMgr extends IModule implements IPlayerMgr 
 {
     static MODUEL_NAME : string = "PlayerMgr" ;
@@ -33,6 +35,9 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             let player = this.mPlayers.get(targetID) ;
             if ( player == null )
             {
+                msg[key.ret] = 200 ;
+                msg["err"] = "can not find player with ID = " + targetID ;
+                this.sendMsg(msgID, msg, orgPort, orgID, this.getSvrApp().getCurSvrIdx() ) ;
                 XLogger.warn( "player is not on this server , canot process msg . uid = " + targetID + "msgID = " + msg[key.msgID] + " msg = " + JSON.stringify(msg)  ) ;
                 return false
             }
@@ -166,6 +171,103 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 //XLogger.debug( "player disconnect session id = " + player.sessionID ) ;
             }
             return {} ;
+        } ) ;
+
+        rpc.registerRPC(eRpcFuncID.Func_ReqPlayerPlayingMatch,( sierNum : number, arg : Object )=>{
+            let uid = arg[key.uid] ;
+            let sessionID = arg[key.sessionID] ;
+            let p = self.getPlayerByUID(uid, false ) ;
+            if ( !p )
+            {
+                return { ret : 1 } ;
+            }
+
+            if ( p.sessionID != sessionID )
+            {
+                return { ret : 2 };
+            }
+
+            let js = p.onRPCCall( eRpcFuncID.Func_ReqPlayerPlayingMatch , arg) ;
+            js[key.ret] = 0 ;
+            return js ;
+        } ) ;
+
+        rpc.registerRPC(eRpcFuncID.Func_SetPlayingMatch,( sierNum : number, arg : Object )=>{
+            let uid = arg[key.uid] ;
+            let p = self.getPlayerByUID(uid, false ) ;
+            if ( !p )
+            {
+                MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_SetPlayingMatch, arg : arg } ) ; 
+                return {} ;
+            }
+
+            let js = p.onRPCCall( eRpcFuncID.Func_SetPlayingMatch , arg) ;
+            return js ;
+        } ) ;
+
+        rpc.registerRPC(eRpcFuncID.Func_DeductionMoney,( sierNum : number, arg : Object )=>{
+            let uid = arg[key.uid] ;
+            let sessionID = arg[key.sessionID] ;
+            let p = self.getPlayerByUID(uid, false ) ;
+            if ( !p )
+            {
+                return { ret : 1 } ;
+            }
+
+            if ( p.sessionID != sessionID )
+            {
+                return { ret : 2 };
+            }
+
+            let js = p.onRPCCall( eRpcFuncID.Func_DeductionMoney , arg) ;
+            if ( js[key.ret] == null )
+            {
+                XLogger.warn( "forget ret key in eRpcFuncID.Func_ReqPlayerPlayingMatch" ) ;
+            }
+            return js ;
+        } ) ;
+
+        rpc.registerRPC(eRpcFuncID.Func_addMoney,( sierNum : number, arg : Object )=>{
+            let uid = arg[key.uid] ;
+            let p = self.getPlayerByUID(uid, false ) ;
+            if ( !p )
+            {
+                MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_addMoney, arg : arg } ) ; 
+                return {} ;
+            }
+
+            let js = p.onRPCCall( eRpcFuncID.Func_addMoney , arg) ;
+            return js ;
+        } ) ;
+
+        rpc.registerRPC(eRpcFuncID.Func_CheckUID,( sierNum : number, arg : Object )=>{
+            let uid = arg[key.uid] ;
+            let sessionID = arg[key.sessionID] ;
+            let p = self.getPlayerByUID(uid, false ) ;
+            if ( !p )
+            {
+                return { ret : 1 } ;
+            }
+
+            if ( p.sessionID != sessionID )
+            {
+                return { ret : 2 } ;
+            }
+
+            return { ret : 0 } ;
+        } ) ;
+
+        rpc.registerRPC(eRpcFuncID.Func_ModifySignedMatch,( sierNum : number, arg : Object )=>{
+            let uid = arg[key.uid] ;
+            let p = self.getPlayerByUID(uid, false ) ;
+            if ( !p )
+            {
+                MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_ModifySignedMatch, arg : arg } ) ; 
+                return {} ;
+            }
+
+            let js = p.onRPCCall( eRpcFuncID.Func_ModifySignedMatch , arg) ;
+            return js ;
         } ) ;
     } 
 

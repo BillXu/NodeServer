@@ -37,4 +37,12 @@ export class key
     static fertilizer = "fertilizer" ;
     static treeLevel = "treeLevel" ;
     static treeCDEndTime = "treeCDEndTime" ;
+    static matchs = "matchs" ;
+    static matchID = "matchID" ;
+    static moneyType = "moneyType" ;
+    static comment = "comment" ;
+    static isAdd = "isAdd" ;
+    static isStart = "isStart" ;
+    static playingMatchID = "playingMatchID" ;
+    static signedMatches = "signedMatches" ;
 }

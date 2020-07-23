@@ -155,6 +155,21 @@ export class MailModule extends IModule
         MailModule.sendMail(targetID, pmail ) ;
     }
 
+    static sendOfflineEventMail( targetID : number , type : eMailType , js : Object )
+    {
+        let pmail = new MailData();
+        pmail.id = this.s_Mail.generateMailID();
+        pmail.content = JSON.stringify(js||{}) ;
+        pmail.items = null;
+        pmail.recivedTime = Date.now();
+        pmail.senderID = 0 ;
+        pmail.state = eMailState.eState_Unread ;
+        pmail.title = "offline" ;
+        pmail.type = type ;
+        
+        MailModule.sendMail(targetID, pmail ) ;
+    }
+
     static sendMail( targetID : number , mail : MailData )
     {
         MailModule.saveMailToDB(targetID, mail ) ;

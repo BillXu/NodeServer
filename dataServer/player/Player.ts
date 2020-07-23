@@ -1,3 +1,4 @@
+import { eRpcFuncID } from './../../common/Rpc/RpcFuncID';
 import { PlayerDiamondTree } from './PlayerDiamondTree';
 import { MailData } from './../../shared/playerData/PlayerMailData';
 import { PlayerMail } from './PlayerMail';
@@ -148,5 +149,10 @@ export class Player
     onRecivedMail( mail : MailData )
     {
         this.getMail().onRecivedMail(mail) ;
+    }
+
+    onRPCCall( funcID : eRpcFuncID , arg : Object ) : Object
+    {        
+        return this.getBaseInfo().onRPCCall( funcID, arg ) ;
     }
 }

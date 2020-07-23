@@ -69,7 +69,7 @@ export class RpcModule extends IModule
             let reqs = this.mSendingRequests.values();
             for ( let v of reqs )
             {
-                if ( v.uniqueTag === uniqueTag )
+                if ( v.uniqueTag === uniqueTag && funcID == v.funcID )
                 {
                     XLogger.warn( "already send unique id reuquest can not send again = " + uniqueTag ) ;
                     return 0;

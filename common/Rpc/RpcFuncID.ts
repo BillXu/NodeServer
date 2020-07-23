@@ -20,5 +20,23 @@ export enum eRpcFuncID
     Func_LoadPlayerInfo,
     // arg : { uid : 2345 }
     // result : {  key : value } , key means table fialed ;  , if ObjectKeys() return length is 0 , means failed
+    Func_ReqPlayerPlayingMatch,
+    // arg : { uid : 235 , sessionID : 23 }
+    // result : { ret : 0 , matchID : 0 }
+    // ret : 0 means ok , 1 can not find player with uid , 2 sessionID not equal ;
+    Func_SetPlayingMatch,
+    // arg { uid : 234 , matchID : 234, isStart : 0  }  // start or end ;
+    Func_DeductionMoney,
+    // arg : { uid : 2345 , sessionID : 23 , moneyType : eItemType , cnt : 234 , comment : "descript why this option" }
+    // result : { ret : 0 , moneyType : eItemType , cnt : 234 }
+    // ret : 0 , success , 1 uid error , 2 money not enough ;
+    Func_addMoney,
+    // arg : { uid : 2345, moneyType : eItemType , cnt : 234,comment : "descript why this option" }
+    Func_CheckUID, // data svr ;
+    // arg : { uid : 235, sessionID : 234 }
+    // result : { ret : 0 }
+    // ret : 0 check pass , 1 cannot find player with uid , 2 check failed ;
+    Func_ModifySignedMatch,
+    // arg { uid : 234 , matchID : 234 , isAdd : 0 }
     Func_Max,
 }

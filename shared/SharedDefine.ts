@@ -15,6 +15,7 @@ export enum eSex
 export enum eMailType
 {
     eMail_OfflineEvent,
+    eMail_RpcCall, // { funcID : eRpcFuncID , arg : {} } 
     eMail_Popup,
     eMail_Sys = 100,
     eMial_Normal,
@@ -26,4 +27,20 @@ export enum eItemType
 {
     eItem_Diamond,
     eItem_Max,
+}
+
+export enum eMatchType
+{
+    eMatch_Quick,  // reach fix player cnt , then start match ;
+    eMatch_FixTime, // match started on fix time ;
+    eMatch_RepeatTime, // every one hour start a game ;
+    eMatch_Max,
+}
+
+export enum eMatchState
+{
+    eMatch_SignUp,
+    eMatch_Playing,
+    eMatch_Closed,
+    eMatch_Max,
 }

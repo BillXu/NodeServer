@@ -245,6 +245,20 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
 
     protected doPlayerRegister( nSessionID : number , jsRegInfo : Object )
     {
+        if ( jsRegInfo[key.account] == null )
+        {
+            XLogger.warn( "account is null cannot register sessionID = " + nSessionID ) ;
+            let msgTransfer = {} ;
+            msgTransfer[key.msgID] = eMsgType.MSG_TRANSER_DATA ;
+            msgTransfer["dstPort"] = eMsgPort.ID_MSG_PORT_CLIENT ;
+            msgTransfer["dstID"] = nSessionID ;
+            msgTransfer["orgPort"] = eMsgPort.ID_MSG_PORT_GATE ;
+            msgTransfer["orgID"] = this.mNet.getSessionID();
+            msgTransfer["msg"] = jsRegInfo;
+            this.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_TRANSER_DATA, msgTransfer ) ;
+            return ;
+        }
+        
         let arg = {} ;
         arg[key.account] = jsRegInfo[key.account] ;
         arg[key.nickeName] = jsRegInfo[key.nickeName] ;

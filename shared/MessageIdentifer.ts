@@ -7,6 +7,8 @@ export enum eMsgPort
 	ID_MSG_PORT_VERIFY,
 	ID_MSG_PORT_DB,
 	ID_MSG_PORT_DATA,
+	ID_MSG_PORT_MATCH,
+	ID_MSG_PORT_MJXY, // xiang yang ka wu xing ;
 	ID_MSG_PORT_ALL_SERVER,
 	ID_MSG_PORT_MAX,
 };
@@ -119,6 +121,25 @@ export enum eMsgType
 	// client : { adTime : 10 } ;
 	// svr : { ret : 0 , leftCD : 10 } 
 	// ret: 0 success , 1 invalid action ; 
+
+	MSG_PLAYER_REQ_MATCH_LIST = 200,
+	// client : { type : eMatchType }
+	// svr : { type : eMatchType, matchs : [ { matchData } , ...  ] }
+
+	MSG_PLAYER_MATCH_SIGN_UP,
+	// client : { uid : 2000 }
+	// svr : { ret : 0 , matchID : 2000, type : eMatchType }
+	// ret : 0 success , 1 uid error , 2 money not enough , 3 already in other match, 
+	//  4 already in this match , 5 can not find player with uid , 6 member is full
+	// 7 match not in wait signe up state;
+	// uid : self uid , 
+	// matchID : when sign up success , will return to client;
+
+	MSG_PLAYER_MATCH_SIGN_OUT, // canncel match
+	// client : { uid : 23000 }
+	// svr : { ret : 0 }
+	// ret : 0 , success , 1 you are not login , 2 uid error , 3 you are not in sign list , 4 match not in wait signe up state;
+
 
 
 	///------above is new ;

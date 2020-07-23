@@ -110,6 +110,7 @@ export class Application
             case eMsgPort.ID_MSG_PORT_DB:
                 return "db" ;
             default:
+                XLogger.error( "unknown svr type to get cfg port = " + eMsgPort[port] );
                 return null ;
         }
     }

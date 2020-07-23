@@ -1,3 +1,4 @@
+import { eItemType } from './../../shared/SharedDefine';
 import { key } from './../../shared/KeyDefine';
 import { XLogger } from './../../common/Logger';
 import { ePlayerNetState } from './../../common/commonDefine';
@@ -188,5 +189,101 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         let js = this.toJson();
         this.mPlayer.sendMsgToClient(eMsgType.MSG_PLAYER_BASE_DATA, js ) ;
         XLogger.debug( "send base data to client uid = " + this.mPlayer.uid + "sessionID = " +  this.mPlayer.sessionID ) ;
+    }
+
+    onRPCCall( funcID : eRpcFuncID , arg : Object ) : Object
+    {        
+        switch ( funcID )
+        {
+            case eRpcFuncID.Func_ReqPlayerPlayingMatch:
+                {
+                    return { ret : 0 , matchID : this.playingMatchID } ;
+                }
+                break ;
+            case eRpcFuncID.Func_SetPlayingMatch:
+                {
+                    let mid = arg[key.matchID] ;
+                    let isStart = arg[key.isStart] == 1 ;
+                    if ( isStart == false && mid != this.playingMatchID )
+                    {
+                        XLogger.warn( "ending match is not playing match ,why ? uid = " + this.uid + " playing matchID = " + this.playingMatchID + " ending MatchID = " + mid ) ;
+                    }
+                    
+                    if ( isStart && this.playingMatchID != 0 )
+                    {
+                        XLogger.warn( "playing matchID is not 0 , how can start another game uid = " + this.uid + " starting matchID = " + mid + " playing matchID " + this.playingMatchID  ) ;
+                    }
+
+                    this.playingMatchID = isStart ? mid : 0 ;
+                }
+                break ;
+            case eRpcFuncID.Func_DeductionMoney:
+                {
+                    // arg : { uid : 2345 , sessionID : 23 , moneyType : eItemType , cnt : 234 , comment : "descript why this option" }
+                    // result : { ret : 0 , moneyType : eItemType , cnt : 234 }
+                    // ret : 0 , success , 1 uid error , 2 money not enough ;
+                    arg[key.ret] = this.onModifyMoney( arg[key.moneyType], arg[key.cnt] * -1 ,arg[key.comment] ) ? 0 : 2 ;
+                    XLogger.debug( "player deduction money uid = " + this.uid + " result = " + ( arg[key.ret] == 0  ? " success " : " failed "  ) + " detail : " + JSON.stringify(arg) );
+                    return arg ;
+                }
+                break ;
+            case eRpcFuncID.Func_addMoney:
+                {
+                    // arg : { uid : 2345, moneyType : eItemType , cnt : 234,comment : "descript why this option" }
+                    this.onModifyMoney( arg[key.moneyType], arg[key.cnt] ,arg[key.comment] ) ? 0 : 2 ;
+                    XLogger.debug( "player add money uid = " + this.uid + " type = " + arg[key.moneyType] + " cnt = " + arg[key.cnt] + " comment = " + key.comment ) ;
+                }
+                break ;
+            case eRpcFuncID.Func_ModifySignedMatch:
+                {
+                    // arg { uid : 234 , matchID : 234 , isAdd : 0 }
+                    let mid = arg[key.matchID] ;
+                    let idx = this.signedMatches.indexOf( mid ) ;
+                    let isAdd = arg[key.isAdd] == 1 ;
+                    if ( isAdd && idx != -1 )
+                    {
+                        XLogger.warn( "adding signed up matchID , but already in list matchID = " + mid + " uid = " + this.uid + " signedMatches = " + JSON.stringify(this.signedMatches) ) ;
+                        break ;
+                    }
+
+                    if ( isAdd == false && idx == -1 )
+                    {
+                        XLogger.warn( "removing signed up matchID , but do not in list matchID = " + mid + " uid = " + this.uid + " signedMatches = " + JSON.stringify(this.signedMatches) ) ;
+                        break ;
+                    }
+                    
+                    let r = isAdd ? this.signedMatches.push(mid) : this.signedMatches.splice(idx,1) ;
+                    XLogger.debug( "stop complie remove unuse var , so print r = " + r  ) ;
+                }
+                break ;
+            default:
+                XLogger.warn("unknown rpc call for player rpc funcID = " + eRpcFuncID[funcID] + " uid = " + this.uid + " arg = " + JSON.stringify(arg || {} )) ; 
+                return {} ;
+        }
+        return {} ;
+    }
+
+    onModifyMoney( moneyType : eItemType , cnt : number , commont : string ) : boolean 
+    {
+        if ( cnt == 0 )
+        {
+            XLogger.warn( "modify money cnt = 0 type = " + moneyType + " uid = " + this.uid + " comment = " + commont ) ;
+            return true ;
+        }
+
+        let isAdd = cnt > 0 ;
+        if ( eItemType.eItem_Diamond == moneyType )
+        {
+            if ( isAdd == false && this.diamond < Math.abs(cnt) )
+            {
+                return false ;
+            }
+            this.diamond += cnt ;
+            this.onMoneyChanged( false ) ;
+            return true ;
+        }
+
+        XLogger.warn( "known money type = " + moneyType + " cnt = " + cnt + " uid = " + this.uid ) ;
+        return false ;
     }
 }

@@ -23,7 +23,6 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
     init( player : Player , ip : string ) : void 
     {
         this.mPlayer = player ;
-        this.loadMailData();
     }
 
     getCompentName() : string 
@@ -36,7 +35,10 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
         if ( this.mIsLoadedData == false )
         {
             XLogger.error("will never come to here already reactive , must load data ok  uid = " + this.mPlayer.uid ) ;
-            this.loadMailData();
+            if ( this.mPlayer.getBaseInfo().isLoaded )
+            {
+                this.loadMailData();
+            }
         }
         else
         {
@@ -217,7 +219,8 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
 
     onLoadBaseInfoFinished() : void
     {
-        this.startTimerCheckGlobalMail();
+        XLogger.debug( " base data load ok , start load mailData uid = " + this.mPlayer.uid ) ;
+        this.loadMailData();
     }
 
     // self function 
@@ -303,7 +306,15 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
                 return ;
             }
             let r : Object[] = result["result"];
+            let len = self.mails.length ;
             self.parse(r) ;
+            if ( len >= self.mails.length && r.length > 0 )
+            {
+                XLogger.error( "parse occoured a error must finish loadmail r = " + JSON.stringify(r) + " uid = " + self.mPlayer.uid ) ;
+                self.finishLoadMailData();
+                return ;
+            }
+
             if ( r.length < PlayerMail.PAGE_CNT )
             {
                 XLogger.debug("load mail cnt < pageCnt finished loading mails , uid = " + self.mPlayer.uid + " curCnt = " + r.length + " totalCnt = " + self.mails.length ) ;
@@ -329,25 +340,33 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
 
     protected sysAutoProcessOfflineEvent()
     {
-        for ( let mail of this.mails )
-        {
-            if ( mail.type >= eMailType.eMial_Normal )
-            {
-                continue ;
-            }
-            // do process ;
-            this.doProcessOfflineEventMail(mail) ;
-        }
-
         // delete processed mails ;
-        remove(this.mails,( m : MailData )=>{ return m.type < eMailType.eMial_Normal ;}) ;
+        let vOfflineEventMail = remove(this.mails,( m : MailData )=>{ return m.type < eMailType.eMial_Normal ;}) ;
+        vOfflineEventMail.sort( ( a : MailData, b : MailData  )=> a.recivedTime - b.recivedTime ) ;
+        XLogger.debug( "begin process offline event mail uid = " + this.mPlayer.uid ) ;
+        for ( let om of vOfflineEventMail )
+        {
+            // do process ;
+            this.doProcessOfflineEventMail(om) ;
+        }
+        XLogger.debug( "end process offline event mail uid = " + this.mPlayer.uid ) ;
         let arg = { sql : "update playerMail set isDelete = 1 where uid = " + this.mPlayer.uid + " and isDelete = 0 and type < " + eMailType.eMial_Normal } ;
         this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false ), eRpcFuncID.Func_ExcuteSql , arg ) ;
     }
 
     protected doProcessOfflineEventMail( mail : MailData )
     {
-
+        switch ( mail.type )
+        {
+            case eMailType.eMail_RpcCall:
+                {
+                    let js = JSON.parse(mail.content) ;
+                    this.mPlayer.onRPCCall(js["funcID"], js["arg"] ) ; 
+                }
+                break ;
+            default:
+                XLogger.warn( "unknown offline event mail type = " + mail.type + " mailID = " + mail.id ) ;
+        }
     }
 
     protected sendMaxMailID()

@@ -1,3 +1,4 @@
+import { clone } from 'lodash';
 import { MailData, eMailState } from './../shared/playerData/PlayerMailData';
 import { XLogger } from './../common/Logger';
 import { eAccountType, eSex } from './../shared/SharedDefine';
@@ -223,7 +224,6 @@ class TestClient implements INetworkDelegate
 
 let c = new TestClient();
 c.init("ws://localhost:3001", "wechatNameNew" ) ;
-
 
 //let date = new Date();
 //date.setDate(date.getDate() - 20 ) ;
