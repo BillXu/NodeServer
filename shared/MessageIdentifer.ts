@@ -17,7 +17,12 @@ export enum eMsgType
 	//--new define begin---
 	// the msg title used between servers 
 	MSG_SERVERS_USE,
-    MSG_VERIFY,   // used between svr ;
+
+	MSG_PING,
+	// client : { any }
+	// svr : { any }
+	
+	MSG_VERIFY,   // used between svr ;
     // client : { pwd : aa , reconnectToken : number }
 	// svr : { ret : 0 , reconnectToken : number, sessionID : 2345 } 
 	// reconnectToken : must keep your token unique , recommond generate  = ( now() % 10000 ) * 1000 + random(1,1000) ;

@@ -188,7 +188,13 @@ class ClientPeer
         let js = JSON.parse(data.data.toString());
         //XLogger.debug( "recived msg sessionID = " + this.mSessionID + " msg = " + data.data.toString() ) ;
         let msgID = js[ServerNetwork.MSG_ID] ;
-        if ( msgID == eMsgType.MSG_VERIFY )
+        if ( eMsgType.MSG_PING == msgID )
+        {
+            this.mIsKeepLive = true ;
+            this.mSocketPeer.send(data.data.toString()) ;
+            return ;
+        }
+        else if ( msgID == eMsgType.MSG_VERIFY )
         {
             this.mReconnectToken = js[key.reconnectToken] ;
             let ret = this.checkVerify( js["pwd"] )

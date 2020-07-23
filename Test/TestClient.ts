@@ -41,14 +41,6 @@ class TestClient implements INetworkDelegate
             this.onLogicMsg(unpackMsg[key.msgID], unpackMsg );
             return ;
         }
-        // else if ( eMsgType.MSG_PLAYER_REGISTER == msgID )
-        // {
-        //     this.onRegistered(msg) ;
-        // }
-        // else if ( eMsgType.MSG_PLAYER_LOGIN == msgID )
-        // {
-        //     this.onLogin(msg) ;
-        // }
     }
 
     onReconectedResult( isOk : boolean ) : void 
