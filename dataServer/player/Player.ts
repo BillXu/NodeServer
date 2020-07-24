@@ -157,10 +157,11 @@ export class Player
         return this.getBaseInfo().onRPCCall( funcID, arg ) ;
     }
 
-    onRecivedNotice( notice : string )
+    onRecivedNotice( notice : string , time : number  ) // miliseconds ; date.now(); can be change to loace time ;
     {
         let msg = {} ;
         msg[key.notice] = notice ;
+        msg[key.time] = Math.floor(time/1000 ) ;
         this.sendMsgToClient(eMsgType.MSG_PLAYER_NOTICE_DLG, msg ) ;
     }
 }
