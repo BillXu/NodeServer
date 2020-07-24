@@ -4,7 +4,8 @@ import { eMsgPort } from '../../shared/MessageIdentifer';
 import { Match } from './Match';
 export interface IMatchLawDelegate
 {
-    onPlayerFinish( player : MatchPlayer , rankIdx : number, isFinal : boolean, matchLaw : IMatchLaw ) : void ;
+    onPlayerFinish( player : MatchPlayer , rankIdx : number, matchLaw : IMatchLaw ) : void ;
+    onGuaFenResultFinished( player : MatchPlayer[] , matchLaw : IMatchLaw ) : void ;
     onLawFinished( matchLaw : IMatchLaw ) : void ;
 }
 

@@ -178,6 +178,14 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             return {} ;
         } ) ;
 
+        rpc.registerRPC(eRpcFuncID.Func_SendMail,( sierNum : number, arg : Object )=>{
+            let uid = arg[key.uid] ;
+            let content = arg[key.content] ;
+            let title = arg[key.title] || "系统";
+            MailModule.sendNormalMail(uid, title, content ) ;
+            return {} ;
+        } ) ;
+
         rpc.registerRPC(eRpcFuncID.Func_ReqPlayerPlayingMatch,( sierNum : number, arg : Object )=>{
             let uid = arg[key.uid] ;
             let sessionID = arg[key.sessionID] ;
@@ -281,12 +289,25 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             let p = self.getPlayerByUID(uid, false ) ;
             if ( !p || p.netState != ePlayerNetState.eState_Online )
             {
-                MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_ModifySignedMatch, arg : arg } ) ; 
+                MailModule.sendNoticeMail(uid,notice ) ; 
                 return {} ;
             }
 
-            p.onRecivedNotice(notice) ;
+            p.onRecivedNotice(notice,Date.now() ) ;
             return {} ;
+        } ) ;
+
+        rpc.registerRPC(eRpcFuncID.Func_MatchResult, ( sierNum : number, arg : Object )=>{
+            let uid = arg[key.uid] ;
+            let p = self.getPlayerByUID(uid, false ) ;
+            if ( !p )
+            {
+                MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_MatchResult, arg : arg } ) ; 
+                return {} ;
+            }
+
+            let js = p.onRPCCall( eRpcFuncID.Func_MatchResult , arg) ;
+            return js ;
         } ) ;
     } 
 

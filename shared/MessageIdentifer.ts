@@ -123,7 +123,7 @@ export enum eMsgType
 	// ret: 0 success , 1 invalid action ; 
 
 	MSG_PLAYER_NOTICE_DLG,
-	// svr : { noitice : "this is a notice" }
+	// svr : { noitice : "this is a notice", time : 234235234234  }  // time change change to local time . seconds ;
 
 	MSG_PLAYER_REQ_MATCH_LIST = 200,
 	// client : { type : eMatchType }
@@ -143,7 +143,9 @@ export enum eMsgType
 	// svr : { ret : 0 }
 	// ret : 0 , success , 1 you are not login , 2 uid error , 3 you are not in sign list , 4 match not in wait signe up state;
 
-
+	MSG_PLAYER_MATCH_RESULT,
+	//svr : { rankIdx : 0 , matchID : 234 , reward : IMoney[] } 
+	// if do not have rewards , reward key will be null ;
 
 	///------above is new ;
 	MSG_JSON_CONTENT,

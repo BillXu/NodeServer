@@ -1,3 +1,4 @@
+import { IMoney } from './../../shared/IMoney';
 import { eItemType } from './../../shared/SharedDefine';
 import { key } from './../../shared/KeyDefine';
 import { XLogger } from './../../common/Logger';
@@ -266,6 +267,31 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     XLogger.debug( "stop complie remove unuse var , so print r = " + r  ) ;
                 }
                 break ;
+            case eRpcFuncID.Func_MatchResult:
+                {
+                    // arg : { uid : 235 , rankIdx : 2 ,  reward : IMoney[] , matchID : 2345 , matchName : "this is a match" }
+                    let vRwards : IMoney[] = arg[key.reward] ;
+                    let mid = arg[key.matchID] ;
+                    if ( vRwards == null )
+                    {
+                        XLogger.debug( "player do not get reward uid = " + this.uid + " matchID = " + mid ) ;
+                    }
+                    else
+                    {
+                        for ( let m of vRwards )
+                        {
+                            this.onModifyMoney(m.type, m.cnt, arg[key.matchName] + " 获奖名次：" + arg[key.rankIdx] ,false ) ;
+                        }
+                        this.onMoneyChanged(true) ;
+                    }
+
+                    if ( mid != this.playingMatchID )
+                    {
+                        XLogger.warn( "result ending match is not playing match ,why ? uid = " + this.uid + " playing matchID = " + this.playingMatchID + " ending MatchID = " + mid ) ;
+                    }
+                    this.playingMatchID = 0 ; // clear playing flag ;
+                }
+                break ;
             default:
                 XLogger.warn("unknown rpc call for player rpc funcID = " + eRpcFuncID[funcID] + " uid = " + this.uid + " arg = " + JSON.stringify(arg || {} )) ; 
                 return {} ;
@@ -273,7 +299,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         return {} ;
     }
 
-    onModifyMoney( moneyType : eItemType , cnt : number , commont : string ) : boolean 
+    onModifyMoney( moneyType : eItemType , cnt : number , commont : string, isSaveDB : boolean = true  ) : boolean 
     {
         if ( cnt == 0 )
         {
@@ -289,7 +315,10 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                 return false ;
             }
             this.diamond += cnt ;
-            this.onMoneyChanged( false ) ;
+            if ( isSaveDB )
+            {
+                this.onMoneyChanged( false ) ;
+            }
             return true ;
         }
 

@@ -1,3 +1,4 @@
+import { IMoney } from './../../shared/IMoney';
 import { eMatchType, eItemType } from './../../shared/SharedDefine';
 import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
 import { MatchMgr } from './../MatchMgr';
@@ -14,7 +15,8 @@ export interface IMatchConfig
     repeatTimeMatchOpenDuration : number[] // hour , by 24 type  eg : 18 means 6 pm ; two value [] , 26 means next day 2 : 00 am ;  // repeatTime match type used key 
     signUpFee : { moneyType : eItemType , cnt : number } ;
     playerCntLimt : number[] ; // low limit , and up limit ;
-    reward: { startIdx : string , endEndIdx : string , itemType : eItemType , cnt : number, desc : string }[] ;
+    reward: { startIdx : number , endEndIdx : number , money : IMoney[], desc : string }[] ;
+    laws : [ { roundIdx : number , upgrade : number , gameRoundCnt : number, diFen : number } ]
 }
 
 export interface IMatch

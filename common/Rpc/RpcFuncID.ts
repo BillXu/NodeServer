@@ -20,6 +20,8 @@ export enum eRpcFuncID
     Func_LoadPlayerInfo,
     // arg : { uid : 2345 }
     // result : {  key : value } , key means table fialed ;  , if ObjectKeys() return length is 0 , means failed
+    Func_SendMail,
+    // arg : { uid : 2345 , content : "this is content" , title? : "hello" }
     Func_ReqPlayerPlayingMatch,
     // arg : { uid : 235 , sessionID : 23 }
     // result : { ret : 0 , matchID : 0 }
@@ -40,5 +42,7 @@ export enum eRpcFuncID
     // arg { uid : 234 , matchID : 234 , isAdd : 0 }
     Func_InformNotice,
     // arg : { uid : 234 , notice : "2345" }
+    Func_MatchResult,
+    // arg : { uid : 235 , rankIdx : 2 ,  reward : IMoney[] , matchID : 2345 , matchName : "this is a match" }
     Func_Max,
 }

@@ -1,10 +1,11 @@
+import { IMoney } from './../../shared/IMoney';
 import { XLogger } from './../../common/Logger';
 import { eRpcFuncID } from './../../common/Rpc/RpcFuncID';
 import { key } from './../../shared/KeyDefine';
 import { IMatchLaw, IMatchLawDelegate } from './IMatchLaw';
 import  HashMap  from 'hashmap';
 import { MatchPlayer, eMathPlayerState } from './MatchPlayer';
-import { merge } from 'lodash';
+import { merge, random, clone, cloneWith, cloneDeep } from 'lodash';
 import { MatchMgr } from './../MatchMgr';
 import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
 import { eMatchType, eMatchState, eItemType } from './../../shared/SharedDefine';
@@ -171,10 +172,76 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
     }
 
     // imatchLaw delegate
-    onPlayerFinish( player : MatchPlayer , rankIdx : number, isFinal : boolean , matchLaw : IMatchLaw ) : void 
+    onPlayerFinish( player : MatchPlayer , rankIdx : number , matchLaw : IMatchLaw ) : void 
     {
+        let rewards = this.mCfg.reward;
+        let isGuaFen = rewards.length == 1 ;
+
+        let vMoney : IMoney[] = null ;
+        if ( isGuaFen == false ) // gua fen prize will not distribute here ;
+        {
+            for ( let r of rewards )
+            {
+                if ( r.startIdx <= rankIdx && rankIdx <= r.endEndIdx )
+                {
+                    vMoney = r.money ;
+                    break;
+                }
+            }
+        }
+
         // give prize ;
         // relase playingMatch var in data ;
+        // tell data svr ;
+        let arg = {} ;
+        arg[key.uid] = player.uid ;
+        arg[key.rankIdx] = rankIdx ;
+        arg[key.reward] = vMoney ;
+        arg[key.matchID] = this.matchID ;
+        arg[key.matchName] = this.mCfg.matchName ;
+        this.mMatchMgr.getSvrApp().getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, player.uid, eRpcFuncID.Func_MatchResult, arg ) ;
+
+        // tell player ;
+        let msg = {} ;
+        msg[key.matchID] = this.matchID ;
+        msg[key.rankIdx] = rankIdx ;
+        msg[key.moneyType ] = vMoney ;
+        this.sendMsgToClient(player.sessionID, eMsgType.MSG_PLAYER_MATCH_RESULT, msg ) ;
+        return ;
+    }
+
+    onGuaFenResultFinished( player : MatchPlayer[] , matchLaw : IMatchLaw )
+    {
+        if ( this.mCfg.reward.length != 1 )
+        {
+            XLogger.debug("why gua fen reword have more than one ? cfgID = " + this.mCfgID ) ; 
+        }
+        
+        let moneyReword = this.mCfg.reward[0].money[0] ;
+        let vgufen = this.guaFen( moneyReword.cnt * 100 , player.length ) ; // yuan to fen , keep interger .
+        for ( let idx = 0 ; idx < player.length ; ++idx )
+        {
+            let p = player[idx] ;
+            // give prize ;
+            // relase playingMatch var in data ;
+            // tell data svr ;
+            let vMoney = clone(moneyReword) ;
+            vMoney.cnt = vgufen[idx] / 100 ;
+            let arg = {} ;
+            arg[key.uid] = p.uid ;
+            arg[key.rankIdx] = idx + 1 ;
+            arg[key.reward] = vMoney;
+            arg[key.matchID] = this.matchID ;
+            arg[key.matchName] = this.mCfg.matchName ;
+            this.mMatchMgr.getSvrApp().getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, p.uid, eRpcFuncID.Func_MatchResult, arg ) ;
+
+            // tell player ;
+            let msg = {} ;
+            msg[key.matchID] = this.matchID ;
+            msg[key.rankIdx] = idx + 1 ;
+            msg[key.moneyType ] = vMoney ;
+            this.sendMsgToClient(p.sessionID, eMsgType.MSG_PLAYER_MATCH_RESULT, msg ) ;
+        }
     }
 
     onLawFinished( matchLaw : IMatchLaw ) : void 
@@ -182,7 +249,36 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
         this.mLaws.delete( matchLaw.getIdx() ) ;
     }
 
-    // self config ;
+    // self function ;
+    protected guaFen( total : number , cnt : number  ) : number[]
+    {
+        let aver = ( total / cnt ) * 0.05;
+        let base = Math.floor(aver) ;
+        base = Math.max( base, 1 ) ;
+        let vp = new Array<number>();
+        for ( let idx = 0 ; idx < cnt ; ++idx )
+        {
+            vp.push(base) ;
+        }
+
+        total -= base * cnt ;
+        let step = ( total / Math.max(100 ,cnt ) ) ;
+        step = Math.floor(step) ;
+        step = Math.max(step,1) ;
+        while ( total != 0 )
+        {
+            let real = step ;
+            if ( step >= total )
+            {
+                real = total ;
+            }
+            let idx = random(cnt-1,false);         
+            vp[idx] += real ;
+            total -= real ;
+        }
+        return vp ;
+    }
+
     sendMsgToClient( nSessionID : number , msgID : eMsgType , msg : Object )
     {
         this.mMatchMgr.sendMsg(msgID, msg,eMsgPort.ID_MSG_PORT_CLIENT , nSessionID, this.matchID ) ;

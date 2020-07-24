@@ -1,4 +1,4 @@
-import { clone } from 'lodash';
+import { clone, random, shuffle } from 'lodash';
 import { MailData, eMailState } from './../shared/playerData/PlayerMailData';
 import { XLogger } from './../common/Logger';
 import { eAccountType, eSex } from './../shared/SharedDefine';
@@ -222,8 +222,8 @@ class TestClient implements INetworkDelegate
 
 }
 
-let c = new TestClient();
-c.init("ws://localhost:3001", "wechatNameNew" ) ;
+//let c = new TestClient();
+//c.init("ws://localhost:3001", "wechatNameNew" ) ;
 
 //let date = new Date();
 //date.setDate(date.getDate() - 20 ) ;
@@ -231,3 +231,54 @@ c.init("ws://localhost:3001", "wechatNameNew" ) ;
 // let b = Date.now();
 // console.log( "utc = " + a + " s = " + b + " offset = " + ( b - a) ) ;
 // console.log( " str =  " + date.toLocaleString() + " day = " + date.getMonth() ) ; 
+
+function guaFen( total : number , cnt : number  ) : number[]
+{
+     let aver = ( total / cnt ) * 0.05;
+     let base = Math.floor(aver) ;
+     base = Math.max( base, 1 ) ;
+     let vp = new Array<number>();
+     for ( let idx = 0 ; idx < cnt ; ++idx )
+     {
+         vp.push(base) ;
+     }
+
+     total -= base * cnt ;
+     let step = ( total / Math.max(100 ,cnt ) ) ;
+     step = Math.floor(step) ;
+     step = Math.max(step,1) ;
+     while ( total != 0 )
+     {
+         let real = step ;
+         if ( step >= total )
+         {
+             real = total ;
+         }
+
+         let idx = random(cnt-1,false);         
+         vp[idx] += real ;
+         total -= real ;
+     }
+     return vp ;
+}
+
+let v = guaFen(100,10) ;
+console.log(v) ;
+
+let a = { a : 2 }
+let c = clone(a);
+c.a = 100 ;
+console.log( "a = " + JSON.stringify(a) + " c = " + JSON.stringify(c) ) ;
+
+let scnt = 50 ;
+v.length = 0 ;
+while ( scnt-- )
+{
+    v.push(scnt) ;
+}
+
+let v2 = shuffle(v);
+console.log( "v = " + v ) ;
+console.log( "v2 = " + v2 ) ;
+v2 = shuffle(v2);
+console.log( "v2 = " + v2 ) ;

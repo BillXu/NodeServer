@@ -39,6 +39,7 @@ export class key
     static treeCDEndTime = "treeCDEndTime" ;
     static matchs = "matchs" ;
     static matchID = "matchID" ;
+    static matchName = "matchName" ;
     static moneyType = "moneyType" ;
     static comment = "comment" ;
     static isAdd = "isAdd" ;
@@ -48,4 +49,7 @@ export class key
     static notice = "notice" ;
     static cfgID = "cfgID" ;
     static leftTime = "leftTime" ;
+    static rankIdx = "rankIdx" ;
+    static money = "money" ;
+    static reward = "reward" ;
 }

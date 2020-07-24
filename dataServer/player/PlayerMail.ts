@@ -367,7 +367,7 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
                 break ;
             case eMailType.eMail_DlgNotice:
                 {
-                    this.mPlayer.onRecivedNotice( mail.content ) ;
+                    this.mPlayer.onRecivedNotice( mail.content,mail.recivedTime ) ;
                 }
                 break;
             default:
