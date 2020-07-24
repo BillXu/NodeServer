@@ -42,6 +42,11 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 return false
             }
 
+            if ( player.sessionID != orgID )
+            {
+                XLogger.error( "player session and uid not match , invalid targetID ? targetID = " + targetID + " sessionID = " + player.sessionID + " orgID = " + orgID + " msgID = " + eMsgType[msgID] ) ;
+                return false ;
+            }
             return player.onLogicMsg(msgID, msg) ;
         }
         return false ;
@@ -268,6 +273,20 @@ export class PlayerMgr extends IModule implements IPlayerMgr
 
             let js = p.onRPCCall( eRpcFuncID.Func_ModifySignedMatch , arg) ;
             return js ;
+        } ) ;
+
+        rpc.registerRPC(eRpcFuncID.Func_InformNotice,( sierNum : number, arg : Object )=>{
+            let uid = arg[key.uid] ;
+            let notice = arg[key.notice] ;
+            let p = self.getPlayerByUID(uid, false ) ;
+            if ( !p || p.netState != ePlayerNetState.eState_Online )
+            {
+                MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_ModifySignedMatch, arg : arg } ) ; 
+                return {} ;
+            }
+
+            p.onRecivedNotice(notice) ;
+            return {} ;
         } ) ;
     } 
 

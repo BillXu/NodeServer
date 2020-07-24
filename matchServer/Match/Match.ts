@@ -20,6 +20,7 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
     init( cfg : IMatchConfig , matchID : number ,mgr : MatchMgr ) : void
     {
         this.mCfg = cfg;
+        this.mCfgID = cfg.id ;
         this.matchID = matchID ;
         this.mState = eMatchState.eMatch_SignUp ;
         this.mType = cfg.matchType ;
@@ -140,17 +141,9 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
                     self.sendMsgToClient(orgID, msgID, { ret : 3  } ) ;
                     return ;
                 }
-
-                self.mSignedPlayers.delete(uid) ;
-
-                let argAddMone = {} 
-                merge(argAddMone,self.getSignUpFee() ); 
-                argAddMone[key.uid] = uid ; argAddMone[key.comment] = "cannecl match give back money uid = " + self.matchID ;
-                rpc.invokeRpc( eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_addMoney, argAddMone ,null,null, uid ) ;
-                XLogger.debug( "player cannecl match give back money uid = " + uid + " matchID = " + self.matchID + " money = " + argAddMone["moneyType"] + " cnt = " + argAddMone["cnt"] ) ;
-           
-                let argModify = {} ;argModify[key.uid] = uid ; argModify[key.matchID] = self.matchID ; argModify[key.isAdd] = 0 ;
-                rpc.invokeRpc(eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_ModifySignedMatch , argModify ) ;
+                XLogger.debug( "player do canncel match sigup matchID = " + self.matchID + " uid = " + uid ) ;
+                self.doCanncelSignedUp(uid) ;
+                self.sendMsgToClient(orgID, msgID, { ret : 0 , matchID : self.matchID } ) ;
             }, orgID ) ;
             return true ;
         }
@@ -180,7 +173,8 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
     // imatchLaw delegate
     onPlayerFinish( player : MatchPlayer , rankIdx : number, isFinal : boolean , matchLaw : IMatchLaw ) : void 
     {
-
+        // give prize ;
+        // relase playingMatch var in data ;
     }
 
     onLawFinished( matchLaw : IMatchLaw ) : void 
@@ -214,7 +208,7 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
         return this.mCfg.playerCntLimt[0] ;
     }
 
-    onPlayerSignedUp( uid : number , sessionID : number )
+    protected onPlayerSignedUp( uid : number , sessionID : number )
     {
         let p = new MatchPlayer() ;
         p.sessionID = sessionID ;
@@ -224,27 +218,68 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
         this.mSignedPlayers.set(p.uid, p ) ;
         let arg = {} ;arg[key.uid] = uid ; arg[key.matchID] = this.matchID ; arg[key.isAdd] = 1 ;
         this.mMatchMgr.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_ModifySignedMatch , arg ) ;
+    }
 
-        if ( this.mType == eMatchType.eMatch_Quick && this.mSignedPlayers.count() >= this.getPlayerLowLimitCnt() )
+    protected doEneterMatchBattle()
+    {
+        // inform data , palyer enter playing 
+        let vIDs = this.mSignedPlayers.keys();
+        for ( let uid of vIDs )
         {
-            let law = this.createMatchLaw();
-            law.init(this, this.mCfg.gamePort, ++this.mMaxLawIdx ) ;
-            if ( this.mLaws.has(law.getIdx() ))   
-            {
-                XLogger.error("why duplicate law idx = " + law.getIdx() + " matchID = " + this.matchID + " configID = " + this.mCfg.id ) ;
-                this.mMaxLawIdx += 10000;
-                law.init(this, this.mCfg.gamePort, ++this.mMaxLawIdx ) ;
-            }
-            law.setDelegate(this) ;
-            this.mLaws.set(law.getIdx(), law ) ;
-            law.startLaw(this.mSignedPlayers) ;
-            this.mSignedPlayers.clear();
-            XLogger.info( "start a match law , go on aceept signed up  matchID = " + this.matchID + " law idx = " + law.getIdx() ) ;
+            let arg = { } ; arg[key.uid] = uid ; arg[key.matchID] = this.matchID ; arg[key.isStart] = 1 ;
+            this.mMatchMgr.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_SetPlayingMatch , arg ) ;
         }
+
+        // create law to start battle ;
+        let law = this.createMatchLaw();
+        law.init(this, this.mCfg.gamePort, ++this.mMaxLawIdx ) ;
+        if ( this.mLaws.has(law.getIdx() ))   
+        {
+            XLogger.error("why duplicate law idx = " + law.getIdx() + " matchID = " + this.matchID + " configID = " + this.mCfg.id ) ;
+            this.mMaxLawIdx += 10000;
+            law.init(this, this.mCfg.gamePort, ++this.mMaxLawIdx ) ;
+        }
+
+        law.setDelegate(this) ;
+        this.mLaws.set(law.getIdx(), law ) ;
+        law.startLaw(this.mSignedPlayers) ;
+        this.mSignedPlayers.clear();
+        XLogger.info( "start a match law , go on aceept signed up  matchID = " + this.matchID + " law idx = " + law.getIdx() ) ;
+        this.mState = eMatchState.eMatch_Playing ;
+    }
+
+    protected doCanncelSignedUp( uid : number )
+    {
+        let p = this.mSignedPlayers.get(uid) ;
+        if ( !p )
+        {
+            XLogger.error( "why sign up player is null ? match started ? uid = " + uid + " matchID = " + this.matchID ) ;
+            return ;
+        }
+
+        this.mSignedPlayers.delete(uid) ;
+
+        let rpc = this.mMatchMgr.getSvrApp().getRpc();
+
+        let argAddMone = {} 
+        merge(argAddMone,this.getSignUpFee() ); 
+        if ( argAddMone[key.cnt] != 0 )
+        {
+            argAddMone[key.uid] = uid ; argAddMone[key.comment] = "cannecl match give back money uid = " + this.matchID ;
+            rpc.invokeRpc( eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_addMoney, argAddMone ,null,null, uid ) ;
+            XLogger.debug( "cannecl match give back money uid = " + uid + " matchID = " + this.matchID + " money = " + argAddMone[key.moneyType] + " cnt = " + argAddMone[key.cnt] ) ;
+        }
+        else
+        {
+            XLogger.debug( "match is fee so , canncel need not give back money matchID = " + this.matchID + "cfgID = " + this.mCfg.id ) ;
+        }
+   
+        let argModify = {} ;argModify[key.uid] = uid ; argModify[key.matchID] = this.matchID ; argModify[key.isAdd] = 0 ;
+        rpc.invokeRpc(eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_ModifySignedMatch , argModify ) ;
     }
 
     createMatchLaw() : IMatchLaw
     {
-
+        return null ;
     }
 }

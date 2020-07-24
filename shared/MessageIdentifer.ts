@@ -122,6 +122,9 @@ export enum eMsgType
 	// svr : { ret : 0 , leftCD : 10 } 
 	// ret: 0 success , 1 invalid action ; 
 
+	MSG_PLAYER_NOTICE_DLG,
+	// svr : { noitice : "this is a notice" }
+
 	MSG_PLAYER_REQ_MATCH_LIST = 200,
 	// client : { type : eMatchType }
 	// svr : { type : eMatchType, matchs : [ { matchData } , ...  ] }

@@ -1,3 +1,4 @@
+import { key } from './../../shared/KeyDefine';
 import { eRpcFuncID } from './../../common/Rpc/RpcFuncID';
 import { PlayerDiamondTree } from './PlayerDiamondTree';
 import { MailData } from './../../shared/playerData/PlayerMailData';
@@ -154,5 +155,12 @@ export class Player
     onRPCCall( funcID : eRpcFuncID , arg : Object ) : Object
     {        
         return this.getBaseInfo().onRPCCall( funcID, arg ) ;
+    }
+
+    onRecivedNotice( notice : string )
+    {
+        let msg = {} ;
+        msg[key.notice] = notice ;
+        this.sendMsgToClient(eMsgType.MSG_PLAYER_NOTICE_DLG, msg ) ;
     }
 }

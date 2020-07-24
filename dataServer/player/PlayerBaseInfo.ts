@@ -6,7 +6,7 @@ import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
 import { IPlayerCompent } from './IPlayerCompent';
 import { PlayerBaseData } from './../../shared/playerData/PlayerBaseData';
 import { Player } from './Player';
-import { random } from 'lodash';
+import { random, remove } from 'lodash';
 import { eRpcFuncID } from '../../common/Rpc/RpcFuncID';
 export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
 {
@@ -110,6 +110,11 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     this.mPlayer.sendMsgToClient(msgID, msg) ;
                 }
                 break;
+            case eMsgType.MSG_PLAYER_BASE_DATA:
+                {
+                    this.sendDataInfoToClient();
+                }
+                break ;
             default:
                 return false ;
         }
@@ -215,6 +220,11 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     }
 
                     this.playingMatchID = isStart ? mid : 0 ;
+                    let vR = remove(this.signedMatches,( id : number )=> id == mid ) || [];
+                    if ( vR.length == 0 )
+                    {
+                        XLogger.warn( "remove signed math to playing match , but can not find uid = " + this.uid + " matchID = " + mid ) ;
+                    }
                 }
                 break ;
             case eRpcFuncID.Func_DeductionMoney:

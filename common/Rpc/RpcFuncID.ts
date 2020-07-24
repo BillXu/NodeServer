@@ -38,5 +38,7 @@ export enum eRpcFuncID
     // ret : 0 check pass , 1 cannot find player with uid , 2 check failed ;
     Func_ModifySignedMatch,
     // arg { uid : 234 , matchID : 234 , isAdd : 0 }
+    Func_InformNotice,
+    // arg : { uid : 234 , notice : "2345" }
     Func_Max,
 }

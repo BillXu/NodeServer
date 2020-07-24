@@ -16,7 +16,7 @@ export enum eMailType
 {
     eMail_OfflineEvent,
     eMail_RpcCall, // { funcID : eRpcFuncID , arg : {} } 
-    eMail_Popup,
+    eMail_DlgNotice,
     eMail_Sys = 100,
     eMial_Normal,
     eMail_SysRefForState, // a refrence to the sys mail that be sended to everyone , the mail of this type record sys mail state , example : if already get the gif 
@@ -39,6 +39,8 @@ export enum eMatchType
 
 export enum eMatchState
 {
+    eMatch_Stoped,  // did not open during some time ; 
+    eMatch_WaitOpenSignUp,
     eMatch_SignUp,
     eMatch_Playing,
     eMatch_Closed,

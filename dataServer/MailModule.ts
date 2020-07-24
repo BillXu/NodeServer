@@ -170,6 +170,21 @@ export class MailModule extends IModule
         MailModule.sendMail(targetID, pmail ) ;
     }
 
+    static sendNoticeMail( targetID : number , notice : string )
+    {
+        let pmail = new MailData();
+        pmail.id = this.s_Mail.generateMailID();
+        pmail.content = notice ;
+        pmail.items = null;
+        pmail.recivedTime = Date.now();
+        pmail.senderID = 0 ;
+        pmail.state = eMailState.eState_Unread ;
+        pmail.title = "通知" ;
+        pmail.type = eMailType.eMail_DlgNotice ;
+        
+        MailModule.sendMail(targetID, pmail ) ;
+    }
+
     static sendMail( targetID : number , mail : MailData )
     {
         MailModule.saveMailToDB(targetID, mail ) ;

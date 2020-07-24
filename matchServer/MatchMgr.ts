@@ -1,3 +1,4 @@
+import { XLogger } from './../common/Logger';
 import { key } from './../shared/KeyDefine';
 import { eMatchType } from './../shared/SharedDefine';
 import HashMap  from 'hashmap';
@@ -8,7 +9,7 @@ import { IModule } from "../common/IModule";
 export class MatchMgr extends IModule
 {
     static MODULE_NAME : string = "MatchMgr";
-    protected mMatchs : HashMap<number,IMatch> = new HashMap<number,IMatch>();
+    protected mMatchs : HashMap<number,IMatch> = new HashMap<number,IMatch>(); // { matchiID : Imatch }
     protected mTypeMatchs : HashMap<eMatchType,Array<IMatch> > = new HashMap<eMatchType,Array<IMatch> >(); 
     getModuleType() : string
     {
@@ -56,5 +57,18 @@ export class MatchMgr extends IModule
     onRegistedToCenter( svrIdx : number , svrMaxCnt : number ) : void 
     {
 
+    }
+
+    // self function 
+    deleteMatch( matchID : number )
+    {
+        if ( this.mMatchs.has(matchID) )
+        {
+            this.mMatchs.delete( matchID ) ;
+        }
+        else
+        {
+            XLogger.warn( "delete match but match do not exit ,matchID = " + matchID  ) ;
+        }
     }
 }

@@ -45,4 +45,7 @@ export class key
     static isStart = "isStart" ;
     static playingMatchID = "playingMatchID" ;
     static signedMatches = "signedMatches" ;
+    static notice = "notice" ;
+    static cfgID = "cfgID" ;
+    static leftTime = "leftTime" ;
 }

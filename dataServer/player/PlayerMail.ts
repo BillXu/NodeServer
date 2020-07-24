@@ -212,6 +212,7 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
         {
             if ( this.mIsLoadedData )
             {
+                this.sysAutoProcessOfflineEvent();
                 this.sendMaxMailID() ;
             }
         }
@@ -364,6 +365,11 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
                     this.mPlayer.onRPCCall(js["funcID"], js["arg"] ) ; 
                 }
                 break ;
+            case eMailType.eMail_DlgNotice:
+                {
+                    this.mPlayer.onRecivedNotice( mail.content ) ;
+                }
+                break;
             default:
                 XLogger.warn( "unknown offline event mail type = " + mail.type + " mailID = " + mail.id ) ;
         }
