@@ -3,6 +3,14 @@ import { eMatchType, eItemType } from './../../shared/SharedDefine';
 import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
 import { MatchMgr } from './../MatchMgr';
 
+export interface ILawRoundConfig
+{
+    roundIdx : number ;
+    upgradeCnt : number ; 
+    gameRoundCnt : number;
+    diFen : number ;
+}
+
 export interface IMatchConfig
 {
     id : number ;
@@ -16,7 +24,10 @@ export interface IMatchConfig
     signUpFee : { moneyType : eItemType , cnt : number } ;
     playerCntLimt : number[] ; // low limit , and up limit ;
     reward: { startIdx : number , endEndIdx : number , money : IMoney[], desc : string }[] ;
-    laws : [ { roundIdx : number , upgrade : number , gameRoundCnt : number, diFen : number } ]
+    playerCntPerDesk : number ; 
+    guaFenPlayerCnt : number ; 
+    initScore : number ;
+    laws : ILawRoundConfig[] 
 }
 
 export interface IMatch

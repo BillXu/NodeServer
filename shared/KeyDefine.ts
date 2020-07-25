@@ -52,4 +52,12 @@ export class key
     static rankIdx = "rankIdx" ;
     static money = "money" ;
     static reward = "reward" ;
+    static deskCnt = "deskCnt" ;
+    static deskID = "deskID" ;
+    static deskIDs = "deskIDs" ;
+    static lawIdx = "lawIdx" ;
+    static diFen = "diFen" ;
+    static score = "score" ;
+    static players = "players" ;
+    static roundCnt = "roundCnt" ;
 }

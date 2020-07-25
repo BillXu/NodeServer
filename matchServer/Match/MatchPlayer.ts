@@ -16,6 +16,8 @@ export class MatchPlayer
     state : eMathPlayerState = eMathPlayerState.eState_SignUp ;
     signUpTime : number = 0;  
     scoreRecorder : number[] = [] ;
-    stayRoomID : number = 0 ;
+    stayDeskID : number = 0 ;
+    score : number = 0;
+    rankIdx : number = 0 ;
     //feeMoney : { moneyType : eItemType , cnt : number } ;
 }

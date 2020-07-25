@@ -13,10 +13,10 @@ import { IMatch, IMatchConfig } from './IMatch';
 import { MatchData } from './../../shared/MatchData';
 export class Match extends MatchData implements IMatch , IMatchLawDelegate
 {
-    protected mMatchMgr : MatchMgr = null ;
+    mMatchMgr : MatchMgr = null ;
     protected mSignedPlayers = new HashMap<number,MatchPlayer>(); // { uid , player  }
     protected mLaws = new HashMap<number,IMatchLaw>(); // { idx , law }
-    protected mCfg : IMatchConfig = null ;
+    mCfg : IMatchConfig = null ;
     protected mMaxLawIdx : number = 0 ;
     init( cfg : IMatchConfig , matchID : number ,mgr : MatchMgr ) : void
     {
