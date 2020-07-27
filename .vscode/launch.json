@@ -38,6 +38,21 @@
             //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
             "outFiles": ["${workspaceFolder}/build/**/*.js"]
         },
+
+        {
+  
+          "type": "node",
+
+          "request": "launch",
+
+          "name": "MatchSvr",
+
+          //"program": "${workspaceFolder}/build/gateServer/GateSvr.js",
+          "program": "${workspaceFolder}/matchServer/index.ts",
+          "preLaunchTask": "tsc: build - matchServer/tsconfig.json",
+          //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
+          "outFiles": ["${workspaceFolder}/build/**/*.js"]
+      },
         
         {
   

@@ -221,17 +221,6 @@ export class RpcModule extends IModule
             // sieralNum : 23455 , funcID : eRpcFuncID, arg : {}
             let funcID = msg["funcID"] ;
             let sieralNum = msg["sieralNum"] ;
-            let func = this.mRPCFuncs.get( funcID ) ;
-            if ( func == null )
-            {
-                XLogger.error( "svr do not have funcID = " + eRpcFuncID[funcID] + " request from port = " + eMsgPort[orgPort] + " id = " + orgID ) ;
-                let jsBack = {} ;
-                jsBack["sieralNum"] = sieralNum ;
-                jsBack["state"] = 2 ;
-                jsBack["errMsg"] = "do not have func id = " + eRpcFuncID[funcID];
-                this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, orgPort, orgID, this.getSvrApp().getCurSvrIdx() ) ;
-                return true;
-            }
 
             if ( this.mDelayRespRequest.has( sieralNum ) )
             {
@@ -252,30 +241,27 @@ export class RpcModule extends IModule
                 return true ;
             }
 
-            let result = func(sieralNum,msg["arg"] ) ;
-            if ( null == result )
+            let svrRpcOutResult = {} ;
+            if ( this.getSvrApp().onRpcCall(funcID, msg["arg"] , sieralNum, svrRpcOutResult ) )
             {
-                let jsBack = {} ;
-                jsBack["sieralNum"] = sieralNum ;
-                jsBack["state"] = 1 ;
-                this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, orgPort, orgID, this.getSvrApp().getCurSvrIdx() ) ;
+                this.responeRpcCall( svrRpcOutResult, sieralNum, orgPort, orgID ) ;
+                return ;
+            }
 
-                let dr = new RpcDelayRespRequest();
-                dr.sieralNum = sieralNum ;
-                dr.targetID = orgID ;
-                dr.targetPort = orgPort ;
-                this.mDelayRespRequest.set(sieralNum , dr ) ;
-                //XLogger.debug( "excute rpc put in delay respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
-            }
-            else
+            let func = this.mRPCFuncs.get( funcID ) ;
+            if ( func == null )
             {
-                //XLogger.debug( "rpc respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
+                XLogger.error( "svr do not have funcID = " + eRpcFuncID[funcID] + " request from port = " + eMsgPort[orgPort] + " id = " + orgID ) ;
                 let jsBack = {} ;
                 jsBack["sieralNum"] = sieralNum ;
-                jsBack["state"] = 0 ;
-                jsBack["result"] = result;
+                jsBack["state"] = 2 ;
+                jsBack["errMsg"] = "do not have func id = " + eRpcFuncID[funcID];
                 this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, orgPort, orgID, this.getSvrApp().getCurSvrIdx() ) ;
+                return true;
             }
+
+            let result = func(sieralNum,msg["arg"] ) ;
+            this.responeRpcCall(result, sieralNum, orgPort, orgID ) ;
             return true ;
         }
         else if ( eMsgType.MSG_RPC_RESULT == msgID )
@@ -351,5 +337,32 @@ export class RpcModule extends IModule
             this.mMaxSierlNum += svrMaxCnt ;
             this.mMaxSierlNum += svrIdx ; 
         } 
+    }
+
+    protected responeRpcCall( result : Object , sieralNum : number , orgPort : eMsgPort, orgID : number )
+    {
+        if ( null == result )
+        {
+            let jsBack = {} ;
+            jsBack["sieralNum"] = sieralNum ;
+            jsBack["state"] = 1 ;
+            this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, orgPort, orgID, this.getSvrApp().getCurSvrIdx() ) ;
+
+            let dr = new RpcDelayRespRequest();
+            dr.sieralNum = sieralNum ;
+            dr.targetID = orgID ;
+            dr.targetPort = orgPort ;
+            this.mDelayRespRequest.set(sieralNum , dr ) ;
+            //XLogger.debug( "excute rpc put in delay respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
+        }
+        else
+        {
+            //XLogger.debug( "rpc respone sieral = " + sieralNum + " func = " + eRpcFuncID[funcID] ) ;
+            let jsBack = {} ;
+            jsBack["sieralNum"] = sieralNum ;
+            jsBack["state"] = 0 ;
+            jsBack["result"] = result;
+            this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, orgPort, orgID, this.getSvrApp().getCurSvrIdx() ) ;
+        }       
     }
  }

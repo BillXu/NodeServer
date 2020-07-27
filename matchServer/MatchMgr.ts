@@ -1,17 +1,22 @@
+import { Match } from './Match/Match';
+import { MatchConfigLoader } from './MatchConfigLoader';
 import { XLogger } from './../common/Logger';
 import { key } from './../shared/KeyDefine';
 import { eMatchType } from './../shared/SharedDefine';
 import HashMap  from 'hashmap';
-import { IMatch } from './Match/IMatch';
+import { IMatch, IMatchConfig } from './Match/IMatch';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { IModule } from "../common/IModule";
 import { eRpcFuncID } from '../common/Rpc/RpcFuncID';
+import { IServerApp } from '../common/IServerApp';
 
 export class MatchMgr extends IModule
 {
     static MODULE_NAME : string = "MatchMgr";
     protected mMatchs : HashMap<number,IMatch> = new HashMap<number,IMatch>(); // { matchiID : Imatch }
     protected mTypeMatchs : HashMap<eMatchType,Array<IMatch> > = new HashMap<eMatchType,Array<IMatch> >(); 
+    protected mCfgLoader : MatchConfigLoader = null ;
+    protected mMaxMatchID : number = 0 ;
     getModuleType() : string
     {
         return MatchMgr.MODULE_NAME ;
@@ -58,9 +63,14 @@ export class MatchMgr extends IModule
     onRegistedToCenter( svrIdx : number , svrMaxCnt : number ) : void 
     {
         super.onRegistedToCenter(svrIdx, svrMaxCnt) ;
+        if ( null == this.mCfgLoader )
+        {
+            this.mCfgLoader = new MatchConfigLoader();
+            this.mCfgLoader.loadConfig(null, this.loadCfgResult.bind(this) ) ;
+        }
     }
 
-    onRegisterToSvrApp(svrApp)
+    onRegisterToSvrApp(svrApp : IServerApp )
     {
         super.onRegisterToSvrApp(svrApp) ;
         this.installRpc() ;
@@ -107,5 +117,34 @@ export class MatchMgr extends IModule
         {
             XLogger.warn( "delete match but match do not exit ,matchID = " + matchID  ) ;
         }
+    }
+
+    protected loadCfgResult( cfgs : IMatchConfig[], loader : MatchConfigLoader )
+    {
+        for ( let cfg of cfgs )
+        {
+            let m = new Match() ;
+            m.init(cfg, this.generateMatchID(), this ) ;
+            this.mMatchs.set(m.matchID,m) ;
+            let type = m.getType();
+            let tv = this.mTypeMatchs.get(type) ;
+            if ( tv == null )
+            {
+                tv = new Array<Match>();
+                this.mTypeMatchs.set(type, tv ) ;
+            }
+            tv.push(m) ;
+            XLogger.debug( "created a matchID = " + m.matchID + " cfgID = " + m.mCfgID );
+        }
+    }
+
+    protected generateMatchID() : number
+    {
+        if ( this.mMaxMatchID == 0 )
+        {
+            this.mMaxMatchID = this.getSvrApp().getCurSvrIdx();
+        }
+        this.mMaxMatchID += this.getSvrApp().getCurPortMaxCnt();
+        return this.mMaxMatchID ;
     }
 }

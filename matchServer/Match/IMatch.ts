@@ -1,3 +1,4 @@
+import { ePlayerNetState } from './../../common/commonDefine';
 import { IMoney } from './../../shared/IMoney';
 import { eMatchType, eItemType } from './../../shared/SharedDefine';
 import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
@@ -35,6 +36,8 @@ export interface IMatch
     init( cfg : IMatchConfig , matchID : number ,mgr : MatchMgr ) : void;
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number ) : boolean ;
     onVisitInfo( jsInfo : Object ) : void ;
+    onDeskFinished( lawIdx : number , deskID : number, result : { uid : number , score : number }[] ) : void ;
+    onRefreshPlayerNetState( uid : number , sessionID : number ,netState : ePlayerNetState ) : boolean ;
     getType() : eMatchType ; 
     getMatchID() : number ;
     isClosed() : boolean ;

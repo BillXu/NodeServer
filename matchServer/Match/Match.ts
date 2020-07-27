@@ -1,3 +1,4 @@
+import { MatchLaw } from './MatchLaw';
 import { ePlayerNetState } from './../../common/commonDefine';
 import { IMoney } from './../../shared/IMoney';
 import { XLogger } from './../../common/Logger';
@@ -405,6 +406,6 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
 
     createMatchLaw() : IMatchLaw
     {
-        return null ;
+        return new MatchLaw() ;
     }
 }

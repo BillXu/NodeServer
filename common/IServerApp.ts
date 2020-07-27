@@ -1,3 +1,4 @@
+import { eRpcFuncID } from './Rpc/RpcFuncID';
 import { IModule } from './IModule';
 import  HashMap  from 'hashmap';
 import { XLogger } from './Logger';
@@ -32,6 +33,18 @@ export abstract class IServerApp implements INetworkDelegate , IServer
     getRpc() : RpcModule
     {
         return this.getModule(RpcModule.MODULE_NAME) as RpcModule ;
+    }
+
+    onRpcCall( funcID : eRpcFuncID , arg : Object , sieral : number , outResult : Object ) : boolean
+    {
+        for ( let v of this.mModules )
+        {
+            if ( v.onRpcCall(funcID, arg, sieral, outResult) )
+            {
+                return true ;
+            }
+        }
+        return false ;
     }
 
     // network delegate ;

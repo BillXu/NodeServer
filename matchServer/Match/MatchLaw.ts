@@ -101,9 +101,24 @@ export class MatchLaw implements IMatchLaw
         }
     }
 
-    onRefreshPlayerNetState( uid : number , sessionID : number ,netState : ePlayerNetState  ) : void 
+    onRefreshPlayerNetState( uid : number , sessionID : number ,netState : ePlayerNetState  ) : boolean 
     {
+        let p = this.mPlayers.get(uid) ;
+        if ( p == null )
+        {
+            return false ;
+        }
 
+        p.sessionID = sessionID ;
+        if ( p.stayDeskID != 0 )
+        {
+            let arg = {} ;
+            arg[key.deskID] = p.stayDeskID ;
+            arg[key.uid] = p.uid ;
+            arg[key.sessionID] = p.sessionID ;
+            arg[key.state] = netState ;
+            this.getRpc().invokeRpc(this.mGamePort, p.stayDeskID, eRpcFuncID.Func_DeskUpdatePlayerNetState, arg ) ;
+        }
     }
 
     setDelegate( pdel : IMatchLawDelegate ) : void 

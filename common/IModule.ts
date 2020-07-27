@@ -1,3 +1,4 @@
+import { eRpcFuncID } from './Rpc/RpcFuncID';
 import { IServerApp, IFuncMsgCallBack } from './IServerApp';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 export abstract class IModule
@@ -21,6 +22,10 @@ export abstract class IModule
     abstract onLogicMsg( msgID : eMsgType , msg : Object, orgID : number , orgPort : eMsgPort, targetID : number ) : boolean ;
 
     onRegistedToCenter( svrIdx : number , svrMaxCnt : number ) : void {}
+    onRpcCall( funcID : eRpcFuncID , arg : Object , sieral : number , outResult : Object ) : boolean
+    {
+        return false ;
+    }
 
     sendMsg( msgID : number , msg : Object , dstPort : eMsgPort, dstID : number , orgID : number, lpfCallBack? : IFuncMsgCallBack  ) : void 
     {
