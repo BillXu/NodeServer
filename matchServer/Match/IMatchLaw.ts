@@ -15,6 +15,6 @@ export interface IMatchLaw
     getIdx() : number ;
     startLaw( players : HashMap<number,MatchPlayer> ) : void ;
     onDeskFinished( deskID : number, result : { uid : number , score : number }[] ) : void ;
-    onRefreshPlayerNetState( uid : number , sessionID : number ,netState : ePlayerNetState ) : void ;
+    onRefreshPlayerNetState( uid : number , sessionID : number ,netState : ePlayerNetState ) : boolean ;
     setDelegate( pdel : IMatchLawDelegate ) : void ;
 }

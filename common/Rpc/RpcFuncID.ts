@@ -51,5 +51,9 @@ export enum eRpcFuncID
     // arg : { matchID : 234 , lawIdx : 2 , deskID : 2 , players : { uid : 234 , sessionID : 234 , score : 234 }[] }
     Func_InformDeskResult,
     // arg : { matchID : 234 , lawIdx : 23 , deksID : 2 , players : { uid : 23 , score : 23 }[] }
+    Func_MatchUpdatePlayerNetState,
+    // arg : { matchID : 234 , uid : 23 , sessionID : 234 , state : ePlayerNetState }
+    Func_DeskUpdatePlayerNetState,
+    // arg : { deskID : 234 , uid : 23 , sessionID : 234 , state : ePlayerNetState }
     Func_Max,
 }

@@ -1,3 +1,4 @@
+import { ePlayerNetState } from './../../common/commonDefine';
 import { IMoney } from './../../shared/IMoney';
 import { XLogger } from './../../common/Logger';
 import { eRpcFuncID } from './../../common/Rpc/RpcFuncID';
@@ -154,6 +155,34 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
     onVisitInfo( jsInfo : Object ) : void 
     {
         merge(jsInfo,this.toJson() ) ;
+    }
+
+    onDeskFinished( lawIdx : number ,  deskID : number, result : { uid : number , score : number }[] ) : void 
+    {
+        let law = this.mLaws.get(lawIdx) ;
+        if ( law == null )
+        {
+            XLogger.warn( "inform desk finish , but law is null ? matchID = " + this.matchID + " lawIdx = " + lawIdx ) ;
+            return ;
+        }
+        XLogger.debug( "recieved desk Result deskID = " + deskID + " matchID = " + this.matchID + " lawIdx = " + lawIdx + " detail = " + JSON.stringify(result) ) ;
+        law.onDeskFinished(deskID, result ) ;
+    }
+
+    onRefreshPlayerNetState( uid : number , sessionID : number ,netState : ePlayerNetState ) : boolean 
+    {
+        let lws = this.mLaws.values() ;
+        for ( let l of lws )
+        {
+            if ( l.onRefreshPlayerNetState(uid, sessionID, netState) )
+            {
+                XLogger.debug( "match recived player net state matchiID = " + this.matchID + " uid = " + uid + " sessionID = " + sessionID + " state = " + netState ) ;
+                return true ;
+            }
+        }
+
+        XLogger.debug( "player state change not processed uid = " + uid + " matchID = " + this.matchID ) ;
+        return false ;
     }
 
     getType() : eMatchType 

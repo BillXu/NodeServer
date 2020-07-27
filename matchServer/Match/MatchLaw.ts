@@ -64,6 +64,7 @@ export class MatchLaw implements IMatchLaw
             this.mFinishedPlayers.push(pp) ;
             pp.scoreRecorder.push(pp.score) ;
             pp.score = p.score ;
+            pp.stayDeskID = 0 ;
             pp.state = eMathPlayerState.eState_WaitResult;
         }
 

@@ -77,6 +77,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         else
         {
             this.sendDataInfoToClient();
+            this.informMatchNetState();
         }
     }
 
@@ -136,6 +137,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         }
         this.mNetState = state ;
         XLogger.debug( "player update netState = " + state + "sessionID = " + this.mPlayer.sessionID ) ;
+        this.informMatchNetState();
     }
 
     onMoneyChanged( isRefreshToClient : boolean = false )
@@ -180,8 +182,22 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         this.mIsLoadedData = true ;
         this.mPlayer.onLoadBaseInfoFinished();
         this.sendDataInfoToClient();
+        this.informMatchNetState();
     }
 
+    protected informMatchNetState()
+    {
+        if ( this.playingMatchID != 0 )
+        {
+            // arg : { matchID : 234 , uid : 23 , sessionID : 234 , state : ePlayerNetState }
+            let arg = {} ;
+            arg[key.matchID] = this.playingMatchID ;
+            arg[key.uid] = this.uid ;
+            arg[key.sessionID] = this.mPlayer.sessionID ;
+            arg[key.state] = this.mNetState ;
+            this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_MATCH, this.playingMatchID, eRpcFuncID.Func_MatchUpdatePlayerNetState, arg ) ;
+        }
+    }
     onLoadBaseInfoFinished() : void{}
 
     protected sendDataInfoToClient()

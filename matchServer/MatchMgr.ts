@@ -5,6 +5,7 @@ import HashMap  from 'hashmap';
 import { IMatch } from './Match/IMatch';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { IModule } from "../common/IModule";
+import { eRpcFuncID } from '../common/Rpc/RpcFuncID';
 
 export class MatchMgr extends IModule
 {
@@ -56,9 +57,45 @@ export class MatchMgr extends IModule
 
     onRegistedToCenter( svrIdx : number , svrMaxCnt : number ) : void 
     {
-
+        super.onRegistedToCenter(svrIdx, svrMaxCnt) ;
     }
 
+    onRegisterToSvrApp(svrApp)
+    {
+        super.onRegisterToSvrApp(svrApp) ;
+        this.installRpc() ;
+    }
+
+    protected installRpc()
+    {
+        let rpc = this.getSvrApp().getRpc();
+        let self = this ;
+        rpc.registerRPC( eRpcFuncID.Func_MatchUpdatePlayerNetState, ( seialID : number , arg : Object )=>{
+            // arg : { matchID : 234 , uid : 23 , sessionID : 234 , state : ePlayerNetState }
+            let matchID = arg[key.matchID] ;
+            let m = self.mMatchs.get(matchID) ;
+            if ( null == m )
+            {
+                XLogger.warn( "inform playe net state but match is null matchID = " + matchID + " uid = " + arg[key.uid] ) ;
+                return {} ;
+            } 
+            m.onRefreshPlayerNetState( arg[key.uid], arg[key.sessionID], arg[key.state] ) ;
+            return {}
+        } ) ;
+
+        rpc.registerRPC( eRpcFuncID.Func_InformDeskResult, ( seialID : number , arg : Object )=>{
+            // arg : { matchID : 234 , lawIdx : 23 , deksID : 2 , players : { uid : 23 , score : 23 }[] }
+            let matchID = arg[key.matchID] ;
+            let m = self.mMatchs.get(matchID) ;
+            if ( null == m )
+            {
+                XLogger.warn( "inform match result but match is null matchID = " + matchID + " reuslt = " + JSON.stringify(arg[key.result]) ) ;
+                return {} ;
+            } 
+            m.onDeskFinished(arg[key.lawIdx],arg[key.deskID],arg[key.result]) ;
+            return {}
+        } ) ;
+    }
     // self function 
     deleteMatch( matchID : number )
     {
