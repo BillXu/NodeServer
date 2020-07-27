@@ -60,4 +60,11 @@ export class key
     static score = "score" ;
     static players = "players" ;
     static roundCnt = "roundCnt" ;
+    static curRoundIdx = "curRoundIdx" ;
+    static bankerIdx = "bankerIdx" ;
+    static seatCnt = "seatCnt" ;
+    static leftCardCnt = "leftCardCnt" ;
+    static stateInfo = "stateInfo" ;
+    static idx = "idx" ;
+    static cardsData = "cardsData" ;
 }

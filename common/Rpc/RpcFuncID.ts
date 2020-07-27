@@ -45,10 +45,10 @@ export enum eRpcFuncID
     Func_MatchResult,
     // arg : { uid : 235 , rankIdx : 2 ,  reward : IMoney[] , matchID : 2345 , matchName : "this is a match" }
     Func_CreateMatchDesk,
-    // arg : { deskCnt : 4 , roundCnt : 2  ,diFen : 23 }
+    // arg : { matchID : 234 , lawIdx : 2 , deskCnt : 4 , roundCnt : 2  ,diFen : 23 }
     // result : { deskIDs : number[] }
     Func_PushPlayersToDesk,
-    // arg : { matchID : 234 , lawIdx : 2 , deskID : 2 , players : { uid : 234 , sessionID : 234 , score : 234 }[] }
+    // arg : { deskID : 2 , players : { uid : 234 , sessionID : 234 , score : 234 }[] }
     Func_InformDeskResult,
     // arg : { matchID : 234 , lawIdx : 23 , deksID : 2 , players : { uid : 23 , score : 23 }[] }
     Func_MatchUpdatePlayerNetState,

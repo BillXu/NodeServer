@@ -46,3 +46,20 @@ export enum eMatchState
     eMatch_Closed,
     eMatch_Max,
 }
+
+export enum eMJDeskState
+{
+    eState_WaitStart,
+    eState_Distribute,
+    eState_Playing,
+    eState_End,
+    eState_Max,
+}
+
+export enum eMJPlayerState
+{
+    eState_Offline,
+    eState_TuoGuan,
+    eState_Online,
+    eState_Max,
+}

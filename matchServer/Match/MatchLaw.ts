@@ -142,6 +142,8 @@ export class MatchLaw implements IMatchLaw
         // rpc call create desk ;
         let rpc = this.getRpc();
         let arg = {} ;
+        arg[key.matchID] = this.matchID ;
+        arg[key.lawIdx] = this.getIdx();
         arg[key.deskCnt] = deskCnt ;
         arg[key.diFen] = this.getDiFenForThisRound();
         arg[key.roundCnt] = this.getRoundForThisRound();
@@ -182,9 +184,9 @@ export class MatchLaw implements IMatchLaw
 
                 // put to desk ;
                 let argt = {} ;
-                argt[key.matchID] = self.matchID ;
+                //argt[key.matchID] = self.matchID ;
+                // argt[key.lawIdx] = self.getIdx();
                 argt[key.deskID] = deskID ;
-                argt[key.lawIdx] = self.getIdx();
                 argt[key.players] = vPlayesTmp ;
                 XLogger.debug( "rpc call put player to desk matchID = " + self.matchID + " deskID = " + deskID + " lawIdx = " + self.getIdx() + " players = " + JSON.stringify(vPlayesTmp) ) ;
                 rpc.invokeRpc(self.mGamePort, deskID, eRpcFuncID.Func_PushPlayersToDesk, argt ) ;

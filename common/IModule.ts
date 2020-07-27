@@ -4,7 +4,7 @@ import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 export abstract class IModule
 {
     protected mSvrApp : IServerApp = null ;
-
+    protected mMaxUniqueID : number = 0 ;
     onRegisterToSvrApp( svrApp : IServerApp ) : void 
     {
         this.mSvrApp = svrApp ;
@@ -30,5 +30,16 @@ export abstract class IModule
     sendMsg( msgID : number , msg : Object , dstPort : eMsgPort, dstID : number , orgID : number, lpfCallBack? : IFuncMsgCallBack  ) : void 
     {
         this.getSvrApp().sendMsg(msgID, msg, dstPort, dstID, orgID,lpfCallBack ) ;
+    }
+
+    generateUniqueID() : number 
+    {
+        if ( this.mMaxUniqueID == 0 )
+        {
+            this.mMaxUniqueID = this.getSvrApp().getCurSvrIdx();
+        }
+
+        this.mMaxUniqueID += this.getSvrApp().getCurPortMaxCnt();
+        return this.mMaxUniqueID ;
     }
 }
