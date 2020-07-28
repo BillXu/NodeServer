@@ -67,4 +67,10 @@ export class key
     static stateInfo = "stateInfo" ;
     static idx = "idx" ;
     static cardsData = "cardsData" ;
+    static act = "act" ;
+    static card = "card" ;
+    static eatWith = "eatWith" ;
+    static invokerIdx = "invokerIdx" ;
+    static waitIdxes = "waitIdxes" ;
+    static gangCnt = "gangCnt" ;
 }

@@ -405,8 +405,19 @@ export class ServerNetwork implements IClientPeerDelegate
         if ( msgID == eMsgType.MSG_RECONNECT )
         {
             let targetSessionID = jsMsg[key.sessionID] ;
+            if ( targetSessionID == nSessionID )
+            {
+                XLogger.error("reconnect failed, target is can not be self, taregetSessionID = " + targetSessionID + " this sessionID = " + nSessionID ) ;
+                let js = {} ;
+                js[key.ret] = 2 ;
+                js[key.sessionID] = nSessionID ;
+                js[key.reconnectToken] = this.mClientPeers.get(nSessionID).reconnectToken;
+                this.sendMsg(nSessionID, msgID, js ) ;
+                return ;
+            }
+
             let target = this.mClientPeers.get(targetSessionID) ;
-            if ( target == null )
+            if ( target == null)
             {
                 XLogger.warn("reconnect failed, target is null , can not reconnect, taregetSessionID = " + targetSessionID + " this sessionID = " + nSessionID ) ;
                 let js = {} ;

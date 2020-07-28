@@ -50,8 +50,9 @@ export enum eMatchState
 export enum eMJDeskState
 {
     eState_WaitStart,
-    eState_Distribute,
-    eState_Playing,
+    eState_Start,
+    eState_WaitAct, // { idx : 23, act : eMJActType, invokerIdx : number , buGangResore? : Object }
+    eState_WaitOtherAct, // { waitIdxes : { idx : 0 , maxAct : eMJAct }[] , gangCnt : 0 , card : 23 , invokerIdx : number, act : eMJActType, buGangResore? : Object }
     eState_End,
     eState_Max,
 }

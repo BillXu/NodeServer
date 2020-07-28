@@ -45,7 +45,7 @@ export class DeskMgr extends IModule implements IDeskDelegate
                     while ( cnt-- )
                     {
                         let d = this.createDesk();
-                        d.init(this.generateUniqueID(), diFen, roundCnt, this ) ;
+                        d.init(this.generateUniqueID(), diFen, roundCnt, this ,this ) ;
                         d.setMatchInfo( mid, lidx ) ;
                         this.mDesks.set(d.getDeskID(), d ) ;
                         vIDs.push( d.getDeskID() ) ;

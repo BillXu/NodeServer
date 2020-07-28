@@ -85,11 +85,43 @@ export class MJDeskData implements IShareData
         return null ;
     }
 
-    addPlayer( player : MJPlayerData , idx : number ) : boolean 
+    getPlayerBySessionID( sessionID : number ) : MJPlayerData
+    {
+        for ( let v of this.vPlayers )
+        {
+            if ( v != null && v.sessionID == sessionID )
+            {
+                return v ;
+            }
+        }
+        
+        return null ;
+    }
+
+    addPlayer( player : MJPlayerData , idx? : number ) : boolean 
     {
         if ( this.vPlayers.length >= this.seatCnt )
         {
             console.error( "player seat is full , can not add more player" ) ;
+            return false ;
+        }
+
+        if ( idx == null )
+        {
+            // find a index ;
+            for ( let i = 0 ; i < this.seatCnt ; ++i )
+            {
+                if ( this.getPlayerByIdx(i) == null )
+                {
+                    idx = i ;
+                    break ;
+                }
+            }
+        }
+
+        if ( idx == null )
+        {
+            console.error( "do not have pos for this player deskID = " + this.deskID + " uid = " + player.uid ) ;
             return false ;
         }
 

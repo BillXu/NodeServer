@@ -14,6 +14,7 @@ export enum eMJActType
 {
 	eMJAct_None,
 	eMJAct_Mo = eMJAct_None, // 摸牌
+	eMJAct_Pass, //  过 
 	eMJAct_Chi, // 吃
 	eMJAct_Peng,  // 碰牌
 	eMJAct_MingGang,  // 明杠
@@ -22,7 +23,6 @@ export enum eMJActType
 	eMJAct_BuGang_Done, //  补杠第二阶段，执行杠牌
 	eMJAct_Hu,  //  胡牌
 	eMJAct_Chu, // 出牌
-	eMJAct_Pass, //  过 
 	eMJAct_Ting,
 	eMJAct_Max,
 };

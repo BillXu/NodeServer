@@ -104,7 +104,7 @@ export enum eMsgType
 
 	MSG_PLAYER__DIAMOND_TREE_REQ_INFO,
 	// client : null ;
-	// svr : { level : 0 , diamond : [ 100,200 ], leftCD : 100, nextFertilizer : 2 , nextDiamond : [ 100,200 ] }
+	// svr : { level : 0 , curFertilizer : 100 , diamond : [ 100,200 ], leftCD : [ cur ,Max ], nextFertilizer : 2 , nextDiamond : [ 100,200 ] }
 	// nextFertilizer : level up need Fertilizer cnt .  nextDiamonds: next level tree will produce diamon cnt ;
 
 	MSG_PLAYER__DIAMOND_TREE_LEVEL_UP,
@@ -114,12 +114,12 @@ export enum eMsgType
 
 	MSG_PLAYER__DIAMOND_TREE_GET_DIAMOND,
 	// client : null ;
-	// svr : { ret : 0 , leftCD : 0 ,recivedDiamond : 23 , finalDiamond : 235 }
+	// svr : { ret : 0 , leftCD : [ cur ,Max ] ,recivedDiamond : 23 , finalDiamond : 235 }
 	// ret : 0 success , 1 CDing , please wait a while ;
 
 	MSG_PLAYER__DIAMOND_TREE_DECREASE_CD,
 	// client : { adTime : 10 } ;
-	// svr : { ret : 0 , leftCD : 10 } 
+	// svr : { ret : 0 , leftCD : [ cur ,Max ] } 
 	// ret: 0 success , 1 invalid action ; 
 
 	MSG_PLAYER_NOTICE_DLG,
@@ -146,6 +146,21 @@ export enum eMsgType
 	MSG_PLAYER_MATCH_RESULT,
 	//svr : { rankIdx : 0 , matchID : 234 , reward : IMoney[] } 
 	// if do not have rewards , reward key will be null ;
+
+	MSG_PLAYER_MJ_ACT = 300,
+	// client : { act : eMJActType , card : number , eatWith? : number[] }
+	// svr : { ret : 0 , newCard? : number }
+	// ret : 0 success , 1 not your turn , 2 , state error , 3 , cards error ;
+	
+	MSG_DESK_MJ_ACT,
+	//svr : { idx : 2 , act : eMJActType , card : number , invokeIdx? : number ,eatWith? : number[] }
+
+
+
+
+
+
+
 
 	///------above is new ;
 	MSG_JSON_CONTENT,

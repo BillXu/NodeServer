@@ -13,11 +13,11 @@ interface TreeLevelCfgItem
 }
 
 let jscfg : TreeLevelCfgItem[]= [
-    { level : 1, fertilizer : 3 , diamond : [100,200 ] , cd : 0 },
-    { level : 2, fertilizer : 4 , diamond : [200,400 ] , cd : 20 },
-    { level : 3, fertilizer : 5 , diamond : [100,200 ] , cd : 70 },
-    { level : 4, fertilizer : 6 , diamond : [100,200 ] , cd : 80 },
-    { level : 5, fertilizer : 7 , diamond : [100,200 ], cd : 90 }
+    { level : 1, fertilizer : 3 , diamond : [100,200 ] , cd : 60*60 },
+    { level : 2, fertilizer : 4 , diamond : [200,400 ] , cd : 60*60 * 2 },
+    { level : 3, fertilizer : 5 , diamond : [100,200 ] , cd : 60*60 * 3 },
+    { level : 4, fertilizer : 6 , diamond : [100,200 ] , cd : 60*60 * 4 },
+    { level : 5, fertilizer : 7 , diamond : [100,200 ], cd : 60*60 * 5 }
 ]
 
 export class PlayerDiamondTree implements IPlayerCompent
@@ -55,7 +55,9 @@ export class PlayerDiamondTree implements IPlayerCompent
 
                 msg[key.level] = this.level;
                 msg[key.diamond] = cfg.diamond ;
-                msg[key.leftCD] = max([this.CDEndTime - Date.now() , 0 ] ) ;
+                msg[key.curFertilizer] = this.mPlayer.getBaseInfo().fertilizer ;
+                msg[key.leftCD] = [Math.floor(max([this.CDEndTime - Date.now() , 0 ] )/1000),cfg.cd ];
+
                 
                 let nextCfg = this.getLevelCfg(this.level + 1 );
                 if ( nextCfg == null )
@@ -122,17 +124,17 @@ export class PlayerDiamondTree implements IPlayerCompent
                 if ( nleft <= 0  ) // 0k
                 {
                     msg[key.ret] = 0 ;
-                    msg[key.leftCD] = this.getLevelCfg(this.level).cd ;
+                    msg[key.leftCD] = [this.getLevelCfg(this.level).cd,this.getLevelCfg(this.level).cd ];
                     msg[key.recivedDiamond] = this.randDiamonds();
                     this.mPlayer.getBaseInfo().diamond += msg[key.recivedDiamond] ;
                     this.mPlayer.getBaseInfo().onMoneyChanged(false) ;
                     msg[key.finalDiamond] = this.mPlayer.getBaseInfo().diamond;
-                    this.CDEndTime = msg[key.leftCD] + Date.now();
+                    this.CDEndTime = this.getLevelCfg(this.level).cd * 1000  + Date.now();
                 }
                 else
                 {
                     msg[key.ret] = 1 ;
-                    msg[key.leftCD] = nleft;
+                    msg[key.leftCD] = [ Math.floor(nleft/1000), this.getLevelCfg(this.level).cd ];
                     msg[key.recivedDiamond] = 0;
                     msg[key.finalDiamond] = this.mPlayer.getBaseInfo().diamond;
                 }
@@ -149,14 +151,14 @@ export class PlayerDiamondTree implements IPlayerCompent
                 if ( Date.now() - this.mLastDecreaseCD < 65000 && nleft > 0 )
                 {
                     msg[key.ret] = 1 ;
-                    msg[key.leftCD] = nleft;
+                    msg[key.leftCD] = [ Math.floor(nleft/1000), this.getLevelCfg(this.level).cd ];
                     XLogger.warn( "decrase cd too offen , uid = " + this.mPlayer.uid + " elaps = " + (Date.now() - this.mLastDecreaseCD )) ;
                 }
                 else
                 {
                     this.CDEndTime = 0 ;
                     msg[key.ret] = 0 ;
-                    msg[key.leftCD] = 0 ;
+                    msg[key.leftCD] = [ 0, this.getLevelCfg(this.level).cd ];
                     this.mLastDecreaseCD = Date.now()
                 }
                 this.mPlayer.sendMsgToClient(msgID, msg) ;

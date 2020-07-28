@@ -244,3 +244,6 @@ b = tmp ;
 console.log( "v =" +  v) ;
 console.log( "b =" +  b ) ;
 
+let date = new Date("1995-12-17T03:24:00") ;
+console.log(date.toLocaleString() ) ;
+

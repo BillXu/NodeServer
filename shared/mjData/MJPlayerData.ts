@@ -19,7 +19,10 @@ export class MJPlayerData implements IShareData
         js[key.uid] = this.uid ;
         js[key.score] = this.score ; 
         js[key.state] = this.state ;
-        js[key.cardsData] = this.cardData.toJson();
+        if ( this.cardData != null )
+        {
+            js[key.cardsData] = this.cardData.toJson();
+        }
         return js ;
     }
 
@@ -34,7 +37,7 @@ export class MJPlayerData implements IShareData
         {
             this.cardData = this.createMJPlayerCardData();
         }
-        
+
         if ( js[key.cardsData] != null )
         {
             this.cardData.parse(js[key.cardsData]) ;
