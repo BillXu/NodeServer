@@ -170,6 +170,16 @@ class Group
 //@ccclass
 export class HuChecker {
 
+    protected static s_Checker : HuChecker = null ;
+    static getInstance() : HuChecker
+    {
+        if ( HuChecker.s_Checker == null )
+        {
+            HuChecker.s_Checker = new HuChecker();
+        }
+        return HuChecker.s_Checker;
+    }
+
     checkTing( vCards : number[] ) : { chu : number, tingCards : number[]} [] 
     {
         vCards.sort();
@@ -294,6 +304,7 @@ export class HuChecker {
 
     filterBaiDa( card : number ) : boolean 
     {
+        return false ;
         if ( card == HuChecker.makeCardNum(eMJCardType.eCT_Tiao,1) )
         {
             return true ;
@@ -476,7 +487,7 @@ export class HuChecker {
         return g ;   
     }
 
-    private getHuPaiGroup( vCards : number[] , vBaiDa : number[] ) : Group 
+    getHuPaiGroup( vCards : number[] , vBaiDa : number[] ) : Group 
     {
         vCards.sort();
         // bai da no jiang 

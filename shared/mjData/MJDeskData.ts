@@ -13,8 +13,8 @@ export class MJDeskData implements IShareData
     bankerIdx : number = 0 ;
     seatCnt : number = 0 ;
     state : eMJDeskState = eMJDeskState.eState_WaitStart ;
-    stateInfo : Object = {} ; // key value depoend on state , diffent state , diffent info ;
-    leftCardCnt : number = 0 ;
+    stateInfo : Object ; // key value depoend on state , diffent state , diffent info ;
+    leftCardCnt : number;
 
     vPlayers : MJPlayerData[] = [] ;
 

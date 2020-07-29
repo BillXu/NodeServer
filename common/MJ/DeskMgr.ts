@@ -1,3 +1,4 @@
+import { ePlayerNetState } from './../commonDefine';
 import { key } from './../../shared/KeyDefine';
 import { eRpcFuncID } from './../Rpc/RpcFuncID';
 import HashMap  from 'hashmap';
@@ -26,6 +27,7 @@ export class DeskMgr extends IModule implements IDeskDelegate
             return false ;
         }
 
+        XLogger.debug( "recived desk msg , deskID = " + targetID + " msgID = " + eMsgType[msgID] + " detail = " + JSON.stringify(msg) ) ;
         return p.onLogicMsg(msgID, msg, orgID) ;
     }
 
@@ -47,8 +49,8 @@ export class DeskMgr extends IModule implements IDeskDelegate
                         let d = this.createDesk();
                         d.init(this.generateUniqueID(), diFen, roundCnt, this ,this ) ;
                         d.setMatchInfo( mid, lidx ) ;
-                        this.mDesks.set(d.getDeskID(), d ) ;
-                        vIDs.push( d.getDeskID() ) ;
+                        this.mDesks.set(d.deskID, d ) ;
+                        vIDs.push( d.deskID ) ;
                     }
                     outResult[key.deskIDs] = vIDs ;
                     XLogger.debug( "create desk ok = " + vIDs ) ;
@@ -64,6 +66,7 @@ export class DeskMgr extends IModule implements IDeskDelegate
                         XLogger.debug( "inform desk player net state , but desk is null deskID = " + deskID + " uid = " + arg[key.uid] ) ;
                         break ;
                     }
+                    XLogger.debug("refresh player netState , deskID = " + arg[key.deskID] + " uid = " + arg[key.uid] + " setate = " + ePlayerNetState[arg[key.state]] ) ;
                     d.onRpcCall(funcID, arg, sieral ) ;
                 }
                 break
@@ -79,7 +82,7 @@ export class DeskMgr extends IModule implements IDeskDelegate
                         break ;
                     }
                     
-                    XLogger.debug( "push player into desk matchID = " + pd.getMatchID() + " deskID = " + deskID + " playes = " + JSON.stringify( vPlayer ) )
+                    XLogger.debug( "push player into desk matchID = " + pd.matchID + " deskID = " + deskID + " playes = " + JSON.stringify( vPlayer ) )
                     for ( let jsp of vPlayer )
                     {
                         pd.onPlayerEnter( jsp[key.uid], jsp[key.sessionID], jsp[key.score] ) ;
@@ -96,15 +99,15 @@ export class DeskMgr extends IModule implements IDeskDelegate
     onDeskFinished( result : { uid : number , score : number }[] , desk : IDesk ) : void
     {
         // arg : { matchID : 234 , lawIdx : 23 , deksID : 2 , players : { uid : 23 , score : 23 }[] }
-        XLogger.debug( "match desk finished matchID = " + desk.getMatchID() + " deskID= " + desk.getDeskID() + " result = " + JSON.stringify(result)  ) ;
+        XLogger.debug( "match desk finished matchID = " + desk.matchID + " deskID= " + desk.deskID + " result = " + JSON.stringify(result)  ) ;
         let arg = {} ;
-        arg[key.matchID] = desk.getMatchID();
-        arg[key.lawIdx] = desk.getMatchLawIdx();
-        arg[key.deskID] = desk.getDeskID();
+        arg[key.matchID] = desk.matchID;
+        arg[key.lawIdx] = desk.lawIdx;
+        arg[key.deskID] = desk.deskID;
         arg[key.players] = result;
-        this.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_MATCH, desk.getMatchID(), eRpcFuncID.Func_InformDeskResult, arg ) ;
+        this.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_MATCH, desk.matchID, eRpcFuncID.Func_InformDeskResult, arg ) ;
         
-        this.mDesks.delete( desk.getDeskID() ) ;
+        this.mDesks.delete( desk.deskID ) ;
     }
 
     createDesk() : IDesk

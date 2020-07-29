@@ -8,11 +8,12 @@ export interface IDeskDelegate
 
 export interface IDesk
 {
+    deskID : number ;
+    matchID : number ;
+    lawIdx : number ;
     init( deskID : number , diFen : number , roundCnt : number , delegate : IDeskDelegate , deskMgr : DeskMgr ) : void ;
     setMatchInfo( matchID : number , lawIdx : number ) : void ;
-    getDeskID() : number ;
-    getMatchID() : number ;
-    getMatchLawIdx() : number ;
+
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number ) : boolean ;
     onRpcCall( funcID : eRpcFuncID , arg : Object , sieralNum : number ) : Object ;
     onPlayerEnter( uid : number , sessionID : number , score : number ) : boolean ; 

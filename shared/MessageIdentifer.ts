@@ -147,13 +147,40 @@ export enum eMsgType
 	//svr : { rankIdx : 0 , matchID : 234 , reward : IMoney[] } 
 	// if do not have rewards , reward key will be null ;
 
-	MSG_PLAYER_MJ_ACT = 300,
+
+	MSG_PLAYER_MJ_REQ_DESK_INFO = 300,
+	// client : null
+	// svr : { ret : 0 , info : { MJDeskData } } ;
+
+	MSG_PLAYER_MJ_DESK_PLAYERS_INFO,
+	// svr : { players : { MJPlayerData } } ;
+
+	MSG_DEDK_MJ_PLAYER_ENTER, // some player enter room ; 
+	// svr : { uid : 0 , sessionID : 23 , idx : 2 , score : 2345 }
+
+	MSG_PLAYER_MJ_ACT,
 	// client : { act : eMJActType , card : number , eatWith? : number[] }
-	// svr : { ret : 0 , newCard? : number }
-	// ret : 0 success , 1 not your turn , 2 , state error , 3 , cards error ;
+	// svr : { ret : 0 }
+	// ret : 0 success , 1 not your turn , 2 , state error , 3 , cards error  , can not do act , 4 argument error ;
 	
 	MSG_DESK_MJ_ACT,
-	//svr : { idx : 2 , act : eMJActType , card : number , invokeIdx? : number ,eatWith? : number[] }
+	//svr : { idx : 2 , act : eMJActType , card : number , invokeIdx? : number ,eatWith? : number[] , newCard? : number }
+
+	MSG_DEKS_MJ_INFORM_ACT_WITH_OTHER_CARD,
+	//svr : { card : 234 , invokerIdx : 2 , isBuGang : 0 }
+
+	MSG_DEKS_MJ_INFORM_SELF_ACT,
+	// svr : { isOnlyChu : 0  }
+
+	MSG_DESK_MJ_DISTRIBUTE,
+	// svr : { bankerIdx : 1 , holdCards : [ 2,2,3,4 ] }
+
+	MSG_DESK_MJ_GAME_OVER,
+	// svr : { isHuOver : 0 , result :[ { idx : 0, offset : 2 , final : 234 } , ....  ] } 
+
+
+
+
 
 
 

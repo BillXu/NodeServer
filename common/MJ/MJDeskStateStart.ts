@@ -1,9 +1,10 @@
+import { WaitActStateData } from './MJDeskStateWaitAct';
 import { eMsgType } from './../../shared/MessageIdentifer';
 import { XLogger } from './../Logger';
 import { eMJDeskState } from './../../shared/SharedDefine';
 import { IMJDeskState } from './IMJDeskState';
 import { MJDesk } from './MJDesk';
-export class MJDeskStateWaitStart implements IMJDeskState
+export class MJDeskStateStart implements IMJDeskState
 {
     protected mLeaveStateTime : NodeJS.Timeout = null ;
     protected mDesk : MJDesk = null ;
@@ -26,7 +27,8 @@ export class MJDeskStateWaitStart implements IMJDeskState
             XLogger.warn( "why still have mLeaveStateTime timer" ) ;
             this.mLeaveStateTime = null ;
         }
-        this.mLeaveStateTime = setTimeout( this.finishDistribute.bind(this), MJDeskStateWaitStart.TIME_DISTRIBUTE * 1000 ) ;
+        this.mLeaveStateTime = setTimeout( this.finishDistribute.bind(this), MJDeskStateStart.TIME_DISTRIBUTE * 1000 ) ;
+        XLogger.debug( "enter state of start game , distribute deskID = " + this.mDesk.deskID ) ;
         this.mDesk.distributeCards();
     }
 
@@ -45,6 +47,8 @@ export class MJDeskStateWaitStart implements IMJDeskState
 
     }
 
+    onPlayerReuesetInfo( idx : number ) : void{}
+
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number ) : boolean 
     {
         return false ;
@@ -53,6 +57,8 @@ export class MJDeskStateWaitStart implements IMJDeskState
     finishDistribute()
     {
         this.mLeaveStateTime = null ;
-        this.mDesk.transferState( eMJDeskState.eState_WaitAct, { idx : this.mDesk.bankerIdx } ) ;
+        XLogger.debug( "finished distribute time out, go to wait act deskID = " + this.mDesk.deskID + " bankerIdx = " + this.mDesk.bankerIdx ) ;
+        let data = new WaitActStateData(this.mDesk.bankerIdx, this.mDesk.getPlayerAutoChuCard(this.mDesk.bankerIdx) ) ;
+        this.mDesk.transferState( eMJDeskState.eState_WaitAct, data ) ;
     }
 }

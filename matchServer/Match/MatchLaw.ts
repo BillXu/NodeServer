@@ -110,6 +110,12 @@ export class MatchLaw implements IMatchLaw
         }
 
         p.sessionID = sessionID ;
+        if ( netState != ePlayerNetState.eState_Online )
+        {
+            XLogger.warn( "player do not online , zero sessionID uid = " + uid ) ;
+            p.sessionID = 0 ;
+        }
+
         if ( p.stayDeskID != 0 )
         {
             let arg = {} ;

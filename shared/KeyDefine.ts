@@ -73,4 +73,9 @@ export class key
     static invokerIdx = "invokerIdx" ;
     static waitIdxes = "waitIdxes" ;
     static gangCnt = "gangCnt" ;
+    static holdCards = "holdCards" ;
+    static isBuGang = "isBuGang" ;
+    static newCard = "newCard" ;
+    static outCards = "outCards" ;
+    static vActedCard = "vActedCard" ;
 }

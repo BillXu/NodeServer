@@ -26,6 +26,7 @@ export class MJDeskStateWaitStart implements IMJDeskState
             this.checkTimer = null ;
         }
         this.checkTimer = setInterval( this.update.bind(this),500 ) ;
+        XLogger.debug( "enter state = " + eMJDeskState[this.getState()] + " deskID = " + this.mDesk.deskID ) ;
     }
 
     onLevelState() : void
@@ -51,7 +52,10 @@ export class MJDeskStateWaitStart implements IMJDeskState
     {
         if ( this.mDesk.canStartGame() )
         {
+            XLogger.debug( "do can start game will leave waitState sTate , deskID = " + this.mDesk.deskID ) ;
             this.mDesk.transferState( eMJDeskState.eState_Start ) ;
         }
     }
+
+    onPlayerReuesetInfo( idx : number ) : void{}
 }

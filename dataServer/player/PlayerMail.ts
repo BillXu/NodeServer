@@ -10,7 +10,6 @@ import { PlayerMailData, MailData, eMailState } from './../../shared/playerData/
 import { eRpcFuncID } from '../../common/Rpc/RpcFuncID';
 import { eMailType } from '../../shared/SharedDefine';
 import { MailModule } from '../MailModule';
-import { type } from 'os';
 export class PlayerMail extends PlayerMailData implements IPlayerCompent
 {
     static NAME : string = "PlayerMail" ;

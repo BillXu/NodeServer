@@ -51,8 +51,8 @@ export enum eMJDeskState
 {
     eState_WaitStart,
     eState_Start,
-    eState_WaitAct, // { idx : 23, act : eMJActType, invokerIdx : number , buGangResore? : Object }
-    eState_WaitOtherAct, // { waitIdxes : { idx : 0 , maxAct : eMJAct }[] , gangCnt : 0 , card : 23 , invokerIdx : number, act : eMJActType, buGangResore? : Object }
+    eState_WaitAct, // stateInfo : { idx : 23, act : eMJActType }
+    eState_WaitOtherAct, // stateInfo : { card : number, act : eMJActType , invokerIdx : number }  // act , maybe emjAct_Chu or emjAct_buGangDeclear
     eState_End,
     eState_Max,
 }

@@ -182,6 +182,17 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
             }
         }
 
+        let p = this.mSignedPlayers.get(uid) ;
+        if ( p != null )
+        {
+            p.sessionID = sessionID ;
+            if ( netState != ePlayerNetState.eState_Online )
+            {
+                p.sessionID = 0 ;
+                XLogger.warn( "signed player not online , zero sessionID , uid = " + p.uid );
+            }
+            return true ;
+        }
         XLogger.debug( "player state change not processed uid = " + uid + " matchID = " + this.matchID ) ;
         return false ;
     }
