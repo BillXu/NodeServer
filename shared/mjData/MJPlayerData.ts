@@ -96,9 +96,9 @@ export class MJPlayerData implements IShareData
         return this.cardData.onBuGangDeclare(card) ;
     }
 
-    onBuGangDone( card : number , newCard : number ) : void
+    onBuGangDone( card : number ) : void
     {
-        this.cardData.onBuGangDone(card, newCard) ;
+        this.cardData.onBuGangDone(card) ;
     }
 
     canAnGangWithCard( card : number ) : boolean
@@ -106,9 +106,9 @@ export class MJPlayerData implements IShareData
         return this.cardData.canAnGangWithCard(card) ;
     }
 
-    onAnGang( card : number , newCard : number ) : void
+    onAnGang( card : number ) : void
     {
-        this.cardData.onAnGang(card, newCard) ;
+        this.cardData.onAnGang(card) ;
     }
 
     canHuWithCard( card : number , isZiMo : boolean ) : boolean
@@ -136,9 +136,9 @@ export class MJPlayerData implements IShareData
         return this.cardData.canMingGang(card) ;
     }
 
-    onMingGang( card : number , newCard : number, invokerIdx : number  )
+    onMingGang( card : number , invokerIdx : number  )
     {
-        this.cardData.onMingGang(card, newCard,invokerIdx ) ;
+        this.cardData.onMingGang(card,invokerIdx ) ;
     }
 
     canPeng( card : number ) : boolean

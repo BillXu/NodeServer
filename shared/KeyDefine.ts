@@ -78,4 +78,5 @@ export class key
     static newCard = "newCard" ;
     static outCards = "outCards" ;
     static vActedCard = "vActedCard" ;
+    static isDeclare = "isDeclare" ;
 }

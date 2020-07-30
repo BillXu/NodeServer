@@ -1,3 +1,4 @@
+import { MJPlayerData } from './../../shared/mjData/MJPlayerData';
 import { ePlayerNetState } from './../commonDefine';
 import { key } from './../../shared/KeyDefine';
 import { MJDeskStateWaitOtherAct } from './MJDeskStateWaitOtherAct';
@@ -197,153 +198,6 @@ export class MJDesk extends MJDeskData implements IDesk
         }
     }
 
-    onPlayerDoActWitSelfCard( idx : number ,act : eMJActType , card : number , haveGang : boolean , invokerIdx : number  ) : boolean 
-    {
-        let p = this.getPlayerByIdx(idx) ;
-        let newCard = 0 ;
-        switch ( act )
-        {
-            case eMJActType.eMJAct_Pass:
-                {
-
-                }
-                break ;
-            case eMJActType.eMJAct_Chu:
-                {
-                    if ( p.onChu(card) == false )
-                    {
-                        return false ;
-                    } 
-                }
-                break;
-            case eMJActType.eMJAct_BuGang_Declare:
-                {
-                    if ( this.canLeftCardBeMo() == false )
-                    {
-                        return false ;
-                    }
-
-                    if ( p.onBuGangDeclare(card) == false )
-                    {
-                        return false ;
-                    }
-                }
-                break;
-            case eMJActType.eMJAct_BuGang_Done:
-                {
-                    newCard = this.mMJCards.getCard() ;
-                    p.onBuGangDone(card, newCard ) ;
-                    this.onPlayerBuGanged(idx, invokerIdx) ;
-                }
-                break;
-            case eMJActType.eMJAct_AnGang:
-                {
-                    if ( this.canLeftCardBeMo() == false || p.canAnGangWithCard(card) == false )
-                    {
-                        return false ;
-                    }
-
-                    newCard = this.mMJCards.getCard() ;
-                    p.onAnGang(card, newCard ) ;
-                    this.onPlayerAnGanged(idx, invokerIdx ) ;
-                }
-                break;
-            case eMJActType.eMJAct_Hu:
-                {
-                    if ( false == this.canPlayerHu(idx, card ,true, haveGang, invokerIdx) )
-                    {
-                        return false ;
-                    }
-
-                    this.onPlayerHu(idx, card, true, haveGang, invokerIdx ) ;
-                }
-                break;
-            default:
-                XLogger.error("self act should not do this act = " + act + " deskID = " + this.deskID + " uid = " + p.uid ) ;
-                return false ;
-        }
-
-        let msg = {} ;
-        msg[key.idx] = idx ;
-        msg[key.act] = act ;
-        msg[key.card] = card ;
-        if ( newCard == null || 0 == newCard )
-        {
-            this.sendDeskMsg(eMsgType.MSG_DESK_MJ_ACT, msg) ;
-        }
-        else
-        {
-            this.sendDeskMsg(eMsgType.MSG_DESK_MJ_ACT, msg,idx) ;
-
-            msg[key.newCard] = newCard ;
-            this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_DESK_MJ_ACT, msg ) ;
-        }
-        return true ;
-    }
-
-    onPlayerDoActWithOtherCard( idx : number ,act : eMJActType , card : number , invokerIdx : number , invokerGangCnt : number , eatWith? : number[] )
-    {
-        let p = this.getPlayerByIdx(idx) ;
-        let newCard = 0 ;
-        switch ( act )
-        {
-            case eMJActType.eMJAct_Pass:
-                {
-                    return true ;
-                }
-                break ;
-            case eMJActType.eMJAct_Chi:
-                {
-                    p.onChi(card, eatWith,invokerIdx ) ;
-                }
-                break;
-            case eMJActType.eMJAct_Peng:
-                {
-                    p.onPeng(card,invokerIdx ) ;
-                }
-                break ;
-            case eMJActType.eMJAct_MingGang:
-                {
-                    newCard = this.mMJCards.getCard() ;
-                    p.onMingGang(card, newCard,invokerIdx ) ;
-                    this.onPlayerMingGanged(idx, invokerIdx) ;
-                }
-                break;
-            case eMJActType.eMJAct_Hu:
-                {
-                    this.onPlayerHu( idx, card, false, invokerGangCnt > 0 , invokerIdx )
-                }
-                break;
-            default:
-                {
-                    XLogger.warn( "you should do act with other card act = " + act + " deskID = " + this.deskID + " uid = " + p.uid )  ;
-                    return false ;
-                }
-        }
-
-        let msg = {} ;
-        msg[key.idx] = idx ;
-        msg[key.act] = act ;
-        msg[key.card] = card ;
-        if ( act == eMJActType.eMJAct_Chi )
-        {
-            msg[key.eatWith] = eatWith;
-        }
-
-        if ( newCard == null || 0 == newCard )
-        {
-            this.sendDeskMsg(eMsgType.MSG_DESK_MJ_ACT, msg) ;
-        }
-        else
-        {
-            this.sendDeskMsg(eMsgType.MSG_DESK_MJ_ACT, msg,idx) ;
-
-            msg[key.newCard] = newCard ;
-            this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_DESK_MJ_ACT, msg ) ;
-        }
-        return true ;
-    }
-
     canPlayerDoActWithOtherCard( idx : number ,act : eMJActType , card : number , invokerIdx : number , haveGang : boolean, eatWith? : number[]  ) : boolean 
     {
         let p = this.getPlayerByIdx(idx) ;
@@ -396,26 +250,6 @@ export class MJDesk extends MJDeskData implements IDesk
                 }
         }
         return true ;
-    }
-
-    onPlayerMo( idx : number ) : number
-    {
-        let card = this.mMJCards.getCard() ;
-        if ( card != null && card != 0 )
-        {
-            let p = this.getPlayerByIdx(idx) ;
-            p.onMoCard(card) ;
-
-            let msg = {} ;
-            msg[key.idx] = idx ;
-            msg[key.act] = eMJActType.eMJAct_Mo ;
-            msg[key.card] = 0 ;
-            this.sendDeskMsg(eMsgType.MSG_DESK_MJ_ACT, msg, idx ) ;
-
-            msg[key.card] = card ;
-            this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_DESK_MJ_ACT, msg) ;
-        }
-        return card ;
     }
 
     getPlayerAutoChuCard( idx : number ) : number
@@ -567,33 +401,138 @@ export class MJDesk extends MJDeskData implements IDesk
         this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_PLAYER_MJ_DESK_PLAYERS_INFO, js ) ;
     }
 
-    protected onPlayerAnGanged( idx : number , invokerIdx : number )
-    {
-        // caculate socre here ;
-    }
-
-    protected onPlayerBuGanged( idx : number , invokerIdx : number )
-    {
-        // caculate socre here ;
-    }
-
-    protected onPlayerMingGanged( idx : number , invokerIdx : number )
-    {
-        // caculate socre here ;
-    }
-
     protected canPlayerHu( idx : number , card : number , isZiMo : boolean ,haveGang : boolean , invokerIdx : number ) : boolean
     {
         return this.getPlayerByIdx(idx).canHuWithCard(card, isZiMo) ;
-    }
-
-    protected onPlayerHu( idx : number , card : number , isZiMo : boolean ,haveGang : boolean , invokerIdx : number )
-    {
-        this.getPlayerByIdx(idx).onHuWithCard(card, isZiMo) ;
     }
 
     protected enableChi() : boolean
     {
         return false ;
     }
+
+    // act 
+    onPlayerMo( actIdx : number )
+    {
+        let card = this.mMJCards.getCard() ;
+        if ( card != null && card != 0 )
+        {
+            let p = this.getPlayerByIdx(actIdx) ;
+            p.onMoCard(card) ;
+
+            let msg = {} ;
+            msg[key.idx] = actIdx ;
+            msg[key.card] = 0 ;
+            this.sendDeskMsg(eMsgType.MSG_DESK_MJ_MO, msg, actIdx ) ;
+
+            msg[key.card] = card ;
+            this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_DESK_MJ_MO, msg) ;
+        }
+        return card ;
+    }
+
+    onPlayerChu( player : MJPlayerData , card : number ) : boolean
+    {
+        let msg = {} ;
+        msg[key.card] = card ;
+        msg[key.idx] = player.nIdx ;
+        if ( player.onChu(card) == false )
+        {
+            msg[key.ret] = 2 ;
+            this.sendMsgToPlayer(player.sessionID, eMsgType.MSG_PLAYER_MJ_CHU , msg ) ; 
+            return false ;
+        }
+        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_CHU , msg ); 
+        return true ;
+    }
+
+    onPlayerZiMoHu( player : MJPlayerData , card : number, gangCnt : number , orgInvokerIdx : number ) : boolean
+    {
+        let msg = {} ;
+        msg[key.card] = card ;
+        msg[key.idx] = player.nIdx ;
+        if ( player.canHuWithCard(card, true ) == false )
+        {
+            msg[key.ret] = 2 ;
+            this.sendMsgToPlayer(player.sessionID, eMsgType.MSG_PLAYER_MJ_HU , msg ) ; 
+            return false ;
+        }
+        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_HU , msg ); 
+        return true ;
+    }
+
+    onPlayerAnGang( player : MJPlayerData , card : number , orgInvokerIdx : number ) : boolean
+    {
+        let msg = {} ;
+        msg[key.card] = card ;
+        msg[key.idx] = player.nIdx ;
+        if ( this.canLeftCardBeMo() == false || player.canAnGangWithCard(card) == false )
+        {
+            msg[key.ret] = 2 ;
+            this.sendMsgToPlayer(player.sessionID, eMsgType.MSG_PLAYER_MJ_ANGANG , msg ) ; 
+            return false ;
+        }
+        player.onAnGang(card) ;
+        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_ANGANG , msg ); 
+        this.onPlayerMo(player.nIdx) ;
+        return true ;
+    }
+
+    onPlayerBuGang( player : MJPlayerData , card : number , isDeclare : boolean, orgInvokerIdx : number ) : boolean
+    {
+        let msg = {} ;
+        msg[key.card] = card ;
+        msg[key.idx] = player.nIdx ;
+        msg[key.isDeclare] = isDeclare ? 1 : 0 ;
+        if ( isDeclare )
+        {
+            if ( this.canLeftCardBeMo() == false || player.onBuGangDeclare(card) == false )
+            {
+                msg[key.ret] = 2 ;
+                this.sendMsgToPlayer(player.sessionID, eMsgType.MSG_PLAYER_MJ_BU_GANG , msg ) ; 
+                return false ;
+            }
+            this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_BU_GANG , msg ) ;  
+            return true;
+        }
+
+        player.onBuGangDone(card) ;
+        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_BU_GANG , msg ) ; 
+        this.onPlayerMo(player.nIdx) ;
+        return true ;
+    }
+
+    onPlayerEat( actIdx : number , card : number , eatWith : number[], invokerIdx : number ) : void
+    {
+        let msg = {} ;
+        msg[key.card] = card ;
+        msg[key.idx] = actIdx ;
+        this.getPlayerByIdx(actIdx).onChi(card, eatWith, invokerIdx) ;
+        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_EAT , msg ); 
+    }
+
+    onPlayerPeng( actIdx : number , card : number , invokerIdx : number ) : void
+    {
+        let msg = {} ;
+        msg[key.card] = card ;
+        msg[key.idx] = actIdx ;
+        this.getPlayerByIdx(actIdx).onPeng(card, invokerIdx) ;
+        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_PENG , msg ); 
+    }
+
+    onPlayerMingGang( actIdx : number , card : number , invokerIdx : number ) : void
+    {
+        let msg = {} ;
+        msg[key.card] = card ;
+        msg[key.idx] = actIdx ;
+        this.getPlayerByIdx(actIdx).onMingGang(card, invokerIdx) ;
+        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_PENG , msg ); 
+        this.onPlayerMo(actIdx) ;
+    }
+
+    onPlayerHuOtherCard( actIdxes : number[] , card : number , invokerIdx : number , invokerGangCnt  : boolean  )
+    {
+        // player do hu ;
+    }
+
 }

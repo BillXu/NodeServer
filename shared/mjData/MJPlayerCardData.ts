@@ -1,4 +1,3 @@
-import { runInThisContext } from 'vm';
 import { MJCardData } from './MJCardData';
 import { key } from './../KeyDefine';
 import { eMJActType, eMJCardType } from './MJDefine';
@@ -134,7 +133,7 @@ export class MJPlayerCardData implements IShareData
         return true ;
     }
 
-    onBuGangDone( card : number , newCard : number ) : void
+    onBuGangDone( card : number  ) : void
     {
         for ( let v of this.vActedCards )
         {
@@ -144,8 +143,6 @@ export class MJPlayerCardData implements IShareData
                 break ;
             }
         }
-
-        this.onMoCard(newCard) ;
 
         let acted = new ActedCards() ;
         acted.act = eMJActType.eMJAct_BuGang_Done ;
@@ -158,10 +155,9 @@ export class MJPlayerCardData implements IShareData
         return this.getCardCnt(card) == 4 ;
     }
 
-    onAnGang( card : number , newCard : number ) : void
+    onAnGang( card : number ) : void
     {
         this.removeCard(card,4) ;
-        this.onMoCard(newCard) ;
 
         let acted = new ActedCards() ;
         acted.act = eMJActType.eMJAct_AnGang ;
@@ -288,10 +284,9 @@ export class MJPlayerCardData implements IShareData
         return this.getCardCnt(card) >= 3 ;
     }
 
-    onMingGang( card : number , newCard : number, invokerIdx : number  )
+    onMingGang( card : number , invokerIdx : number  )
     {
         this.removeCard(card,3 ) ;
-        this.onMoCard(newCard) ;
 
         let acted = new ActedCards() ;
         acted.act = eMJActType.eMJAct_MingGang ;

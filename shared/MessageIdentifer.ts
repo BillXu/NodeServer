@@ -124,6 +124,9 @@ export enum eMsgType
 
 	MSG_PLAYER_NOTICE_DLG,
 	// svr : { noitice : "this is a notice", time : 234235234234  }  // time change change to local time . seconds ;
+	
+	MSG_RESULT_ERROR,
+	//svr : { code : eErrorCode , msgID : eMsgType , err? : "" }   
 
 	MSG_PLAYER_REQ_MATCH_LIST = 200,
 	// client : { type : eMatchType }
@@ -158,14 +161,6 @@ export enum eMsgType
 	MSG_DEDK_MJ_PLAYER_ENTER, // some player enter room ; 
 	// svr : { uid : 0 , sessionID : 23 , idx : 2 , score : 2345 }
 
-	MSG_PLAYER_MJ_ACT,
-	// client : { act : eMJActType , card : number , eatWith? : number[] }
-	// svr : { ret : 0 }
-	// ret : 0 success , 1 not your turn , 2 , state error , 3 , cards error  , can not do act , 4 argument error ;
-	
-	MSG_DESK_MJ_ACT,
-	//svr : { idx : 2 , act : eMJActType , card : number , invokeIdx? : number ,eatWith? : number[] , newCard? : number }
-
 	MSG_DEKS_MJ_INFORM_ACT_WITH_OTHER_CARD,
 	//svr : { card : 234 , invokerIdx : 2 , isBuGang : 0 }
 
@@ -178,11 +173,51 @@ export enum eMsgType
 	MSG_DESK_MJ_GAME_OVER,
 	// svr : { isHuOver : 0 , result :[ { idx : 0, offset : 2 , final : 234 } , ....  ] } 
 
+	MSG_MJ_ACT_BEGIN = 400,
+	MSG_DESK_MJ_MO,
+	// svr { idx : 23 , card : 234 }
 
+	MSG_PLAYER_MJ_CHU,
+	// client: { card : number } ;
+	// ret : { ret : 0 , idx : number , card : number }
+	// ret : 0 success , 1 state error , 2 card error ;
 
+	MSG_PLAYER_MJ_ANGANG,
+	// client: { card : number } ;
+	// ret : { ret : 0 , card : number , idx : number  }
+	// ret : 0 success , 1 state error , 2 card error  ;
 
+	MSG_PLAYER_MJ_BU_GANG,
+	// client: { card : 234 } ;
+	// ret : { ret : 0 , card : 234 , isDeclare : 1  }
+	// ret : 0 success , 1 state error , 2 card error  ;
 
+	MSG_PLAYER_MJ_EAT,
+	// client: { card : number , eatWith : [2,3] } ;
+	// ret : { ret : 0 , idx : number , card : number , eatWith : [2,3]  }
+	// ret : 0 success , 1 state error , 2 card error ;
 
+	MSG_PLAYER_MJ_PENG,
+	// client: null ;
+	// ret : { ret : 0 , card : 234 , invokerIdx : 234 }
+	// ret : 0 success , 1 state error , 2 card error , 3 can not do this act ;
+ 
+	MSG_PLAYER_MJ_MING_GANG,
+	// client: null ;
+	// ret : { ret : 0 , card : 234 , invokerIdx : 234 }
+	// ret : 0 success , 1 state error , 2 card error 
+
+	MSG_PLAYER_MJ_HU,
+	// client: null ;
+	// ret : { ret : 0 }
+	// ret : 0 success , 1 state error , 2 card error 
+
+	MSG_PLAYER_MJ_PASS,
+	// client: null ;
+	// ret : { ret : 0 }
+	// ret : 0 success , 1 state error;
+
+	MSG_MJ_ACT_END = 500,
 
 
 

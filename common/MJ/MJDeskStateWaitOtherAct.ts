@@ -73,7 +73,7 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
                     let msg = {} ;
                     msg[key.act] = eMJActType.eMJAct_Pass ;
                     msg[key.card] = self.mData.mCard;  
-                    self.onLogicMsg(eMsgType.MSG_PLAYER_MJ_ACT, msg, p.sessionID ) ;
+                    self.onLogicMsg(eMsgType.MSG_PLAYER_MJ_PASS, msg, p.sessionID ) ;
                 }, 1500 );
     
             }
@@ -98,11 +98,126 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
         outJsInfo[key.act] = this.mData.mBuGangRetore == null ? eMJActType.eMJAct_Chu : eMJActType.eMJAct_BuGang_Declare ;
     }
 
+    // onLogicMsg( msgID : eMsgType , msg : Object, sessionID : number ) : boolean 
+    // {
+    //     if ( msgID != eMsgType.MSG_PLAYER_MJ_ACT )
+    //     {
+    //         return false ;
+    //     }
+
+    //     let p = this.mDesk.getPlayerBySessionID(sessionID) ;
+        
+    //     if ( p == null || this.mData.mWaitIdxes.findIndex(( pw : {idx : number , maxAct : eMJActType } )=>pw.idx == p.nIdx ) == -1  )
+    //     {
+    //         msg[key.ret] = 1 ;
+    //         XLogger.debug( "In waitOtherActState you are not in room , or not in waiting list not your turn orgID = " + sessionID + " is " + ( p == null ? " null " : " not in list " )  + " deskID " + this.mDesk.deskID ) ;
+    //         this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
+    //         return true ;
+    //     }
+
+    //     let act : eMJActType = msg[key.act] ;
+    //     let card : number = msg[key.card] ;
+    //     let isOk = this.mDesk.canPlayerDoActWithOtherCard( p.nIdx, act ,card , this.mData.mInvokerIdx , this.mData.mGangCnt > 0 ,msg[key.eatWith] ) ;
+    //     if ( isOk == false )
+    //     {
+    //         msg[key.ret] = 3 ;
+    //         XLogger.debug( "you can do this act idx = " + p.nIdx + " act = " + act  + " deskID = " + this.mDesk.deskID) ;
+    //         this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
+    //         return true ;
+    //     }
+
+    //     if ( act == eMJActType.eMJAct_Chi )
+    //     {
+    //         if ( msg[key.eatWith] == null )
+    //         {
+    //             XLogger.error( "eatAct but eatWith is null can not do this act failed idx = " + p.nIdx + " deskID = " + this.mDesk.deskID ) ;
+    //             msg[key.ret] = 4 ;
+    //             this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
+    //         }
+    //         this.mChosedEatWith = msg[key.eatWith];
+    //     }
+
+    //     msg[key.ret] = 0 ;
+    //     this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
+
+    //     XLogger.debug( "In waitOtherActState player choseAct = " + eMJActType[act] + " idx = " + p.nIdx + " deskID = " + this.mDesk.deskID ) ;
+    //     this.onPlayerChosedDoAct(p.nIdx, act ) ;
+    //     if ( this.mData.mWaitIdxes.length != 0 ) // go on wait other ;
+    //     {
+    //         XLogger.debug( "still have player not chose act , go on wait deskID = " + this.mDesk.deskID ) ;
+    //         return true ;
+    //     }
+
+    //     if ( this.mChosedAct == null || this.mChosedAct.act == eMJActType.eMJAct_Pass )
+    //     {
+    //         XLogger.debug("all player chose pass or forgot deskID = " + this.mDesk.deskID) ;
+    //         if ( this.mData.mBuGangRetore == null )
+    //         {
+    //             let nextIdx = this.mDesk.getNextActIdx( this.mData.mInvokerIdx ) ;
+    //             let mocard = this.mDesk.onPlayerMo( nextIdx ) ;
+    //             if ( null == mocard || 0 == mocard )
+    //             {   XLogger.debug( "in waitOtherActState no more card to MO , so game end deskID = " + this.mDesk.deskID ) ;
+    //                 this.mDesk.transferState( eMJDeskState.eState_End ,false ) ;
+    //                 return true ;
+    //             }
+
+    //             XLogger.debug( "all player check pass , so next player moPai nextIdx = " + nextIdx + " deskID = " + this.mDesk.deskID ) ;
+    //             let wda = new WaitActStateData( nextIdx, mocard )  ; 
+    //             this.mDesk.transferState( eMJDeskState.eState_WaitAct ,wda ) ;
+    //         }
+    //         else
+    //         {
+    //             XLogger.debug( "all palyer chose check pass , so go on finish BuGang idx = " + this.mData.mBuGangRetore.mActIdx + " deskID = " + this.mDesk.deskID ) ;
+    //             this.mData.mBuGangRetore.mEnterAct = eMJActType.eMJAct_BuGang_Done ;
+    //             this.mDesk.transferState( eMJDeskState.eState_WaitAct ,this.mData.mBuGangRetore ) ;
+    //         }
+    //     }
+    //     else
+    //     {
+    //         XLogger.debug( "all player finished chose act and do their act deskID = " + this.mDesk.deskID ) ;
+    //         this.doChosedAct();
+    //     }
+
+    //     return true ;
+    // }
     onLogicMsg( msgID : eMsgType , msg : Object, sessionID : number ) : boolean 
     {
-        if ( msgID != eMsgType.MSG_PLAYER_MJ_ACT )
+
+        let act = eMJActType.eMJAct_Max ;
+        switch ( msgID )
         {
-            return false ;
+            case eMsgType.MSG_PLAYER_MJ_PASS:
+                {
+                    act = eMJActType.eMJAct_Pass;
+                }
+                break ;
+            case eMsgType.MSG_PLAYER_MJ_EAT:
+                {
+                    act = eMJActType.eMJAct_Chi;
+                }
+                break;
+            case eMsgType.MSG_PLAYER_MJ_PENG:
+                {
+                    act = eMJActType.eMJAct_Peng;
+                }
+                break ;
+            case eMsgType.MSG_PLAYER_MJ_MING_GANG:
+                {
+                    act = eMJActType.eMJAct_MingGang;
+                }
+                break;
+            case eMsgType.MSG_PLAYER_MJ_HU:
+                {
+                    act = eMJActType.eMJAct_Hu;
+                }
+                break;
+            default:
+                {
+                    XLogger.debug( "msg can not process in this state msgID = " + eMsgType[msgID] + " deskID = " + this.mDesk.deskID ) ;
+                    return false ;
+                }
+                break ;
+
         }
 
         let p = this.mDesk.getPlayerBySessionID(sessionID) ;
@@ -110,35 +225,45 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
         if ( p == null || this.mData.mWaitIdxes.findIndex(( pw : {idx : number , maxAct : eMJActType } )=>pw.idx == p.nIdx ) == -1  )
         {
             msg[key.ret] = 1 ;
+            if ( p != null )
+            {
+                msg[key.idx] = p.nIdx ;
+            }
+            else
+            {
+                msg["err"] = "you are not in room";
+            }
             XLogger.debug( "In waitOtherActState you are not in room , or not in waiting list not your turn orgID = " + sessionID + " is " + ( p == null ? " null " : " not in list " )  + " deskID " + this.mDesk.deskID ) ;
-            this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
-            return true ;
-        }
-
-        let act : eMJActType = msg[key.act] ;
-        let card : number = msg[key.card] ;
-        let isOk = this.mDesk.canPlayerDoActWithOtherCard( p.nIdx, act ,card , this.mData.mInvokerIdx , this.mData.mGangCnt > 0 ,msg[key.eatWith] ) ;
-        if ( isOk == false )
-        {
-            msg[key.ret] = 3 ;
-            XLogger.debug( "you can do this act idx = " + p.nIdx + " act = " + act  + " deskID = " + this.mDesk.deskID) ;
             this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
             return true ;
         }
 
         if ( act == eMJActType.eMJAct_Chi )
         {
-            if ( msg[key.eatWith] == null )
+            if ( msg[key.eatWith] == null || msg[key.eatWith].length != 2 )
             {
                 XLogger.error( "eatAct but eatWith is null can not do this act failed idx = " + p.nIdx + " deskID = " + this.mDesk.deskID ) ;
+                msg[key.idx] = p.nIdx ;
                 msg[key.ret] = 4 ;
                 this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
+                return true ;
             }
             this.mChosedEatWith = msg[key.eatWith];
         }
 
-        msg[key.ret] = 0 ;
-        this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
+        let card : number = msg[key.card] ;
+        let isOk = this.mDesk.canPlayerDoActWithOtherCard( p.nIdx, act ,card , this.mData.mInvokerIdx , this.mData.mGangCnt > 0 ,this.mChosedEatWith ) ;
+        if ( isOk == false )
+        {
+            msg[key.idx] = p.nIdx ;
+            msg[key.ret] = 2 ;
+            XLogger.debug( "you can do this act idx = " + p.nIdx + " act = " + act  + " deskID = " + this.mDesk.deskID) ;
+            this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
+            return true ;
+        }
+
+        // msg[key.ret] = 0 ;
+        // this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
 
         XLogger.debug( "In waitOtherActState player choseAct = " + eMJActType[act] + " idx = " + p.nIdx + " deskID = " + this.mDesk.deskID ) ;
         this.onPlayerChosedDoAct(p.nIdx, act ) ;
@@ -229,10 +354,33 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
 
     protected doChosedAct()
     {
-        for ( let idx of this.mChosedAct.idxes )
+        switch( this.mChosedAct.act )
         {
-            XLogger.debug( "do chosed act idx = " + idx + " act = " + eMJActType[this.mChosedAct.act] + " deskID = " + this.mDesk.deskID ) ;
-            this.mDesk.onPlayerDoActWithOtherCard(idx, this.mChosedAct.act, this.mData.mCard, this.mData.mInvokerIdx,this.mData.mGangCnt , this.mChosedEatWith ) ;
+            case eMJActType.eMJAct_Chi:
+                {
+                    this.mDesk.onPlayerEat(this.mChosedAct.idxes[0], this.mData.mCard, this.mChosedEatWith,this.mData.mInvokerIdx ) ;
+                }
+                break;
+            case eMJActType.eMJAct_Peng:
+                {
+                    this.mDesk.onPlayerPeng(this.mChosedAct.idxes[0], this.mData.mCard , this.mData.mInvokerIdx ) ;
+                }
+                break;
+            case eMJActType.eMJAct_MingGang:
+                {
+                    this.mDesk.onPlayerMingGang(this.mChosedAct.idxes[0], this.mData.mCard , this.mData.mInvokerIdx ) ;
+                }
+                break;
+            case eMJActType.eMJAct_Hu:
+                {
+                    this.mDesk.onPlayerHuOtherCard(this.mChosedAct.idxes, this.mData.mCard, this.mData.mInvokerIdx, this.mData.mGangCnt > 0 )
+                    XLogger.debug( "player chose hu so go to gameEnd deskID = " + this.mDesk.deskID ) ;
+                    this.mDesk.transferState( eMJDeskState.eState_End, true ) ;
+                }
+                break;
+            default:
+                XLogger.error("this act should not in here act = " + eMJActType[this.mChosedAct.act] + " deskID = " + this.mDesk.deskID )  ;
+                return ;
         }
 
         if ( this.mChosedAct.act == eMJActType.eMJAct_Hu )
@@ -258,7 +406,7 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
             let msg = {} ;
             msg[key.act] = eMJActType.eMJAct_Pass ;
             msg[key.card] = this.mData.mCard;  
-            this.onLogicMsg(eMsgType.MSG_PLAYER_MJ_ACT, msg, this.mDesk.getPlayerByIdx(p.idx).sessionID ) ;
+            this.onLogicMsg(eMsgType.MSG_PLAYER_MJ_PASS, msg, this.mDesk.getPlayerByIdx(p.idx).sessionID ) ;
         }
     }
 
