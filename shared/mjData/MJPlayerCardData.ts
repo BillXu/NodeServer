@@ -38,10 +38,10 @@ export class ActedCards implements IShareData
 
 export class MJPlayerCardData implements IShareData
 {
-    protected mHoldCards : number[] = [] ;
+    mHoldCards : number[] = [] ;
     protected mOutCards : number[] = [] ;
     protected vActedCards : ActedCards[] = [] ;
-    protected nNewCard : number = 0 ;
+    protected nJustMoCard : number = 0 ;
     toJson() : Object 
     {
         let js = {} ;
@@ -76,11 +76,17 @@ export class MJPlayerCardData implements IShareData
         }
     }
 
+    get justMoCard() : number
+    {
+        return this.nJustMoCard ;
+    }
+
     clear()
     {
         this.mHoldCards.length = 0 ;
         this.mOutCards.length = 0 ;
         this.vActedCards.length = 0 ;
+        this.nJustMoCard = 0 ;
     }
 
     onDistributedCard( vCards : number[] ) : void
@@ -93,7 +99,7 @@ export class MJPlayerCardData implements IShareData
     {
         this.mHoldCards.push(card) ;
         this.mHoldCards.sort((a,b)=>a-b) ;
-        this.nNewCard = card ;
+        this.nJustMoCard = card ;
     }
 
     onChu( card : number ) : boolean
@@ -313,12 +319,49 @@ export class MJPlayerCardData implements IShareData
 
     getAutoChuCard() : number
     {
-        if ( this.nNewCard > 0 && this.getCardCnt(this.nNewCard) > 0 )
+        if ( this.nJustMoCard > 0 && this.getCardCnt(this.nJustMoCard) > 0 )
         {
-            return this.nNewCard ;
+            return this.nJustMoCard ;
+        }
+        else
+        {
+            this.nJustMoCard = 0 ;
         }
 
         return this.mHoldCards[0] ;
+    }
+
+    getCanBuGangCards() : number[]
+    {
+        let vout = [] ;
+        for ( let v of this.vActedCards )
+        {
+            if ( v.act != eMJActType.eMJAct_Peng )
+            {
+                continue ;
+            }
+
+            if ( -1 != this.mHoldCards.indexOf(v.card) )
+            {
+                vout.push(v.card) ;
+            } 
+        }
+
+        return vout ;
+    }
+
+    getCanAnGangCards() : number[]
+    {
+        this.mHoldCards.sort() ;
+        let vout = [] ;
+        for ( let idx = 0 ; (idx + 3) < this.mHoldCards.length ; idx += 4 )
+        {
+            if ( this.mHoldCards[idx] == this.mHoldCards[idx+3] )
+            {
+                vout.push(this.mHoldCards[idx]) ;
+            }
+        }
+        return vout ;
     }
 
     protected getCardCnt( card : number ) : number
@@ -337,9 +380,9 @@ export class MJPlayerCardData implements IShareData
 
     protected removeCard( card : number , cnt : number = 1 )
     {
-        if ( card == this.nNewCard )
+        if ( card == this.nJustMoCard )
         {
-            this.nNewCard = 0 ;
+            this.nJustMoCard = 0 ;
         }
 
         while ( cnt-- )

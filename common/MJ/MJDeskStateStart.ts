@@ -29,6 +29,7 @@ export class MJDeskStateStart implements IMJDeskState
         }
         this.mLeaveStateTime = setTimeout( this.finishDistribute.bind(this), MJDeskStateStart.TIME_DISTRIBUTE * 1000 ) ;
         XLogger.debug( "enter state of start game , distribute deskID = " + this.mDesk.deskID ) ;
+        this.mDesk.onGameStart();
         this.mDesk.distributeCards();
     }
 

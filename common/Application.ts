@@ -35,6 +35,11 @@ let jsCfg =
         centerIP : "ws://localhost:3000",
     },
 
+    shmj : 
+    {
+        centerIP : "ws://localhost:3000",
+    },
+
     db : 
     {
         centerIP : "ws://localhost:3000",
@@ -115,10 +120,12 @@ export class Application
             case eMsgPort.ID_MSG_PORT_DB:
                 return "db" ;
             case eMsgPort.ID_MSG_PORT_MATCH:
-                return "data" ;
+                return "match" ;
+            case eMsgPort.ID_MSG_PORT_MJSH:
+                return "shmj";
             default:
-                XLogger.error( "unknown svr type to get cfg port = " + eMsgPort[port] );
-                return null ;
+                XLogger.error( "unknown svr type to get cfg port = " + eMsgPort[port] + " use data svr" );
+                return "data" ;
         }
     }
 }

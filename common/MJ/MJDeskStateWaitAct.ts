@@ -1,3 +1,4 @@
+import { G_ARG } from './../../shared/SharedDefine';
 import { Player } from './../../dataServer/player/Player';
 import { MJPlayerData } from './../../shared/mjData/MJPlayerData';
 import { WaitOtherActStateData } from './MJDeskStateWaitOtherAct';
@@ -28,9 +29,8 @@ export class MJDeskStateWaitAct implements IMJDeskState
 {
     protected waitTimer : NodeJS.Timeout = null ;
     protected mDesk : MJDesk = null ;
-    static TIME_WAIT_ACT : number = 10 ;
     protected mData : WaitActStateData = null ;
-
+    protected mWaitTimeSecons : number  = G_ARG.TIME_MJ_WAIT_ACT;
     init( desk : MJDesk ) : void 
     {
         this.mDesk = desk ;
@@ -56,8 +56,16 @@ export class MJDeskStateWaitAct implements IMJDeskState
             ++this.mData.mGangCnt;
         }
 
-        this.mDesk.informSelfAct(this.mData.mActIdx, this.mData.mEnterAct ) ;
-        this.checkTuoGuanAct();
+        this.mDesk.informSelfAct(this.mData.mActIdx, this.mData.mEnterAct ,this.mData.mGangCnt > 0 ) ;
+        
+
+        this.mWaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT;
+        if ( this.mDesk.getPlayerByIdx(this.mData.mActIdx).state == eMJPlayerState.eState_TuoGuan )
+        {
+            this.mWaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN ;
+        }
+
+        this.startWait();
     }
 
     onLevelState() : void
@@ -251,7 +259,7 @@ export class MJDeskStateWaitAct implements IMJDeskState
         if ( idx == this.mData.mActIdx )
         {
             XLogger.debug( "waiting act player idx = " + idx +  " inform self act deskID = " + this.mDesk.deskID ) ;
-            this.mDesk.informSelfAct(this.mData.mActIdx, this.mData.mEnterAct ) ;
+            this.mDesk.informSelfAct(this.mData.mActIdx, this.mData.mEnterAct , this.mData.mGangCnt > 0 ) ;
         }
     }
 
@@ -265,23 +273,7 @@ export class MJDeskStateWaitAct implements IMJDeskState
             this.waitTimer = null ;
         }
 
-        this.waitTimer = setTimeout( this.waitActTimeOut.bind(this), MJDeskStateWaitAct.TIME_WAIT_ACT ) ;
-    }
-
-    checkTuoGuanAct()
-    {
-        if ( this.mDesk.getPlayerByIdx(this.mData.mActIdx).state == eMJPlayerState.eState_TuoGuan )
-        {
-            XLogger.debug( "player is tuoguan state actIdx = " + this.mData.mActIdx + " deskID = " + this.mDesk.deskID  ) ;
-            let self = this ;
-            setTimeout(() => {
-                self.waitActTimeOut();
-            }, 1500 );
-        }
-        else
-        {
-            this.startWait();
-        }
+        this.waitTimer = setTimeout( this.waitActTimeOut.bind(this), this.mWaitTimeSecons * 1000 ) ;
     }
 
     // act 

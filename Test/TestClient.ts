@@ -247,17 +247,7 @@ console.log( "b =" +  b ) ;
 let date = new Date("1995-12-17T03:24:00") ;
 console.log(date.toLocaleString() ) ;
 
-class A 
-{
-    hello : string = "";
-}
 
-class B extends A
-{
-    get hello() : string
-    {
-        return "hello B " ;
-    }
-}
-
-console.log( ( new B() ) ) ;
+let vs = [1,8,3] ;
+vs.sort() ;
+console.log(vs) ;

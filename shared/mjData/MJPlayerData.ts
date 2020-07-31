@@ -11,6 +11,7 @@ export class MJPlayerData implements IShareData
     score : number = 0 ;
     offset : number = 0 ;
     cardData : MJPlayerCardData = null ;
+    vLouPeng : number[] = [] ;
 
     init( uid : number , sessionID : number , score : number ,idx? : number )
     {
@@ -26,10 +27,11 @@ export class MJPlayerData implements IShareData
     {
         let js = {} ;
         js[key.idx] = this.nIdx ;
-        js[key.sessionID] = this.sessionID ;
+        //js[key.sessionID] = this.sessionID ;
         js[key.uid] = this.uid ;
         js[key.score] = this.score ; 
         js[key.state] = this.state ;
+        js[key.vLouPeng] = this.vLouPeng ;
         if ( this.cardData != null )
         {
             js[key.cardsData] = this.cardData.toJson();
@@ -40,10 +42,11 @@ export class MJPlayerData implements IShareData
     parse( js : Object  ) : void 
     {
         this.nIdx = js[key.idx] ;
-        this.sessionID = js[key.sessionID] ;
+        //this.sessionID = js[key.sessionID] ;
         this.uid = js[key.uid] ;
         this.score = js[key.score] ;
         this.state = js[key.state] ;
+        this.vLouPeng = js[key.vLouPeng] || [] ;
         if ( this.cardData == null )
         {
             this.cardData = this.createMJPlayerCardData();
@@ -55,6 +58,11 @@ export class MJPlayerData implements IShareData
         }
     }
 
+    addLouPeng( card : number )
+    {
+        this.vLouPeng.push(card) ;
+    }
+
     createMJPlayerCardData() : MJPlayerCardData
     {
         return new MJPlayerCardData() ;
@@ -64,6 +72,12 @@ export class MJPlayerData implements IShareData
     {
         this.offset += offset ;
         this.score += offset ;
+    }
+
+    onGameStart()
+    {
+        this.offset = 0 ;
+        this.cardData.clear();
     }
 
     onGameOver() : void
@@ -84,6 +98,7 @@ export class MJPlayerData implements IShareData
     onMoCard( card : number ) : void
     {
         this.cardData.onMoCard(card) ;
+        this.vLouPeng.length = 0 ;
     }
 
     onChu( card : number ) : boolean
@@ -143,6 +158,11 @@ export class MJPlayerData implements IShareData
 
     canPeng( card : number ) : boolean
     {
+        if ( this.enableLouPeng() && this.vLouPeng.indexOf(card) != -1 )
+        {
+            return false ;
+        }
+
         return this.cardData.canPeng(card) ;
     }
 
@@ -154,6 +174,21 @@ export class MJPlayerData implements IShareData
     getAutoChuCard() : number
     {
         return this.cardData.getAutoChuCard();
+    }
+
+    enableLouPeng() : boolean
+    {
+        return true ;
+    }
+
+    getCanBuGangCards() : number[]
+    {
+        return this.cardData.getCanBuGangCards();
+    }
+
+    getCanAnGangCards() : number[]
+    {
+        return this.cardData.getCanAnGangCards();
     }
 
 }

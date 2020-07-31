@@ -79,4 +79,14 @@ export class key
     static outCards = "outCards" ;
     static vActedCard = "vActedCard" ;
     static isDeclare = "isDeclare" ;
+    static vDice = "vDice";
+    static port = "port" ;
+    static isTing = "isTing" ;
+    static vLouPeng = "vLouPeng" ;
+    static justChu = "justChu" ;
+    static vHuaCards = "vHuaCards" ;
+    static huaCnt = "huaCnt" ;
+    static vHua = "vHua" ;
+    static vCard = "vCard" ;
+    static vLimitCards = "vLimitCards" ;
 }

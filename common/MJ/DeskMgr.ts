@@ -7,7 +7,7 @@ import { IDesk, IDeskDelegate } from './IDesk';
 import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
 import { IModule } from "../IModule";
 
-export class DeskMgr extends IModule implements IDeskDelegate
+export abstract class DeskMgr extends IModule implements IDeskDelegate
 {
     static MODUEL_NAME : string = "DeskMgr" ;
     protected mDesks : HashMap<number,IDesk> = new HashMap<number,IDesk>();
@@ -110,11 +110,5 @@ export class DeskMgr extends IModule implements IDeskDelegate
         this.mDesks.delete( desk.deskID ) ;
     }
 
-    createDesk() : IDesk
-    {
-        XLogger.error( "must implement in sub class " ) ;
-        return null ;
-    }
-
-    
+    abstract createDesk() : IDesk ;
 }

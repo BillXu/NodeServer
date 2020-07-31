@@ -1,3 +1,4 @@
+import { random } from 'lodash';
 import { MJPlayerData } from './../../shared/mjData/MJPlayerData';
 import { ePlayerNetState } from './../commonDefine';
 import { key } from './../../shared/KeyDefine';
@@ -16,41 +17,147 @@ import { IDesk, IDeskDelegate } from './IDesk';
 import { MJDeskData } from './../../shared/mjData/MJDeskData';
 import { MJDeskStateWaitStart } from './MJDeskStateWaitStart';
 import { MJDeskStateGameEnd } from './MJDeskStateGameEnd';
-export class MJDesk extends MJDeskData implements IDesk
+export abstract class MJDesk implements IDesk
 {
     protected mDelegate : IDeskDelegate = null ;
     protected mDeskMgr : DeskMgr = null ;
     protected vStates : IMJDeskState[] = [] ;
     protected mMJCards : MJCards = null ;
-    get stateInfo() : Object
+    protected vPlayers : MJPlayerData[] = [] ;
+    protected mDeskInfo : MJDeskData = null ;
+
+    get deskID() : number
     {
-        let js = {} ;
-        this.vStates[this.state].visitInfo(js) ;
-        return js ;
+        return this.mDeskInfo.deskID ;
     }
 
-    get leftCardCnt() : number
+    get matchID() : number
     {
-        return this.mMJCards.getLeftCnt();
+        return this.mDeskInfo.matchID ;
+    }
+
+    get lawIdx() : number
+    {
+        return this.mDeskInfo.lawIdx ;
+    }
+
+    get bankerIdx () : number
+    {
+        return this.mDeskInfo.bankerIdx ;
+    }
+
+    set banerIdx( idx : number )
+    {
+        this.mDeskInfo.bankerIdx = idx ;
+    }
+
+    get state () : eMJDeskState
+    {
+        return this.mDeskInfo.state ;
+    }
+
+    set state( sate : eMJDeskState )
+    {
+        this.mDeskInfo.state = sate ;
     }
 
     //  idesk 
     init( deskID : number , diFen : number , roundCnt : number , delegate : IDeskDelegate , deskMgr : DeskMgr ) : void 
     {
-        this.deskID = deskID ;
-        this.diFen = diFen ;
-        this.roundCnt = roundCnt ;
+        this.mDeskInfo = this.createDeskInfoData();
+        this.mDeskInfo.deskID = deskID ;
+        this.mDeskInfo.diFen = diFen ;
+        this.mDeskInfo.roundCnt = roundCnt ;
         this.mDelegate = delegate ;
         this.mDeskMgr = deskMgr ;
         this.intallDeskState();
         this.createMJCards();
-        this.bankerIdx = 0 ;
+        this.mDeskInfo.bankerIdx = 0 ;
     }
 
+    getPlayerByIdx( idx : number ) : MJPlayerData
+    {
+        for ( let v of this.vPlayers )
+        {
+            if ( v != null && v.nIdx == idx )
+            {
+                return v ;
+            }
+        }
+        
+        return null ;
+    }
+
+    getPlayerBySessionID( sessionID : number ) : MJPlayerData
+    {
+        for ( let v of this.vPlayers )
+        {
+            if ( v != null && v.sessionID == sessionID )
+            {
+                return v ;
+            }
+        }
+        
+        return null ;
+    }
+
+    addPlayer( player : MJPlayerData , idx? : number ) : boolean 
+    {
+        if ( this.vPlayers.length >= this.mDeskInfo.seatCnt )
+        {
+            console.error( "player seat is full , can not add more player" ) ;
+            return false ;
+        }
+
+        if ( idx == null )
+        {
+            // find a index ;
+            for ( let i = 0 ; i < this.mDeskInfo.seatCnt ; ++i )
+            {
+                if ( this.getPlayerByIdx(i) == null )
+                {
+                    idx = i ;
+                    break ;
+                }
+            }
+        }
+
+        if ( idx == null )
+        {
+            console.error( "do not have pos for this player deskID = " + this.deskID + " uid = " + player.uid ) ;
+            return false ;
+        }
+
+        if ( this.getPlayerByIdx(idx) )
+        {
+            console.error( "already have player in pos of idx = " + idx ) ;
+            return false ;
+        }
+
+        player.nIdx = idx ;
+        this.vPlayers.push(player) ;
+    }
+
+    isPlayerInDesk( nSessionID : number ) : boolean
+    {
+        for ( let p of this.vPlayers )
+        {
+            if ( p.sessionID == nSessionID )
+            {
+                return true ;
+            }
+        }
+        return false ;
+    }
+
+    abstract createMJPlayerData() : MJPlayerData ;
+
+    abstract createDeskInfoData() : MJDeskData ;
+  
     setMatchInfo( matchID : number , lawIdx : number ) : void 
     {
-        this.matchID = matchID ;
-        this.lawIdx = lawIdx ;
+        this.mDeskInfo.matchID = matchID ;
+        this.mDeskInfo.lawIdx = lawIdx ;
     }
 
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number ) : boolean 
@@ -145,15 +252,13 @@ export class MJDesk extends MJDeskData implements IDesk
     // self function 
     canStartGame() : boolean
     {
-        return this.vPlayers.length == this.seatCnt && this.curRoundIdx < this.roundCnt;
+        return this.vPlayers.length == this.mDeskInfo.seatCnt && this.mDeskInfo.curRoundIdx < this.mDeskInfo.roundCnt;
     }
 
     distributeCards()
     {
         this.mMJCards.shuffle();
-
         let msg = { } ;
-        msg[key.bankerIdx] = this.bankerIdx ;
         for ( let p of this.vPlayers )
         {
             let vCards = [] ;
@@ -172,12 +277,12 @@ export class MJDesk extends MJDeskData implements IDesk
         }
     }
 
-    informOtherPlayerAct( playerIdxes : number[], card : number , invokeIdx : number , isBuGang : boolean )
+    informOtherPlayerAct( playerIdxes : number[], card : number , invokeIdx : number , isBuGang : boolean, haveGang : boolean  )
     {
         let msg = {} ;
         msg[key.card] = card ;
-        msg[key.invokerIdx] = invokeIdx ;
-        msg[key.isBuGang] = isBuGang ? 1 : 0 ;
+        //msg[key.invokerIdx] = invokeIdx ;
+        //msg[key.isBuGang] = isBuGang ? 1 : 0 ;
         for ( let p of this.vPlayers )
         {
             if ( p == null || p.state != eMJPlayerState.eState_Online || -1 == playerIdxes.indexOf(p.nIdx) )
@@ -185,16 +290,53 @@ export class MJDesk extends MJDeskData implements IDesk
                 continue ;
             }
 
+            let vActs = [] ;
+            if ( false == isBuGang && p.canChi(card) )
+            {
+                vActs.push(eMJActType.eMJAct_Chi) ;
+            }
+
+            if ( false == isBuGang && p.canMingGang(card) )
+            {
+                vActs.push( eMJActType.eMJAct_MingGang );
+            }
+
+            if ( false == isBuGang && p.canPeng(card) )
+            {
+                vActs.push( eMJActType.eMJAct_Peng ) ;
+            }
+
+            if ( this.canPlayerHu(p.nIdx, card, false, haveGang, invokeIdx) )
+            {
+                vActs.push( eMJActType.eMJAct_Hu ) ;
+            }
+
+            msg[key.act] = vActs;
+
             this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_DEKS_MJ_INFORM_ACT_WITH_OTHER_CARD , msg ) ;
         }
     }
 
-    informSelfAct( idx : number , enterAct : eMJActType )
+    informSelfAct( idx : number , enterAct : eMJActType , haveGang : boolean )
     {
         let p = this.getPlayerByIdx(idx) ;
         if ( p != null && p.state == eMJPlayerState.eState_Online )
         {
-            this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_DEKS_MJ_INFORM_SELF_ACT , { isOnlyChu : ( enterAct == eMJActType.eMJAct_Peng ? 1 : 0 ) } ) ;
+            let msg = {} ;
+        
+            if ( enterAct == eMJActType.eMJAct_Peng || eMJActType.eMJAct_Chi == enterAct )
+            {
+                msg["isOnlyChu"] = 1 ;
+            }
+            else
+            {
+                let p = this.getPlayerByIdx(idx) ;
+                msg["canHu"] = this.canPlayerHu(idx,p.getAutoChuCard(),true,haveGang,idx ) ? 1 : 0 ;
+                msg["buGang"] = p.getCanBuGangCards();
+                msg["anGang"] = p.getCanAnGangCards();
+                msg["isOnlyChu"] = 0 ;
+            }
+            this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_DEKS_MJ_INFORM_SELF_ACT , msg ) ;
         }
     }
 
@@ -294,7 +436,32 @@ export class MJDesk extends MJDeskData implements IDesk
 
     getNextActIdx( curIdx : number ) : number
     {
-        return ( curIdx + 1 ) % this.seatCnt ;
+        for ( let idx = curIdx + 1 ; idx < this.mDeskInfo.seatCnt * 2 ; ++idx )
+        {
+            let r = idx % this.mDeskInfo.seatCnt ;
+            if ( this.getPlayerByIdx( r ) != null )
+            {
+                return r ;
+            }
+        }
+        XLogger.error( "why get next player is null ? empty desk ? deskID = " + this.deskID ) ;
+        return null ;
+    }
+
+    onGameStart()
+    {
+        for ( let p of this.vPlayers )
+        {
+            p.onGameStart();
+        }
+
+        this.mDeskInfo.vDice.length = 0 ;
+        this.mDeskInfo.vDice.push( random(5) + 1 , random(5) + 1 ) ;
+        let msg = {} ;
+        msg[key.curRoundIdx] = this.mDeskInfo.curRoundIdx ;
+        msg[key.bankerIdx] = this.bankerIdx ;
+        msg[key.vDice] = this.mDeskInfo.vDice;
+        this.sendDeskMsg(eMsgType.MSG_DESK_MJ_START, msg ) ;
     }
 
     onGameOver( isHuOver : boolean )
@@ -310,10 +477,10 @@ export class MJDesk extends MJDeskData implements IDesk
         msg["isHuOver"] = isHuOver ? 1 : 0 ;
         msg[key.result] = vp ;
         this.sendDeskMsg(eMsgType.MSG_DESK_MJ_GAME_OVER, msg ) ;
-        this.bankerIdx = this.getNextActIdx(this.bankerIdx) ;
+        this.mDeskInfo.bankerIdx = this.getNextActIdx(this.bankerIdx) ;
 
-        ++this.curRoundIdx ;
-        if ( this.curRoundIdx == this.roundCnt )
+        ++this.mDeskInfo.curRoundIdx ;
+        if ( this.mDeskInfo.curRoundIdx == this.mDeskInfo.roundCnt )
         {
             let vr = [] ;
             for ( let p of this.vPlayers )
@@ -385,23 +552,31 @@ export class MJDesk extends MJDeskData implements IDesk
 
     protected canLeftCardBeMo() : boolean
     {
-        return this.leftCardCnt > 0 ;
+        return this.mMJCards.getLeftCnt() > 0 ;
     }
 
     protected sendDeskInfoToPlayer( idx : number )
     {
+        this.mDeskInfo.leftCardCnt = this.mMJCards.getLeftCnt();
+        if ( this.vStates[this.state] )
+        {
+            this.vStates[this.state].visitInfo(this.mDeskInfo.stateInfo) ;
+        }
         let p = this.getPlayerByIdx(idx) ;
-        let js = this.toJson();
-        let jsPlayers  = js[key.players] ;
-        delete js[key.players] ;
+        let js = this.mDeskInfo.toJson();
         this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_PLAYER_MJ_REQ_DESK_INFO, js ) ;
 
+        let jsPlayers = [] ;
+        for ( let pp of this.vPlayers )
+        {
+            jsPlayers.push(pp.toJson()) ;
+        }
         let msgp = {};
         msgp[key.players] = jsPlayers ;
         this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_PLAYER_MJ_DESK_PLAYERS_INFO, js ) ;
     }
 
-    protected canPlayerHu( idx : number , card : number , isZiMo : boolean ,haveGang : boolean , invokerIdx : number ) : boolean
+    canPlayerHu( idx : number , card : number , isZiMo : boolean ,haveGang : boolean , invokerIdx : number ) : boolean
     {
         return this.getPlayerByIdx(idx).canHuWithCard(card, isZiMo) ;
     }

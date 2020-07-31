@@ -9,6 +9,7 @@ export enum eMsgPort
 	ID_MSG_PORT_DATA,
 	ID_MSG_PORT_MATCH,
 	ID_MSG_PORT_MJXY, // xiang yang ka wu xing ;
+	ID_MSG_PORT_MJSH, // shang hai ma jiang ;
 	ID_MSG_PORT_ALL_SERVER,
 	ID_MSG_PORT_MAX,
 };
@@ -162,10 +163,10 @@ export enum eMsgType
 	// svr : { uid : 0 , sessionID : 23 , idx : 2 , score : 2345 }
 
 	MSG_DEKS_MJ_INFORM_ACT_WITH_OTHER_CARD,
-	//svr : { card : 234 , invokerIdx : 2 , isBuGang : 0 }
+	//svr : { card : 234 , act : eMJActType[] }
 
 	MSG_DEKS_MJ_INFORM_SELF_ACT,
-	// svr : { isOnlyChu : 0  }
+	// svr : { isOnlyChu : 0, canHu : 1 , buGang : [12,3] , anGang : [12,12], limitCards : [23,22] }
 
 	MSG_DESK_MJ_DISTRIBUTE,
 	// svr : { bankerIdx : 1 , holdCards : [ 2,2,3,4 ] }
@@ -209,16 +210,32 @@ export enum eMsgType
 
 	MSG_PLAYER_MJ_HU,
 	// client: null ;
-	// ret : { ret : 0 }
+	// ret : { ret : 0 , isZiMo : 0 , invoker : idx , maCard : 23 , maScore : 23 , ,huInfo : [ idx : 23 , fanxing : eFanxingMJ[] ], players : [ { hold : number[], offset : 23 , final : 23 } , ... ] }
 	// ret : 0 success , 1 state error , 2 card error 
+	// maCard : mai ma card , or fly cang ying ;
 
 	MSG_PLAYER_MJ_PASS,
 	// client: null ;
 	// ret : { ret : 0 }
 	// ret : 0 success , 1 state error;
 
+	MSG_PLAYER_MJ_BU_HUA,
+	// svr: { vHua : [23,23] , vCard : [22,56] }
+
+	MSG_PLAYER_MJ_TING,
+	// client { card : 23 }
+	// svr:  { ret : 0 , idx : 2 , chu: 23 }
+	// ret : 0 success , 1 you cannot ting , 2 you can not chu ;
+	
+	MSG_PLAYER_MJ_TUO_GUAN,
+	// client : { isSet : 0 }
+	// svr : { idx : 2 , isSet : 1 }
+
+
 	MSG_MJ_ACT_END = 500,
 
+	MSG_DESK_MJ_START,
+	// svr : { bankerIdx : 23 , curRoundIdx : 0 , dice : [1,3] }
 
 
 

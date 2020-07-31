@@ -1,9 +1,9 @@
+import { MailModule } from './MailModule';
 import { XLogger } from './../common/Logger';
 import { PlayerSimpleInfoCacher } from './PlayerSimpleInfoCacher';
 import { IServerApp } from "../common/IServerApp";
 import { eMsgPort } from "../shared/MessageIdentifer";
 import { PlayerMgr } from './PlayerMgr';
-import { MailModule } from './MailModule';
 
 export class DataSvr extends IServerApp
 {

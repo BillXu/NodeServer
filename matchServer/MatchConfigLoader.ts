@@ -6,7 +6,7 @@ let cfg = [
         id : 1 ,
         matchName : "quick match test " ,
         matchType : 0 ,
-        gamePort : 7,  // game type ;
+        gamePort : 8,  // game type ;
         startSignTime : "0" ,  // 1995-12-17T03:24:00 ; // must this format ; // fixTime match type used key 
         startTime : "0" ,  // 1995-12-17T03:24:00 ; // must this format ;     // fixTime match type used key 
         repeatTime : 0 , // by minites ;           // repeatTime match type used key 
@@ -16,7 +16,7 @@ let cfg = [
         reward: [ { startIdx : 1 , endEndIdx : 1 , money : [{ type: 0, cnt :10 }], desc : "第一名10个钻石" } ,
         { startIdx : 2 , endEndIdx : 2 , money : [{ type: 0, cnt :5 }], desc : "第二名5个钻石" } ,
         { startIdx : 3 , endEndIdx : 6 , money : [{ type: 0, cnt :1 }], desc : "第3-6名1个钻石" } ],
-        playerCntPerDesk : 3 , 
+        playerCntPerDesk : 4 , 
         guaFenPlayerCnt : 0 ,
         initScore : 0 ,
         laws : [ { roundIdx : 0, upgradeCnt : 9 , gameRoundCnt : 2, diFen : 1 } , 

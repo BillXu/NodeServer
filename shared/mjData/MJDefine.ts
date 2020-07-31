@@ -33,3 +33,8 @@ export enum eEatType
 	eEat_Middle,// AxB
 	eEat_Righ, // ABX,
 }
+
+export enum eFanxingMJ
+{
+
+}

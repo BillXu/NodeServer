@@ -64,3 +64,10 @@ export enum eMJPlayerState
     eState_Online,
     eState_Max,
 }
+
+export class G_ARG
+{
+    static TIME_MJ_BU_HUA : number = 0.8 ;
+    static TIME_MJ_WAIT_ACT : number = 10 ;
+    static TIME_MJ_WAIT_ACT_TUOGUAN : number = 3 ; 
+}
