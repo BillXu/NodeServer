@@ -180,6 +180,25 @@ export abstract class MJDesk implements IDesk
         }
 
         let s = this.vStates[this.state];
+        if ( eMsgType.MSG_PLAYER_MJ_TUO_GUAN == msgID )
+        {
+            if ( s == null )
+            {
+                return false ;
+            }
+
+            let isSet = msg["isSet"] == 1 ;
+            if ( isSet )
+            {
+                XLogger.warn( "player want enter tuoguan act uid = " + p.uid + " deskID = " + this.deskID ) ;
+                this.onPlayerEnterTuoGuanState(p.nIdx) ;
+            }
+            else
+            {
+                this.onPlayerLeaveTuoGuanState(p.nIdx) ;
+                s.onPlayerLeaveTuoGuanState(p.nIdx) ;
+            }
+        }
         if ( s )
         {
            return this.onLogicMsg(msgID, msg, orgID) ;
@@ -208,14 +227,9 @@ export abstract class MJDesk implements IDesk
                     {
                         p.state = eMJPlayerState.eState_TuoGuan ;
                     }
-                    else if ( netState == ePlayerNetState.eState_WaitingReconnect )
-                    {
-                        p.state = eMJPlayerState.eState_Offline ;
-                    }
-                    else
-                    {
-                        p.state = eMJPlayerState.eState_Online ;
-                    }
+                    p.isOnline = netState == ePlayerNetState.eState_Online ;
+                    XLogger.debug( "player netState changed uid = " + p.uid + " state = " + ePlayerNetState[netState] + " deskID = " + this.deskID ) ;
+                    break ;
                 }
             }
             return {} ;
@@ -285,7 +299,7 @@ export abstract class MJDesk implements IDesk
         //msg[key.isBuGang] = isBuGang ? 1 : 0 ;
         for ( let p of this.vPlayers )
         {
-            if ( p == null || p.state != eMJPlayerState.eState_Online || -1 == playerIdxes.indexOf(p.nIdx) )
+            if ( p == null || p.isOnline == false || -1 == playerIdxes.indexOf(p.nIdx) )
             {
                 continue ;
             }
@@ -320,7 +334,7 @@ export abstract class MJDesk implements IDesk
     informSelfAct( idx : number , enterAct : eMJActType , haveGang : boolean )
     {
         let p = this.getPlayerByIdx(idx) ;
-        if ( p != null && p.state == eMJPlayerState.eState_Online )
+        if ( p != null && p.isOnline )
         {
             let msg = {} ;
         
@@ -537,7 +551,7 @@ export abstract class MJDesk implements IDesk
     {
         for ( let p of this.vPlayers )
         {
-            if ( p == null || p.state != eMJPlayerState.eState_Online )
+            if ( p == null || p.isOnline == false )
             {
                 continue ;
             }
@@ -584,6 +598,27 @@ export abstract class MJDesk implements IDesk
     protected enableChi() : boolean
     {
         return false ;
+    }
+
+    onPlayerEnterTuoGuanState( idx : number )
+    {
+        let p = this.getPlayerByIdx(idx) ;
+        if ( p.state == eMJPlayerState.eState_TuoGuan )
+        {
+            XLogger.debug( "player already tuo guan skip msg uid = " + p.uid + " deskID = " + this.deskID ) ;
+            return ;
+        }
+        p.state = eMJPlayerState.eState_TuoGuan ;
+        this.sendDeskMsg(eMsgType.MSG_PLAYER_MJ_TUO_GUAN, { isSet : 1 , idx : idx  } ) ;
+        XLogger.debug( "player enter TuoguanState uid = " + p.uid + " deskID = " + this.deskID ) ;
+    }
+
+    onPlayerLeaveTuoGuanState( idx : number )
+    {
+        let p = this.getPlayerByIdx(idx) ;
+        p.state = eMJPlayerState.eState_Normal ;
+        this.sendDeskMsg(eMsgType.MSG_PLAYER_MJ_TUO_GUAN, { isSet : 0 , idx : idx  } ) ;
+        XLogger.debug( "player leave TuoguanState uid = " + p.uid + " deskID = " + this.deskID ) ;
     }
 
     // act 

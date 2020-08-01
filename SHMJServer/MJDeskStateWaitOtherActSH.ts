@@ -1,5 +1,3 @@
-import { eMJActType } from './../shared/mjData/MJDefine';
-import { key } from './../shared/KeyDefine';
 import { XLogger } from './../common/Logger';
 import { eMJPlayerState, G_ARG } from './../shared/SharedDefine';
 import { MJPlayerDataSH } from './../shared/mjshData/MJPlayerDataSH';
@@ -7,36 +5,19 @@ import { MJDeskStateWaitOtherAct, WaitOtherActStateData } from './../common/MJ/M
 import { eMsgType } from '../shared/MessageIdentifer';
 export class MJDeskStateWaitOtherActSH extends MJDeskStateWaitOtherAct
 {
-    setWaitingPlayerTimeout()
+    protected startWaitPlayer( idx : number , time : number )
     {
-        super.setWaitingPlayerTimeout();
-
-        for ( let p of this.mData.mWaitIdxes )
+        let pp = this.mDesk.getPlayerByIdx(idx) as MJPlayerDataSH; 
+        if ( pp.isTing )
         {
-            let pp = this.mDesk.getPlayerByIdx(p.idx) as MJPlayerDataSH; 
-            if ( pp.isTing == false )
-            {
-                continue ;
-            }
-
-            let tt = this.waitTimers.get(p.idx) ;
-            clearTimeout(tt);
-            this.waitTimers.delete(p.idx) ;
-
-            let time =  G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN ;
+            time =  G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN ;
             if ( pp.state != eMJPlayerState.eState_TuoGuan && pp.canMingGang(this.mData.mCard) && this.mDesk.canPlayerHu(pp.nIdx, this.mData.mCard, false, this.mData.mGangCnt > 0 , this.mData.mInvokerIdx) == false )
             {
                 time = G_ARG.TIME_MJ_WAIT_ACT;
             }
-
-            let self = this ;
-            let idx = p.idx ;
-            let t = setTimeout(() => {
-                self.waitActTimeOut(idx) ;
-            }, time * 1000 );
-
-            this.waitTimers.set(idx, t ) ;
         }
+
+        super.startWaitPlayer(idx, time) ;
     }
 
     waitActTimeOut( idx : number )

@@ -10,4 +10,5 @@ export interface IMJDeskState
     onPlayerReuesetInfo( idx : number ) : void ;
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number ) : boolean ;
     getState() : eMJDeskState ;
+    onPlayerLeaveTuoGuanState( idx : number ) : void ;
 }

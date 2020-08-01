@@ -12,7 +12,7 @@ export class MJDeskStateGameEnd implements IMJDeskState
     {
         this.mDesk = desk ;
     }
-
+    onPlayerLeaveTuoGuanState( idx : number ) : void{} ;
     onEnterState( isHuOver : boolean ) : void 
     {
         XLogger.debug( "GameEndState game over , huOover = " + isHuOver + " , deskID = " + this.mDesk.deskID ) ; 

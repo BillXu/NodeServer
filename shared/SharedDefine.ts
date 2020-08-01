@@ -59,9 +59,8 @@ export enum eMJDeskState
 
 export enum eMJPlayerState
 {
-    eState_Offline,
+    eState_Normal,
     eState_TuoGuan,
-    eState_Online,
     eState_Max,
 }
 

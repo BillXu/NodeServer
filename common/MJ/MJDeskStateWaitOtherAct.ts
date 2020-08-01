@@ -1,3 +1,4 @@
+import { MJPlayerData } from './../../shared/mjData/MJPlayerData';
 import  HashMap  from 'hashmap';
 import { WaitActStateData } from './MJDeskStateWaitAct';
 import { remove } from 'lodash';
@@ -54,29 +55,39 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
         this.mDesk.informOtherPlayerAct(v,this.mData.mCard, this.mData.mInvokerIdx, this.mData.mBuGangRetore != null, this.mData.mGangCnt > 0  ) ;
 
         // start wait ;
-        this.setWaitingPlayerTimeout();
-    }
-
-    setWaitingPlayerTimeout()
-    {
-        let vt = this.waitTimers.values();
-        for ( let v of vt )
-        {
-            clearTimeout(v) ;
-        }
-        this.waitTimers.clear();
-
         for ( let p of this.mData.mWaitIdxes )
         {
             let pp = this.mDesk.getPlayerByIdx(p.idx) ;
             let time = pp.state == eMJPlayerState.eState_TuoGuan ? G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN : G_ARG.TIME_MJ_WAIT_ACT ;
-            let self = this ;
-            let idx = p.idx ;
-            let t = setTimeout(() => {
-                self.waitActTimeOut(idx) ;
-            }, time * 1000 );
+            this.startWaitPlayer(p.idx, time ) ;
+        }
+    }
 
-            this.waitTimers.set(idx, t ) ;
+    protected startWaitPlayer( idx : number , time : number )
+    {
+        let t = this.waitTimers.get(idx) ;
+        if ( null != t )
+        {
+            clearTimeout(t) ;
+            this.waitTimers.delete(idx) ;
+        }
+
+        let self = this ;
+        t = setTimeout(() => {
+            self.mDesk.onPlayerEnterTuoGuanState(idx) ;
+            self.waitActTimeOut(idx) ;
+        }, time * 1000 );
+
+        this.waitTimers.set(idx, t ) ;
+    }
+
+    onPlayerLeaveTuoGuanState( idx : number )
+    {
+        let ret = this.mData.mWaitIdxes.findIndex( ( v : {idx : number , maxAct : eMJActType } )=>{ v.idx == idx } ) ;
+        if ( -1 != ret )
+        {
+            let time = G_ARG.TIME_MJ_WAIT_ACT - G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN ;
+            this.startWaitPlayer(idx, time) ;
         }
     }
 

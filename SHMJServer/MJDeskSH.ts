@@ -38,6 +38,17 @@ export class MJDeskSH extends MJDesk
         return true ;
     }
 
+    onPlayerEnterTuoGuanState( idx : number )
+    {
+        if ( ( this.getPlayerByIdx(idx) as MJPlayerDataSH).isTing  )
+        {
+            XLogger.debug( "player already ting , not enter tuoGuanState idx = " + idx + " deskID = " + this.deskID ) ;
+            return ;
+        }
+
+        super.onPlayerEnterTuoGuanState(idx) ;
+    }
+
     canPlayerHu( idx : number , card : number , isZiMo : boolean ,haveGang : boolean , invokerIdx : number ) : boolean
     {
         return this.getPlayerByIdx(idx).canHuWithCard(card, isZiMo) ;
@@ -46,7 +57,7 @@ export class MJDeskSH extends MJDesk
     informSelfAct( idx : number , enterAct : eMJActType , haveGang : boolean )
     {
         let p = this.getPlayerByIdx(idx) ;
-        if ( p != null && p.state == eMJPlayerState.eState_Online )
+        if ( p != null && p.isOnline )
         {
             let msg = {} ;
         
@@ -85,7 +96,7 @@ export class MJDeskSH extends MJDesk
         msg[key.card] = card ;
         for ( let p of this.vPlayers )
         {
-            if ( p == null || p.state != eMJPlayerState.eState_Online || -1 == playerIdxes.indexOf(p.nIdx) )
+            if ( p == null || p.isOnline == false || -1 == playerIdxes.indexOf(p.nIdx) )
             {
                 continue ;
             }

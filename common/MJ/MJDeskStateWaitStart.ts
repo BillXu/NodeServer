@@ -11,7 +11,7 @@ export class MJDeskStateWaitStart implements IMJDeskState
     {
         this.mDesk = desk ;
     }
-
+    onPlayerLeaveTuoGuanState( idx : number ) : void{} ;
     getState() : eMJDeskState
     {
         return eMJDeskState.eState_WaitStart ;

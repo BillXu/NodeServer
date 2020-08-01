@@ -7,7 +7,8 @@ export class MJPlayerData implements IShareData
     nIdx : number = 0 ;
     sessionID : number = 0 ;
     uid : number = 0 ;
-    state : eMJPlayerState = eMJPlayerState.eState_Online ;
+    state : eMJPlayerState = eMJPlayerState.eState_Normal ;
+    isOnline : boolean = true ;
     score : number = 0 ;
     offset : number = 0 ;
     cardData : MJPlayerCardData = null ;
@@ -17,7 +18,8 @@ export class MJPlayerData implements IShareData
     {
         this.uid = uid ; this.sessionID = sessionID ;
         this.score = score ;
-        this.state = sessionID != 0 ? eMJPlayerState.eState_Online : eMJPlayerState.eState_TuoGuan;
+        this.isOnline = sessionID != 0 ;
+        this.state = this.isOnline ? eMJPlayerState.eState_Normal : eMJPlayerState.eState_TuoGuan;
         this.offset = 0 ;
         this.nIdx = idx ;
         this.cardData = this.createMJPlayerCardData();
@@ -32,6 +34,7 @@ export class MJPlayerData implements IShareData
         js[key.score] = this.score ; 
         js[key.state] = this.state ;
         js[key.vLouPeng] = this.vLouPeng ;
+        js[key.isOnline ] = this.isOnline ? 1 : 0 ;
         if ( this.cardData != null )
         {
             js[key.cardsData] = this.cardData.toJson();
@@ -47,6 +50,7 @@ export class MJPlayerData implements IShareData
         this.score = js[key.score] ;
         this.state = js[key.state] ;
         this.vLouPeng = js[key.vLouPeng] || [] ;
+        this.isOnline = js[key.isOnline] == 1 ;
         if ( this.cardData == null )
         {
             this.cardData = this.createMJPlayerCardData();

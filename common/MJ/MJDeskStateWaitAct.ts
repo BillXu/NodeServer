@@ -273,7 +273,14 @@ export class MJDeskStateWaitAct implements IMJDeskState
             this.waitTimer = null ;
         }
 
-        this.waitTimer = setTimeout( this.waitActTimeOut.bind(this), this.mWaitTimeSecons * 1000 ) ;
+        let self = this ;
+        this.waitTimer = setTimeout( ()=>{ self.mDesk.onPlayerEnterTuoGuanState(self.mData.mActIdx); self.waitActTimeOut(); } , this.mWaitTimeSecons * 1000 ) ;
+    }
+
+    onPlayerLeaveTuoGuanState( idx : number )
+    {
+        this.mWaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT - G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN ;
+        this.startWait();
     }
 
     // act 

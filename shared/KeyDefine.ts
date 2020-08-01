@@ -89,4 +89,5 @@ export class key
     static vHua = "vHua" ;
     static vCard = "vCard" ;
     static vLimitCards = "vLimitCards" ;
+    static isOnline = "isOnline" ;
 }
