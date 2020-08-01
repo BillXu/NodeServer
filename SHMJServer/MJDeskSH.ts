@@ -6,7 +6,7 @@ import { MJDeskStateWaitActSH } from './MJDeskStateWaitActSH';
 import { MJDeskStateWaitStart } from './../common/MJ/MJDeskStateWaitStart';
 import { XLogger } from './../common/Logger';
 import { eMJActType } from './../shared/mjData/MJDefine';
-import { G_ARG, eMJPlayerState, eMJDeskState } from './../shared/SharedDefine';
+import { G_ARG, eMJDeskState } from './../shared/SharedDefine';
 import { key } from './../shared/KeyDefine';
 import { MJDeskData } from './../shared/mjData/MJDeskData';
 import { MJPlayerData } from './../shared/mjData/MJPlayerData';
@@ -15,7 +15,6 @@ import { DeskMgr } from './../common/MJ/DeskMgr';
 import { MJDesk } from './../common/MJ/MJDesk';
 import { eMsgPort, eMsgType } from '../shared/MessageIdentifer';
 import { MJDeskDataSH } from '../shared/mjshData/MJDeskDataSH';
-import { result } from 'lodash';
 export class MJDeskSH extends MJDesk
 {
     init( deskID : number , diFen : number , roundCnt : number , delegate : IDeskDelegate , deskMgr : DeskMgr ) : void 
