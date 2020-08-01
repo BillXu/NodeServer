@@ -6,7 +6,6 @@ import { HuChecker } from '../mjData/HuChecker';
 export class MJPlayerDataSH extends MJPlayerData
 {
     isTing : boolean = false ;
-     
     justChuCard : number = 0 ;  // can not eat or peng self chu this round ;
 
     get huaCnt() : number
@@ -59,9 +58,10 @@ export class MJPlayerDataSH extends MJPlayerData
         return false ;
     }
 
-    onTing() : void
+    onTing( chuedCard : number ) : void
     {
         this.isTing = true ;
+        (this.cardData as MJPlayerCardDataSH).tingChu = chuedCard ;
     }
     
     getMayBeTingCards() : number[]
@@ -160,4 +160,8 @@ export class MJPlayerDataSH extends MJPlayerData
         return ( this.cardData as MJPlayerCardDataSH).getLimitCards();
     }
 
+    getTotalHuaCnt() : number
+    {
+        return ( this.cardData as MJPlayerCardDataSH).getTotalHuaCnt();
+    }
 }

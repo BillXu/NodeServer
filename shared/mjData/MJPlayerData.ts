@@ -1,6 +1,6 @@
 import { eMJPlayerState } from './../SharedDefine';
 import { key } from './../KeyDefine';
-import { MJPlayerCardData } from './MJPlayerCardData';
+import { MJPlayerCardData, ActedCards } from './MJPlayerCardData';
 import { IShareData } from './../IShareData';
 export class MJPlayerData implements IShareData
 {
@@ -13,6 +13,7 @@ export class MJPlayerData implements IShareData
     offset : number = 0 ;
     cardData : MJPlayerCardData = null ;
     vLouPeng : number[] = [] ;
+    huCard : number = 0 ;
 
     init( uid : number , sessionID : number , score : number ,idx? : number )
     {
@@ -82,11 +83,15 @@ export class MJPlayerData implements IShareData
     {
         this.offset = 0 ;
         this.cardData.clear();
+        this.huCard = 0 ;
+        this.vLouPeng.length = 0 ;
     }
 
     onGameOver() : void
     {
         this.offset = 0 ;
+        this.huCard = 0 ;
+        this.vLouPeng.length = 0 ;
     }
 
     onDistributedCard( vCards : number[] ) : void
@@ -138,6 +143,7 @@ export class MJPlayerData implements IShareData
     onHuWithCard( card : number , isZiMo : boolean )
     {
         this.cardData.onHuWithCard(card, isZiMo) ;
+        this.huCard = card ;
     }
 
     canChi( card : number ,eatWith? : number[] ) : boolean
@@ -195,4 +201,45 @@ export class MJPlayerData implements IShareData
         return this.cardData.getCanAnGangCards();
     }
 
+    getHoldCards() : number[]
+    {
+        return this.cardData.mHoldCards ;
+    }
+
+    getActedCards() : ActedCards[]
+    {
+        return this.cardData.vActedCards;
+    }
+
+    visitInfoForResult() : Object
+    {
+        let info = {} ;
+        info[key.holdCards] = this.cardData.mHoldCards ;        
+        info[key.offset] = this.offset;
+        info[key.final] = this.score;
+        if ( this.cardData.mHoldCards.length % 3 == 2 && this.huCard != 0 )
+        {
+            info[key.huCard] = this.huCard ;
+        }
+        
+        return info ;
+    }
+
+    visitInfoForDeskInfo( reqPlayerIdx : number ) : Object
+    {
+        let js = this.toJson();
+        if ( reqPlayerIdx != this.nIdx )
+        {
+            let cards : Object = js[key.cardsData] ;
+            if ( cards != null )
+            {
+                let vhold : number[] = cards[key.holdCards];
+                if ( null != vhold )
+                {
+                    vhold.forEach( (v , idx,va )=>va[idx]=0 ) ;
+                }
+            }
+        }
+        return js ;
+    }
 }

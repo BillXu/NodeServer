@@ -172,7 +172,7 @@ export enum eMsgType
 	// svr : { bankerIdx : 1 , holdCards : [ 2,2,3,4 ] }
 
 	MSG_DESK_MJ_GAME_OVER,
-	// svr : { isHuOver : 0 , result :[ { idx : 0, offset : 2 , final : 234 } , ....  ] } 
+	// svr : { isHuOver : 0 ,isDeskFinished : 1  } 
 
 	MSG_MJ_ACT_BEGIN = 400,
 	MSG_DESK_MJ_MO,
@@ -210,7 +210,7 @@ export enum eMsgType
 
 	MSG_PLAYER_MJ_HU,
 	// client: null ;
-	// ret : { ret : 0 , isZiMo : 0 , invoker : idx , maCard : 23 , maScore : 23 , ,huInfo : [ idx : 23 , fanxing : eFanxingMJ[] ], players : [ { hold : number[], offset : 23 , final : 23 } , ... ] }
+	// svr : { ret : 0 , huCard : number , invokerIdx : idx , maCard : 23 , maScore : 23  ,huInfo : [ idx : 23 , fanxing : number , bei : 2  ], players : [ { hold : number[], offset : 23 , final : 23 } , ... ] }
 	// ret : 0 success , 1 state error , 2 card error 
 	// maCard : mai ma card , or fly cang ying ;
 

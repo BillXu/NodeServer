@@ -36,5 +36,15 @@ export enum eEatType
 
 export enum eFanxingMJ
 {
-
+	ePingHu = 0 ,
+	eHunYiSe = 1,
+	eQingYiSe = 1 << 1,
+	ePengPengHu = 1 << 2,
+	eDaDiaoChe = 1 << 3,
+	eMengQing = 1 << 4,
+	eGangKai = 1 << 5,
+	eQiangGang = 1 << 6,
+	eWuHuaGuo = 1 << 7 ,
+	eQingPeng = eFanxingMJ.eQingYiSe | eFanxingMJ.ePengPengHu,
+	eHunPeng = eFanxingMJ.eHunYiSe | eFanxingMJ.ePengPengHu,
 }

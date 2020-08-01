@@ -1,4 +1,4 @@
-import { clone, random, shuffle } from 'lodash';
+import { clone, random, shuffle, isEqualWith, isEqual } from 'lodash';
 import { MailData, eMailState } from './../shared/playerData/PlayerMailData';
 import { XLogger } from './../common/Logger';
 import { eAccountType, eSex } from './../shared/SharedDefine';
@@ -249,8 +249,17 @@ console.log(date.toLocaleString() ) ;
 
 
 let vs = [1,8,3] ;
-vs.sort() ;
+//vs.sort() ;
 console.log(vs) ;
 
+let vs2 = [1,8,3] ;
+console.log( vs == vs2 ) ;
+console.log( isEqual(vs, vs2) )  ;
+
+let s = {} ;
+s["k"] = vs2;
+let vc : number[] = s["k"] ;
+vc.forEach( (v,idx , vt )=>vt[idx]=0 ) ;
+console.log(s["k"]) ;
 
 

@@ -481,15 +481,16 @@ export abstract class MJDesk implements IDesk
     onGameOver( isHuOver : boolean )
     {
         // send msg first ;
-        let vp = [] ;
+        //let vp = [] ;
         for ( let p of this.vPlayers )
         {
-            vp.push( { idx : p.nIdx , offset : p.offset, final : p.score } ) ;
+            //vp.push( { idx : p.nIdx , offset : p.offset, final : p.score } ) ;
             p.onGameOver() ;
         }
         let msg = {} ;
         msg["isHuOver"] = isHuOver ? 1 : 0 ;
-        msg[key.result] = vp ;
+        msg["isDeskFinished"] = ( this.mDeskInfo.curRoundIdx == this.mDeskInfo.roundCnt - 1 ) ? 1 : 0 ;
+        //msg[key.result] = vp ;
         this.sendDeskMsg(eMsgType.MSG_DESK_MJ_GAME_OVER, msg ) ;
         this.mDeskInfo.bankerIdx = this.getNextActIdx(this.bankerIdx) ;
 
@@ -583,7 +584,7 @@ export abstract class MJDesk implements IDesk
         let jsPlayers = [] ;
         for ( let pp of this.vPlayers )
         {
-            jsPlayers.push(pp.toJson()) ;
+            jsPlayers.push( pp.visitInfoForDeskInfo(idx) ) ;
         }
         let msgp = {};
         msgp[key.players] = jsPlayers ;
@@ -671,6 +672,11 @@ export abstract class MJDesk implements IDesk
         return true ;
     }
 
+    onPlayerHuOtherCard( actIdxes : number[] , card : number , invokerIdx : number , invokerGangCnt  : boolean, isBuGang : boolean  )
+    {
+        // player do hu ;
+    }
+
     onPlayerAnGang( player : MJPlayerData , card : number , orgInvokerIdx : number ) : boolean
     {
         let msg = {} ;
@@ -740,9 +746,6 @@ export abstract class MJDesk implements IDesk
         this.onPlayerMo(actIdx) ;
     }
 
-    onPlayerHuOtherCard( actIdxes : number[] , card : number , invokerIdx : number , invokerGangCnt  : boolean  )
-    {
-        // player do hu ;
-    }
+
 
 }

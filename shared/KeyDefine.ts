@@ -90,4 +90,9 @@ export class key
     static vCard = "vCard" ;
     static vLimitCards = "vLimitCards" ;
     static isOnline = "isOnline" ;
+    static huCard = "huCard" ;
+    static huInfo = "huInfo" ;
+    static offset = "offset" ;
+    static final = "final" ;
+    static tingChu = "tingChu" ;
 }

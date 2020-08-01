@@ -1,3 +1,4 @@
+import { FanxingCheckerSH } from './../shared/mjshData/FanxingCheckerSH';
 import { MJPlayerDataSH } from './../shared/mjshData/MJPlayerDataSH';
 import { MJDeskStateWaitOtherActSH } from './MJDeskStateWaitOtherActSH';
 import { MJDeskStateGameEnd } from './../common/MJ/MJDeskStateGameEnd';
@@ -14,6 +15,7 @@ import { DeskMgr } from './../common/MJ/DeskMgr';
 import { MJDesk } from './../common/MJ/MJDesk';
 import { eMsgPort, eMsgType } from '../shared/MessageIdentifer';
 import { MJDeskDataSH } from '../shared/mjshData/MJDeskDataSH';
+import { result } from 'lodash';
 export class MJDeskSH extends MJDesk
 {
     init( deskID : number , diFen : number , roundCnt : number , delegate : IDeskDelegate , deskMgr : DeskMgr ) : void 
@@ -47,11 +49,6 @@ export class MJDeskSH extends MJDesk
         }
 
         super.onPlayerEnterTuoGuanState(idx) ;
-    }
-
-    canPlayerHu( idx : number , card : number , isZiMo : boolean ,haveGang : boolean , invokerIdx : number ) : boolean
-    {
-        return this.getPlayerByIdx(idx).canHuWithCard(card, isZiMo) ;
     }
 
     informSelfAct( idx : number , enterAct : eMJActType , haveGang : boolean )
@@ -134,13 +131,73 @@ export class MJDeskSH extends MJDesk
 
     onPlayerZiMoHu( player : MJPlayerData , card : number, gangCnt : number , orgInvokerIdx : number ) : boolean
     {
+        if ( this.canPlayerHu(player.nIdx, card, true, gangCnt > 0 , orgInvokerIdx ) == false )
+        {
+            return false ;
+        }
+        player.onHuWithCard(card, true) ;
+        let huResult = FanxingCheckerSH.getInstance().checkFanxing( player as MJPlayerDataSH, gangCnt > 0, false, this.mDeskInfo.diFen ) ;
+        // caculte fenshu ;
+        let sore = 0 ;
+        for ( let p of this.vPlayers )
+        {
+            if ( p.nIdx != player.nIdx )
+            {
+                continue ;
+            }
+            p.modifyScore( -1 * huResult.score );
+            sore += huResult.score ;
+        }
+        player.modifyScore(sore) ;
 
+        // make msg info ;
+        // // ret : { ret : 0 , huCard : number , invokerIdx : idx , maCard : 23 , maScore : 23  ,huInfo : [ idx : 23 , fanxing : number , bei : 2  ], players : [ { hold : number[], offset : 23 , final : 23 } , ... ] }
+        let msg = {} ;
+        msg[key.ret] = 0 ;
+        msg[key.huCard] = card ;
+        msg[key.invokerIdx] = player.nIdx;
+        msg[key.huInfo] = [{ idx : player.nIdx , fanxing : huResult.fanxing , bei : huResult.beiShu }] ;
+        msg[key.players] = this.makePlayersInfoForResult();
+        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_HU, msg ) ;
         return true ;
     }
 
-    onPlayerHuOtherCard( actIdxes : number[] , card : number , invokerIdx : number , invokerGangCnt  : boolean  )
+    onPlayerHuOtherCard( actIdxes : number[] , card : number , invokerIdx : number , invokerGangCnt  : boolean , isBuGang : boolean )
     {
-        // player do hu ;
+        let invoker = this.getPlayerByIdx(invokerIdx) ;
+        let vHuInfo = [] ;
+        for ( let huIdx of actIdxes )
+        {
+            let huPlayer = this.getPlayerByIdx(huIdx) ;
+            huPlayer.onHuWithCard(card, false ) ;
+            // player do hu ;
+            let huResult = FanxingCheckerSH.getInstance().checkFanxing( huPlayer as MJPlayerDataSH, false, isBuGang, this.mDeskInfo.diFen ) ;
+            // caculte fenshu ;
+            huPlayer.modifyScore( huResult.score ) ;
+            invoker.modifyScore( -1 * huResult.score ) ;
+            vHuInfo.push( { idx : huIdx , fanxing : huResult.fanxing , bei : huResult.beiShu } ) ;
+        }
+
+        // make msg info ;
+        // // ret : { ret : 0 , huCard : number , invokerIdx : idx , maCard : 23 , maScore : 23  ,huInfo : [ idx : 23 , fanxing : number , bei : 2  ], players : [ { hold : number[], offset : 23 , final : 23 } , ... ] }
+        let msg = {} ;
+        msg[key.ret] = 0 ;
+        msg[key.huCard] = card ;
+        msg[key.invokerIdx] = invokerIdx;
+        msg[key.huInfo] = vHuInfo ;
+        msg[key.players] = this.makePlayersInfoForResult();
+        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_HU, msg ) ;
+    }
+
+    protected makePlayersInfoForResult() : Object
+    {
+        // players : [ { hold : number[], offset : 23 , final : 23 } , ... ] 
+        let vPlayers = [] ;
+        for ( let p of this.vPlayers )
+        {
+            vPlayers.push( p.visitInfoForResult() ) ;
+        }
+        return vPlayers ;
     }
 
     onPlayerTing( idx : number , chuCard : number ) : boolean
@@ -168,20 +225,9 @@ export class MJDeskSH extends MJDesk
             return false ;
         } 
 
-        for ( let v of vmay )
-        {
-            if ( this.canPlayerHu(idx, v, true, false, idx ) )
-            {
-                ( p as MJPlayerDataSH ).onTing();
-                this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_TING, msg ) ;
-                return true ;
-            } 
-        }
-
-        p.onMoCard(chuCard) ;
-        msg[key.ret] = 1 ;
-        this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_PLAYER_MJ_TING, msg ) ;
-        XLogger.warn( "ting pai but ting cards cannot really hu , uid = " + p.uid + " deskID = " + this.deskID ) ;
+        ( p as MJPlayerDataSH ).onTing( chuCard );
+        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_TING, msg ) ;
+        XLogger.warn( "ting pai ok, uid = " + p.uid + " deskID = " + this.deskID ) ;
         return false ;
     }
 
@@ -233,4 +279,6 @@ export class MJDeskSH extends MJDesk
         this.state = eMJDeskState.eState_WaitStart; 
         this.vStates[this.state].onEnterState(null) ;
     }
+
+
 }

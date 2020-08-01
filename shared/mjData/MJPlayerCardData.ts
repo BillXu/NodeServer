@@ -40,7 +40,7 @@ export class MJPlayerCardData implements IShareData
 {
     mHoldCards : number[] = [] ;
     protected mOutCards : number[] = [] ;
-    protected vActedCards : ActedCards[] = [] ;
+    vActedCards : ActedCards[] = [] ;
     protected nJustMoCard : number = 0 ;
     toJson() : Object 
     {
@@ -181,7 +181,7 @@ export class MJPlayerCardData implements IShareData
         }
 
         // check 7 pair
-        if ( this.vActedCards.length == 0 )
+        if ( this.vActedCards.length == 0 && this.enable7Pair() )
         {
             vCheck.sort() ;
             let is7Pair = true ;
@@ -395,5 +395,10 @@ export class MJPlayerCardData implements IShareData
             }
             this.mHoldCards.splice(idx,1) ;
         }
+    }
+
+    protected enable7Pair() : boolean 
+    {
+        return true ;
     }
 }

@@ -1,4 +1,4 @@
-import { eMJCardType } from './../mjData/MJDefine';
+import { eMJCardType, eMJActType } from './../mjData/MJDefine';
 import { MJCardData } from './../mjData/MJCardData';
 import { key } from './../KeyDefine';
 import { MJPlayerCardData } from './../mjData/MJPlayerCardData';
@@ -6,9 +6,39 @@ export class MJPlayerCardDataSH extends MJPlayerCardData
 {
     vHuaCard : number[] = [] ;
     vLimitCards : number[] = [] ;
+    tingChu : number = 0 ;
     get huaCnt() : number
     {
-        return this.vHuaCard.length;
+        let cnt = this.vHuaCard.length ;
+        let dong = MJCardData.makeCardNum(eMJCardType.eCT_Feng , 1 ) ;
+        for ( let v of this.vActedCards )
+        {
+            if ( v.act == eMJActType.eMJAct_Peng && v.card >= dong  )
+            {
+                ++cnt;
+                continue ;
+            }
+
+            if ( v.act == eMJActType.eMJAct_MingGang )
+            {
+                ++cnt ;
+                if ( v.card >= dong )
+                {
+                    ++cnt ;
+                }
+                continue ;
+            }
+
+            if ( v.act == eMJActType.eMJAct_AnGang )
+            {
+                cnt += 2 ;
+                if ( v.card >= dong )
+                {
+                    ++cnt ;
+                }
+            }
+        }
+        return cnt;
     }
 
     toJson() : Object
@@ -16,6 +46,10 @@ export class MJPlayerCardDataSH extends MJPlayerCardData
         let js = super.toJson();
         js[key.vHuaCards] = this.vHuaCard;
         js[key.vLimitCards] = this.vLimitCards ;
+        if ( this.tingChu != 0 )
+        {
+            js[key.tingChu] = this.tingChu ;
+        }
         return js ;
     }
 
@@ -24,6 +58,7 @@ export class MJPlayerCardDataSH extends MJPlayerCardData
         super.parse(js) ;
         this.vLimitCards = js[key.vLimitCards] || [] ;
         this.vHuaCard = js[key.vHuaCards] || [] ;
+        this.tingChu = js[key.tingChu] || 0 ;
     }
 
     clear()
@@ -31,6 +66,7 @@ export class MJPlayerCardDataSH extends MJPlayerCardData
         super.clear();
         this.vHuaCard.length = 0 ;
         this.vLimitCards.length = 0 ;
+        this.tingChu = 0 ;
     }
 
     getHoldHuaCards() : number[]
@@ -102,5 +138,25 @@ export class MJPlayerCardDataSH extends MJPlayerCardData
     getLimitCards() : number[]
     {
         return this.vLimitCards ;
+    }
+
+    getTotalHuaCnt() : number
+    {
+        let dong = MJCardData.makeCardNum( eMJCardType.eCT_Feng, 1 ) ;
+        let keCnt = 0 ;
+        for ( let i = 0 ; i < 4 ; ++i )
+        {
+            if ( this.mHoldCards.indexOf(dong + i) != -1 )
+            {
+                ++keCnt ;
+            }
+        }
+
+        return this.huaCnt + keCnt ;
+    }
+
+    protected enable7Pair() : boolean 
+    {
+        return false ;
     }
 }
