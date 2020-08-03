@@ -1,3 +1,4 @@
+import { XLogger } from './../../common/Logger';
 import { eMJPlayerState } from './../SharedDefine';
 import { key } from './../KeyDefine';
 import { MJPlayerCardData, ActedCards } from './MJPlayerCardData';
@@ -248,6 +249,7 @@ export class MJPlayerData implements IShareData
                 {
                     vhold.forEach( (v , idx,va )=>va[idx]=0 ) ;
                 }
+                XLogger.debug( "for desk info holdCnt = " + vhold.length + " uid = " + this.uid ) ;
             }
         }
         return js ;

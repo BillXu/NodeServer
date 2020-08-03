@@ -46,7 +46,7 @@ export abstract class MJDesk implements IDesk
         return this.mDeskInfo.bankerIdx ;
     }
 
-    set banerIdx( idx : number )
+    set bankerIdx( idx : number )
     {
         this.mDeskInfo.bankerIdx = idx ;
     }
@@ -271,26 +271,30 @@ export abstract class MJDesk implements IDesk
 
     distributeCards()
     {
+        XLogger.debug( "distribute bankerIdx = " + this.bankerIdx + " deskID = " + this.deskID ) ;
         this.mMJCards.shuffle();
         let msg = { } ;
         for ( let p of this.vPlayers )
         {
             let vCards = [] ;
-            let cnt = 12 ;
+            let cnt = 13 ;
             while ( cnt-- )
             {
                 vCards.push(this.mMJCards.getCard() ) ;
             }
 
             p.onDistributedCard(vCards) ;
-            if ( this.banerIdx == p.nIdx )
+            if ( this.bankerIdx == p.nIdx )
             {
-                p.onMoCard( this.mMJCards.getCard() ) ;
+                XLogger.debug( "banker mo extra card bankerID = " + p.uid + " deskID = " + this.deskID ) ;
+                let c = this.mMJCards.getCard() ;
+                p.onMoCard( c ) ;
+                vCards.push(c) ;
             }
 
             msg[key.holdCards] = vCards ;
 
-            XLogger.debug( "distributed cards , deskID = " + this.deskID + " uid = " + p.uid + " idx = " + p.nIdx + " msg : " + JSON.stringify(msg) ) ;
+            XLogger.debug( "distributed cards , deskID = " + this.deskID + " uid = " + p.uid + " idx = " + p.nIdx + "length = " + vCards.length + " msg : " + JSON.stringify(msg) ) ;
             this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_DESK_MJ_DISTRIBUTE, msg ) ;
         }
     }
