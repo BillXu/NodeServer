@@ -1,3 +1,4 @@
+import { XLogger } from './../Logger';
 import { shuffle } from 'lodash';
 import { MJCardData } from './../../shared/mjData/MJCardData';
 import { eMJCardType } from '../../shared/mjData/MJDefine';
@@ -29,12 +30,14 @@ export class MJCards extends MJCardData
         {
             if ( i <= 3 && this.haveJian )
             {
-                this.vCards.push( MJCardData.makeCardNum( eMJCardType.eCT_Jian, i ) ) ;
+                let v = MJCardData.makeCardNum( eMJCardType.eCT_Jian, i );
+                this.vCards.push(v,v,v,v) ;
             }
 
             if ( i <= 4 && this.haveFeng )
             {
-                this.vCards.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, i ) ) ;
+                let v = MJCardData.makeCardNum( eMJCardType.eCT_Feng, i );
+                this.vCards.push(v,v,v,v) ;
             }
 
             if ( i <= 8 && this.haveHua )
@@ -44,21 +47,25 @@ export class MJCards extends MJCardData
 
             if ( this.haveWan )
             {
-                this.vCards.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, i ) ) ;
+                let v = MJCardData.makeCardNum( eMJCardType.eCT_Wan, i );
+                this.vCards.push(v,v,v,v) ;
             }
 
             if ( this.haveTong )
             {
-                this.vCards.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, i ) ) ;
+                let v = MJCardData.makeCardNum( eMJCardType.eCT_Tong, i );
+                this.vCards.push(v,v,v,v) ;
             }
 
             if ( this.haveTiao )
             {
-                this.vCards.push( MJCardData.makeCardNum( eMJCardType.eCT_Tiao, i ) ) ;
+                let v = MJCardData.makeCardNum( eMJCardType.eCT_Tiao, i );
+                this.vCards.push(v,v,v,v) ;
             }
         }
 
-        shuffle(this.vCards) ;
+        this.vCards = shuffle(this.vCards) ;
+        XLogger.debug( "after shuffle cardCnt = " + this.vCards.length ) ;
     }
 
     getCard( dstCard? : number ) : number

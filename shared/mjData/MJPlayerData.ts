@@ -181,6 +181,16 @@ export class MJPlayerData implements IShareData
         this.cardData.onPeng(card,invokerIdx ) ;
     }
 
+    beRobedGang() : void
+    {
+        this.cardData.beRobedGang();
+    }
+
+    beEatPengGang( nCard : number ) : void
+    {
+        this.cardData.beEatPengGang(nCard) ;
+    }
+
     getAutoChuCard() : number
     {
         return this.cardData.getAutoChuCard();

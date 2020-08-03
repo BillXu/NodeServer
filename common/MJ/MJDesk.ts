@@ -201,7 +201,7 @@ export abstract class MJDesk implements IDesk
         }
         if ( s )
         {
-           return this.onLogicMsg(msgID, msg, orgID) ;
+           return s.onLogicMsg(msgID, msg, orgID) ;
         }
         else
         {
@@ -276,13 +276,17 @@ export abstract class MJDesk implements IDesk
         for ( let p of this.vPlayers )
         {
             let vCards = [] ;
-            let cnt = this.bankerIdx == p.nIdx ? 13 : 12 ;
+            let cnt = 12 ;
             while ( cnt-- )
             {
                 vCards.push(this.mMJCards.getCard() ) ;
             }
 
             p.onDistributedCard(vCards) ;
+            if ( this.banerIdx == p.nIdx )
+            {
+                p.onMoCard( this.mMJCards.getCard() ) ;
+            }
 
             msg[key.holdCards] = vCards ;
 
@@ -516,6 +520,8 @@ export abstract class MJDesk implements IDesk
         this.vStates.push( new MJDeskStateWaitAct() );
         this.vStates.push( new MJDeskStateWaitOtherAct() ) ;
         this.vStates.push( new MJDeskStateGameEnd() ) ;
+        let self = this ;
+        this.vStates.forEach( ( v : IMJDeskState )=>v.init(self) ) ;
         this.state = eMJDeskState.eState_WaitStart;
         this.vStates[this.state].onEnterState(null) ;
     }
@@ -588,7 +594,7 @@ export abstract class MJDesk implements IDesk
         }
         let msgp = {};
         msgp[key.players] = jsPlayers ;
-        this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_PLAYER_MJ_DESK_PLAYERS_INFO, js ) ;
+        this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_PLAYER_MJ_DESK_PLAYERS_INFO, msgp ) ;
     }
 
     canPlayerHu( idx : number , card : number , isZiMo : boolean ,haveGang : boolean , invokerIdx : number ) : boolean
@@ -659,22 +665,30 @@ export abstract class MJDesk implements IDesk
 
     onPlayerZiMoHu( player : MJPlayerData , card : number, gangCnt : number , orgInvokerIdx : number ) : boolean
     {
-        let msg = {} ;
-        msg[key.card] = card ;
-        msg[key.idx] = player.nIdx ;
-        if ( player.canHuWithCard(card, true ) == false )
-        {
-            msg[key.ret] = 2 ;
-            this.sendMsgToPlayer(player.sessionID, eMsgType.MSG_PLAYER_MJ_HU , msg ) ; 
-            return false ;
-        }
-        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_HU , msg ); 
+        // let msg = {} ;
+        // msg[key.card] = card ;
+        // msg[key.idx] = player.nIdx ;
+        // if ( player.canHuWithCard(card, true ) == false )
+        // {
+        //     msg[key.ret] = 2 ;
+        //     this.sendMsgToPlayer(player.sessionID, eMsgType.MSG_PLAYER_MJ_HU , msg ) ; 
+        //     return false ;
+        // }
+        // this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_HU , msg ); 
         return true ;
     }
 
     onPlayerHuOtherCard( actIdxes : number[] , card : number , invokerIdx : number , invokerGangCnt  : boolean, isBuGang : boolean  )
     {
         // player do hu ;
+        if ( isBuGang )
+        {
+            this.getPlayerByIdx(invokerIdx).beRobedGang() ;
+        }
+        else
+        {
+            this.getPlayerByIdx(invokerIdx).beEatPengGang(card) ;
+        }
     }
 
     onPlayerAnGang( player : MJPlayerData , card : number , orgInvokerIdx : number ) : boolean
@@ -725,6 +739,7 @@ export abstract class MJDesk implements IDesk
         msg[key.idx] = actIdx ;
         this.getPlayerByIdx(actIdx).onChi(card, eatWith, invokerIdx) ;
         this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_EAT , msg ); 
+        this.getPlayerByIdx(invokerIdx).beEatPengGang(card) ;
     }
 
     onPlayerPeng( actIdx : number , card : number , invokerIdx : number ) : void
@@ -734,6 +749,7 @@ export abstract class MJDesk implements IDesk
         msg[key.idx] = actIdx ;
         this.getPlayerByIdx(actIdx).onPeng(card, invokerIdx) ;
         this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_PENG , msg ); 
+        this.getPlayerByIdx(invokerIdx).beEatPengGang(card) ;
     }
 
     onPlayerMingGang( actIdx : number , card : number , invokerIdx : number ) : void
@@ -744,6 +760,7 @@ export abstract class MJDesk implements IDesk
         this.getPlayerByIdx(actIdx).onMingGang(card, invokerIdx) ;
         this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_PENG , msg ); 
         this.onPlayerMo(actIdx) ;
+        this.getPlayerByIdx(invokerIdx).beEatPengGang(card) ;
     }
 
 

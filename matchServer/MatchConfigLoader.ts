@@ -11,8 +11,8 @@ let cfg = [
         startTime : "0" ,  // 1995-12-17T03:24:00 ; // must this format ;     // fixTime match type used key 
         repeatTime : 0 , // by minites ;           // repeatTime match type used key 
         repeatTimeMatchOpenDuration : [0], // hour , by 24 type  eg : 18 means 6 pm ; two value [] , 26 means next day 2 : 00 am ;  // repeatTime match type used key 
-        signUpFee : { moneyType : 0 , cnt : 10 } ,
-        playerCntLimt : [10,100] , // low limit , and up limit ;
+        signUpFee : { moneyType : 0 , cnt : 0 } ,
+        playerCntLimt : [4,4] , // low limit , and up limit ;
         reward: [ { startIdx : 1 , endEndIdx : 1 , money : [{ type: 0, cnt :10 }], desc : "第一名10个钻石" } ,
         { startIdx : 2 , endEndIdx : 2 , money : [{ type: 0, cnt :5 }], desc : "第二名5个钻石" } ,
         { startIdx : 3 , endEndIdx : 6 , money : [{ type: 0, cnt :1 }], desc : "第3-6名1个钻石" } ],
@@ -28,12 +28,12 @@ let cfg = [
         id : 2 ,
         matchName : "fixTime match test " ,
         matchType : 1 ,  // 0 quick mode , 1 fixtime , 2 repeat mode ;
-        gamePort : 7,  // game type ;
+        gamePort : 8,  // game type ;
         startSignTime : "2020-7-27T00:00:00" ,  // 1995-12-17T03:24:00 ; // must this format ; // fixTime match type used key 
         startTime : "2020-8-5T13:00:00" ,  // 1995-12-17T03:24:00 ; // must this format ;     // fixTime match type used key 
         repeatTime : 0 , // by minites ;           // repeatTime match type used key 
         repeatTimeMatchOpenDuration : [0], // hour , by 24 type  eg : 18 means 6 pm ; two value [] , 26 means next day 2 : 00 am ;  // repeatTime match type used key 
-        signUpFee : { moneyType : 0 , cnt : 10 } ,
+        signUpFee : { moneyType : 0 , cnt : 0 } ,
         playerCntLimt : [20,100] , // low limit , and up limit ;
         reward: [ { startIdx : 1 , endEndIdx : 1 , money : [{ type: 0, cnt :10 }], desc : "第一名10个钻石" } ,
         { startIdx : 2 , endEndIdx : 2 , money : [{ type: 0, cnt :5 }], desc : "第二名5个钻石" } ,
@@ -50,12 +50,12 @@ let cfg = [
         id : 3 ,
         matchName : "repeat time match test " ,
         matchType : 2 ,  // 0 quick mode , 1 fixtime , 2 repeat mode ;
-        gamePort : 7,  // game type ;
+        gamePort : 8,  // game type ;
         startSignTime : "2020-7-27T00:00:00" ,  // 1995-12-17T03:24:00 ; // must this format ; // fixTime match type used key 
         startTime : "2020-8-5T13:00:00" ,  // 1995-12-17T03:24:00 ; // must this format ;     // fixTime match type used key 
         repeatTime : 20 , // by minites ;           // repeatTime match type used key 
         repeatTimeMatchOpenDuration : [8,23], // hour , by 24 type  eg : 18 means 6 pm ; two value [] , 26 means next day 2 : 00 am ;  // repeatTime match type used key 
-        signUpFee : { moneyType : 0 , cnt : 10 } ,
+        signUpFee : { moneyType : 0 , cnt : 0 } ,
         playerCntLimt : [20,100] , // low limit , and up limit ;
         reward: [ { startIdx : 1 , endEndIdx : 1 , money : [{ type: 0, cnt :10 }], desc : "第一名10个钻石" } ,
         { startIdx : 2 , endEndIdx : 2 , money : [{ type: 0, cnt :5 }], desc : "第二名5个钻石" } ,

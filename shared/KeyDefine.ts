@@ -77,6 +77,7 @@ export class key
     static isBuGang = "isBuGang" ;
     static newCard = "newCard" ;
     static outCards = "outCards" ;
+    static buGangIng = "buGangIng" ;
     static vActedCard = "vActedCard" ;
     static isDeclare = "isDeclare" ;
     static vDice = "vDice";

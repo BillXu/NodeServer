@@ -68,7 +68,7 @@ export class MatchFixTime extends Match
 
     onStartEnterBattle()
     {
-        if ( this.mCfg.playerCntLimt[0] > this.mSignedPlayers.count() ) 
+        if ( this.mCfg.playerCntLimt[0] <= this.mSignedPlayers.count() ) 
         {
             this.doEneterMatchBattle();
         }

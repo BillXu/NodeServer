@@ -48,7 +48,7 @@
           "name": "SHMJSvr",
 
           //"program": "${workspaceFolder}/build/gateServer/GateSvr.js",
-          "program": "${workspaceFolder}/matchServer/index.ts",
+          "program": "${workspaceFolder}/SHMJServer/index.ts",
           "preLaunchTask": "tsc: build - SHMJServer/tsconfig.json",
           //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
           "outFiles": ["${workspaceFolder}/build/**/*.js"]

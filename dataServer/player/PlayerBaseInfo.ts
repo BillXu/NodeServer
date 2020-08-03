@@ -165,7 +165,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         let rpc = this.mPlayer.getRpc();
         let self = this ;
         rpc.invokeRpc( eMsgPort.ID_MSG_PORT_DB, random(200,false ), eRpcFuncID.Func_LoadPlayerInfo,{uid : this.mPlayer.uid },( result : any )=>{
-            if ( Object.keys(result).length == 0 )
+            if ( null == result || Object.keys(result).length == 0 )
             {
                 XLogger.error( "db load base data error uid = " + self.uid + " sessionID = " + self.mPlayer.sessionID ) ;
                 return ;

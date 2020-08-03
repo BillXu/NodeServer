@@ -242,7 +242,7 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
     protected onPlayerChosedDoAct( idx : number , act : eMJActType )
     {
         let vd = remove(this.mData.mWaitIdxes,( pw : {idx : number , maxAct : eMJActType } )=>pw.idx == idx );
-        if ( vd == null || vd.length == 1 )
+        if ( vd == null || vd.length == 0 )
         {
             XLogger.error( "why remove chosed act idx is null ?  idx = " + idx + " deskID = " + this.mDesk.deskID ) ;
             return ;

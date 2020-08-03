@@ -69,7 +69,7 @@ export class MatchRepeatTime extends Match
             this.mState = eMatchState.eMatch_Stoped ;
         }
 
-        if ( this.mCfg.playerCntLimt[0] > this.mSignedPlayers.count() ) 
+        if ( this.mCfg.playerCntLimt[0] <= this.mSignedPlayers.count() ) 
         {
             this.doEneterMatchBattle();
             if ( this.mIsWillStop )

@@ -1,3 +1,6 @@
+import { MatchRepeatTime } from './Match/MatchRepeatTime';
+import { MatchFixTime } from './Match/MatchFixTime';
+import { MatchQuick } from './Match/MatchQuick';
 import { Match } from './Match/Match';
 import { MatchConfigLoader } from './MatchConfigLoader';
 import { XLogger } from './../common/Logger';
@@ -9,6 +12,7 @@ import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { IModule } from "../common/IModule";
 import { eRpcFuncID } from '../common/Rpc/RpcFuncID';
 import { IServerApp } from '../common/IServerApp';
+import { del } from 'request';
 
 export class MatchMgr extends IModule
 {
@@ -123,7 +127,26 @@ export class MatchMgr extends IModule
     {
         for ( let cfg of cfgs )
         {
-            let m = new Match() ;
+            let m : Match = null;
+            if ( cfg.matchType == eMatchType.eMatch_Quick )
+            {
+                m = new MatchQuick();
+            }
+            else if ( cfg.matchType == eMatchType.eMatch_FixTime )
+            {
+                m = new MatchFixTime();
+            }
+            else if ( cfg.matchType == eMatchType.eMatch_RepeatTime )
+            {
+                XLogger.debug( "create match type = " + eMatchType[cfg.matchType] + " cfgID = " + cfg.id ) ;
+                m = new MatchRepeatTime();
+            }
+            else
+            {
+                XLogger.error( "unknown matchType = " + cfg.matchType + " cfgID = " + cfg.id ) ;
+                continue ;
+            }
+            XLogger.debug( "create match type = " + eMatchType[cfg.matchType] + " cfgID = " + cfg.id ) ;
             m.init(cfg, this.generateMatchID(), this ) ;
             this.mMatchs.set(m.matchID,m) ;
             let type = m.getType();

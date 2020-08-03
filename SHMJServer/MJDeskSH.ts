@@ -1,3 +1,5 @@
+import { MJDeskStateStart } from './../common/MJ/MJDeskStateStart';
+import { IMJDeskState } from './../common/MJ/IMJDeskState';
 import { FanxingCheckerSH } from './../shared/mjshData/FanxingCheckerSH';
 import { MJPlayerDataSH } from './../shared/mjshData/MJPlayerDataSH';
 import { MJDeskStateWaitOtherActSH } from './MJDeskStateWaitOtherActSH';
@@ -163,6 +165,7 @@ export class MJDeskSH extends MJDesk
 
     onPlayerHuOtherCard( actIdxes : number[] , card : number , invokerIdx : number , invokerGangCnt  : boolean , isBuGang : boolean )
     {
+        super.onPlayerHuOtherCard(actIdxes, card, invokerIdx, invokerGangCnt, isBuGang ) ;
         let invoker = this.getPlayerByIdx(invokerIdx) ;
         let vHuInfo = [] ;
         for ( let huIdx of actIdxes )
@@ -250,6 +253,7 @@ export class MJDeskSH extends MJDesk
                 vGetCards.push(this.mMJCards.getCard() ) ;
             }
 
+            XLogger.debug( "player do buHua , uid = " + p.uid + " huaCnt = " + vBuedHua.length );
             p.onBuHua(vBuedHua, vGetCards ) ;
             //MSG_PLAYER_MJ_BU_HUA,
             // svr: { hua : [23,23] , cards : [22,56] }
@@ -271,10 +275,12 @@ export class MJDeskSH extends MJDesk
     protected intallDeskState()
     {
         this.vStates.push( new MJDeskStateWaitStart() ) ;
-        this.vStates.push ( new MJDeskStateWaitStart() );
+        this.vStates.push ( new MJDeskStateStart() );
         this.vStates.push( new MJDeskStateWaitActSH() ); 
         this.vStates.push( new MJDeskStateWaitOtherActSH() ) ;
         this.vStates.push( new MJDeskStateGameEnd() ) ; 
+        let self = this ;
+        this.vStates.forEach( ( v : IMJDeskState )=>v.init(self) ) ;
         this.state = eMJDeskState.eState_WaitStart; 
         this.vStates[this.state].onEnterState(null) ;
     }

@@ -236,6 +236,8 @@ export enum eMsgType
 
 	MSG_DESK_MJ_START,
 	// svr : { bankerIdx : 23 , curRoundIdx : 0 , dice : [1,3] }
+	MSG_PLAYER_MJ_ETNTER,
+	// client : { uid : 23 } ;
 
 
 

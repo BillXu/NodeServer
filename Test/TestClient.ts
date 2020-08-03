@@ -99,8 +99,10 @@ class TestClient implements INetworkDelegate
             this.mUID = msg[key.uid] ;
 
             // req tree info ;
-            this.sendMsg(eMsgPort.ID_MSG_PORT_DATA, this.mUID, eMsgType.MSG_PLAYER__DIAMOND_TREE_REQ_INFO, {} ) ;
-
+            //this.sendMsg(eMsgPort.ID_MSG_PORT_DATA, this.mUID, eMsgType.MSG_PLAYER__DIAMOND_TREE_REQ_INFO, {} ) ;
+            
+            // enter room 
+            this.sendMsg( eMsgPort.ID_MSG_PORT_MJSH , 200, eMsgType.MSG_PLAYER_MJ_ETNTER, msg ) ;
         }
         else if ( eMsgType.MSG_PLAYER__DIAMOND_TREE_REQ_INFO == msgID )
         {
@@ -222,44 +224,9 @@ class TestClient implements INetworkDelegate
 
 }
 
-//let c = new TestClient();
-//c.init("ws://localhost:3001", "wechatNameNew" ) ;
-
-//let date = new Date();
-//date.setDate(date.getDate() - 20 ) ;
-// let a = date.getTime();
-// let b = Date.now();
-// console.log( "utc = " + a + " s = " + b + " offset = " + ( b - a) ) ;
-// console.log( " str =  " + date.toLocaleString() + " day = " + date.getMonth() ) ; 
-
- 
-let v = [] ;
-let b = [4,5] ;
-console.log( "v =" +  v) ;
-console.log( "b =" +  b ) ;
-let tmp = v ;
-v = b ;
-b = tmp ;
- 
-console.log( "v =" +  v) ;
-console.log( "b =" +  b ) ;
-
-let date = new Date("1995-12-17T03:24:00") ;
-console.log(date.toLocaleString() ) ;
-
-
-let vs = [1,8,3] ;
-//vs.sort() ;
-console.log(vs) ;
-
-let vs2 = [1,8,3] ;
-console.log( vs == vs2 ) ;
-console.log( isEqual(vs, vs2) )  ;
-
-let s = {} ;
-s["k"] = vs2;
-let vc : number[] = s["k"] ;
-vc.forEach( (v,idx , vt )=>vt[idx]=0 ) ;
-console.log(s["k"]) ;
-
+let c = new TestClient();
+//c.init("ws://localhost:3001", "wechatNameNew3" ) ;
+// c.init("ws://localhost:3001", "wechatNameNew2" ) ;
+ //c.init("ws://localhost:3001", "wechatNameNew1" ) ;
+ c.init("ws://localhost:3001", "wechatNameNew0" ) ;
 

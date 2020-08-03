@@ -42,6 +42,7 @@ export class MJPlayerCardData implements IShareData
     protected mOutCards : number[] = [] ;
     vActedCards : ActedCards[] = [] ;
     protected nJustMoCard : number = 0 ;
+    protected nBuGanging : number = 0 ;
     toJson() : Object 
     {
         let js = {} ;
@@ -57,6 +58,7 @@ export class MJPlayerCardData implements IShareData
         {
             js[key.vActedCard] = va ;
         }
+        js[key.buGangIng ] = this.nBuGanging ;
         return js ;
     }
 
@@ -64,7 +66,8 @@ export class MJPlayerCardData implements IShareData
     {
         this.mHoldCards = js[key.holdCards] ;
         this.mOutCards = js[key.outCards] ;
-        let v : Object[] = js[key.vActedCard] ;
+        this.nBuGanging = js[key.buGangIng] || 0 ;
+        let v : Object[] = js[key.vActedCard] ||[];
         if ( v != null && v.length > 0 )
         {
             for ( let va of v )
@@ -104,7 +107,7 @@ export class MJPlayerCardData implements IShareData
 
     onChu( card : number ) : boolean
     {
-        if ( this.getCardCnt(card) == 1 )
+        if ( this.getCardCnt(card) == 0 )
         {
             return false ;
         }
@@ -136,6 +139,7 @@ export class MJPlayerCardData implements IShareData
         }
 
         this.removeCard(card) ;
+        this.nBuGanging = card ;
         return true ;
     }
 
@@ -154,6 +158,31 @@ export class MJPlayerCardData implements IShareData
         acted.act = eMJActType.eMJAct_BuGang_Done ;
         acted.card = card ;
         this.vActedCards.push(acted) ;
+        this.nBuGanging = 0 ;
+    }
+
+    beRobedGang()
+    {
+        if ( this.nBuGanging != 0 )
+        {
+            this.nBuGanging = 0 ;
+        }
+        else
+        {
+            console.error( "not buGanging , how to be robotedGAng" ) ;
+        }
+    }
+
+    beEatPengGang( nCard : number )
+    {
+        if ( this.mOutCards[this.mOutCards.length -1 ] == nCard )
+        {
+            this.mOutCards.splice(this.mOutCards.length-1,1) ;
+        }
+        else
+        {
+            console.error( "do not chu card = " + nCard + " how to be eat peng gang ?" ) ;
+        }
     }
 
     canAnGangWithCard( card : number ) : boolean
