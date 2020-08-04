@@ -1,7 +1,7 @@
 import { G_ARG, eMJPlayerState } from './../shared/SharedDefine';
 import { key } from './../shared/KeyDefine';
 import { XLogger } from './../common/Logger';
-import { MJDeskSH } from './MJDeskSH';
+import { MJDeskSHNew } from './MJDeskSHNew';
 import { MJPlayerDataSH } from './../shared/mjshData/MJPlayerDataSH';
 import { MJDeskStateWaitAct, WaitActStateData } from './../common/MJ/MJDeskStateWaitAct';
 import { eMJDeskState } from '../shared/SharedDefine';
@@ -12,7 +12,7 @@ export class MJDeskStateWaitActSH extends MJDeskStateWaitAct
     onEnterState( jsData : WaitActStateData ) : void
     {
         super.onEnterState(jsData) ;
-        let buHuaTime = ( this.mDesk as MJDeskSH ).checkPlayerBuHua(this.mData.mActIdx) ;
+        let buHuaTime = ( this.mDesk as MJDeskSHNew ).checkPlayerBuHua(this.mData.mActIdx) ;
         if ( 0 != buHuaTime )
         {
             this.mWaitTimeSecons += buHuaTime ;
@@ -57,7 +57,7 @@ export class MJDeskStateWaitActSH extends MJDeskStateWaitAct
         }
 
         let card = msg[key.card] ;
-        if ( ( this.mDesk as MJDeskSH ).onPlayerTing( this.mData.mActIdx, card ) )
+        if ( ( this.mDesk as MJDeskSHNew ).onPlayerTing( this.mData.mActIdx, card ) )
         {
             this.mData.mCard = card ;
             let vps = this.mDesk.getPlayersNeedTheCard( card, this.mData.mActIdx,this.mData.mGangCnt > 0 ,false ) ;

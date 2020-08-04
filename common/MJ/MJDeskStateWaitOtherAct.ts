@@ -179,7 +179,7 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
             this.mChosedEatWith = msg[key.eatWith];
         }
 
-        let card : number = msg[key.card] ;
+        let card : number = this.mData.mCard;
         let isOk = this.mDesk.canPlayerDoActWithOtherCard( p.nIdx, act ,card , this.mData.mInvokerIdx , this.mData.mGangCnt > 0 ,this.mChosedEatWith ) ;
         if ( isOk == false )
         {
@@ -355,7 +355,7 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
         XLogger.debug( "IN WaitOtherAct player reqInfo of state , findIdx = " + findIdx ) ;
         if ( findIdx != -1 )
         {
-            this.mDesk.informOtherPlayerAct([findIdx],this.mData.mCard, this.mData.mInvokerIdx, this.mData.mBuGangRetore != null,this.mData.mGangCnt > 0 ) ;
+            this.mDesk.informOtherPlayerAct([idx],this.mData.mCard, this.mData.mInvokerIdx, this.mData.mBuGangRetore != null,this.mData.mGangCnt > 0 ) ;
         }
     }
 }

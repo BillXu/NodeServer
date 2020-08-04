@@ -175,7 +175,21 @@ export abstract class MJDesk implements IDesk
         if ( eMsgType.MSG_PLAYER_MJ_REQ_DESK_INFO == msgID )
         {
             this.sendDeskInfoToPlayer(p.nIdx) ;
-            this.vStates[this.state].onPlayerReuesetInfo(p.nIdx) ;
+            //this.vStates[this.state].onPlayerReuesetInfo(p.nIdx) ;
+            return true ;
+        }
+
+        if ( eMsgType.MSG_TEST_MJ_WANT_CARD == msgID )
+        {
+            this.mMJCards.pushCardToFront(msg[key.card]) ;
+            return true;
+        }
+
+        if ( eMsgType.MSG_TEST_MJ_SWAP_CARD == msgID )
+        {
+            let r = this.mMJCards.swapCard(msg["dstCard"], msg["orgCard"] ) ;
+            msg[key.ret] = r ? 0 : 1 ;
+            this.sendMsgToPlayer( orgID, msgID, msg) ;
             return true ;
         }
 
@@ -284,14 +298,6 @@ export abstract class MJDesk implements IDesk
             }
 
             p.onDistributedCard(vCards) ;
-            if ( this.bankerIdx == p.nIdx )
-            {
-                XLogger.debug( "banker mo extra card bankerID = " + p.uid + " deskID = " + this.deskID ) ;
-                let c = this.mMJCards.getCard() ;
-                p.onMoCard( c ) ;
-                vCards.push(c) ;
-            }
-
             msg[key.holdCards] = vCards ;
 
             XLogger.debug( "distributed cards , deskID = " + this.deskID + " uid = " + p.uid + " idx = " + p.nIdx + "length = " + vCards.length + " msg : " + JSON.stringify(msg) ) ;
@@ -448,11 +454,16 @@ export abstract class MJDesk implements IDesk
                 continue ;
             }
 
-            if ( this.enableChi() && p.canChi(card) )
+            if ( this.enableChi() && ( this.getNextActIdx(invokerIdx) == p.nIdx ) && p.canChi(card)  )
             {
                 v.push( { idx : p.nIdx , maxAct : eMJActType.eMJAct_Chi } ) ;
             }
         }
+
+        if ( v.length > 0 )
+        {
+            XLogger.debug( "some need the card = " + card + " detail = " + JSON.stringify(v) ) ;
+        } 
         return v ;
     }
 
@@ -582,6 +593,7 @@ export abstract class MJDesk implements IDesk
 
     protected sendDeskInfoToPlayer( idx : number )
     {
+        XLogger.debug( "send desk info to idx = " + idx ) ;
         this.mDeskInfo.leftCardCnt = this.mMJCards.getLeftCnt();
         if ( this.vStates[this.state] )
         {
@@ -599,6 +611,8 @@ export abstract class MJDesk implements IDesk
         let msgp = {};
         msgp[key.players] = jsPlayers ;
         this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_PLAYER_MJ_DESK_PLAYERS_INFO, msgp ) ;
+
+        this.vStates[this.state].onPlayerReuesetInfo(idx) ;
     }
 
     canPlayerHu( idx : number , card : number , isZiMo : boolean ,haveGang : boolean , invokerIdx : number ) : boolean
@@ -741,6 +755,7 @@ export abstract class MJDesk implements IDesk
         let msg = {} ;
         msg[key.card] = card ;
         msg[key.idx] = actIdx ;
+        msg[key.eatWith] = eatWith;
         this.getPlayerByIdx(actIdx).onChi(card, eatWith, invokerIdx) ;
         this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_EAT , msg ); 
         this.getPlayerByIdx(invokerIdx).beEatPengGang(card) ;
@@ -751,6 +766,7 @@ export abstract class MJDesk implements IDesk
         let msg = {} ;
         msg[key.card] = card ;
         msg[key.idx] = actIdx ;
+        msg[key.invokerIdx] = invokerIdx;
         this.getPlayerByIdx(actIdx).onPeng(card, invokerIdx) ;
         this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_PENG , msg ); 
         this.getPlayerByIdx(invokerIdx).beEatPengGang(card) ;
@@ -761,6 +777,7 @@ export abstract class MJDesk implements IDesk
         let msg = {} ;
         msg[key.card] = card ;
         msg[key.idx] = actIdx ;
+        msg[key.invokerIdx] = invokerIdx;
         this.getPlayerByIdx(actIdx).onMingGang(card, invokerIdx) ;
         this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_PENG , msg ); 
         this.onPlayerMo(actIdx) ;

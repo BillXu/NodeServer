@@ -17,7 +17,7 @@ import { DeskMgr } from './../common/MJ/DeskMgr';
 import { MJDesk } from './../common/MJ/MJDesk';
 import { eMsgPort, eMsgType } from '../shared/MessageIdentifer';
 import { MJDeskDataSH } from '../shared/mjshData/MJDeskDataSH';
-export class MJDeskSH extends MJDesk
+export class MJDeskSHNew extends MJDesk
 {
     init( deskID : number , diFen : number , roundCnt : number , delegate : IDeskDelegate , deskMgr : DeskMgr ) : void 
     {
@@ -78,8 +78,18 @@ export class MJDeskSH extends MJDesk
                 }
                 else
                 {
-                    msg["buGang"] = p.getCanBuGangCards();
-                    msg["anGang"] = p.getCanAnGangCards();
+                    let vbu = p.getCanBuGangCards();
+                    let vAnGang = p.getCanAnGangCards();
+                    if ( vbu != null &&  vbu.length > 0 )
+                    {
+                        msg["buGang"] = vbu;
+                    }
+
+                    if ( vAnGang != null && vAnGang.length > 0 )
+                    {
+                        msg["anGang"] = vAnGang;
+                    }
+                    
                     XLogger.debug( "when have hu , and ting = true , skip gang opt  uid = " + p.uid + " deskID = " + this.deskID ) ;
                 }
 
@@ -258,6 +268,7 @@ export class MJDeskSH extends MJDesk
             //MSG_PLAYER_MJ_BU_HUA,
             // svr: { hua : [23,23] , cards : [22,56] }
             let msg = {} ;
+            msg[key.idx] = idx ;
             msg[key.vCard] = vGetCards;
             msg[key.vHua] = vBuedHua;
             this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_PLAYER_MJ_BU_HUA, msg ) ;

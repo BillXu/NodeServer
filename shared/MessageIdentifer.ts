@@ -238,6 +238,34 @@ export enum eMsgType
 	// svr : { bankerIdx : 23 , curRoundIdx : 0 , dice : [1,3] }
 	MSG_PLAYER_MJ_ETNTER,
 	// client : { uid : 23 } ;
+	MSG_TEST_MJ_WANT_CARD,
+	// client : { card : number }
+	MSG_TEST_MJ_SWAP_CARD,
+	// client: { orgCard : number , dstCard : number }
+	// svr : { ret : 0 ,  orgCard : number , dstCard : number }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -328,7 +356,7 @@ export enum eMsgType
 	// client : { }
 	// svr : { rankInfo : { { uid : 123, totalPoint : 123 } ,{},... } }
 
-	MSG_CREATE_ROOM = 300,
+	MSG_CREATE_ROOM,
 	// client: { uid : 234 ,gameType : 0 , seatCnt : 4 , payType : 1 , level : 2 , opts : {  .... }  }
 	// payType : 0 the room owner pay cards , 1 AA pay card type , 2 big winer pay cards 
 	// svr : {  ret : 0 , roomID : 23 } // ret : 0 success , 1 diamond is not enough, 2 create room count reach limit , 3 argument error , 4 room type error ,can not create room,  5  server maintenance,create room later   , 6 svr is busy , please try later , 7 internal time out;
@@ -416,7 +444,7 @@ export enum eMsgType
 	// type : as defined
 	// detail : follow diffrent with type
 
-	MSG_PLAYER_SET_READY = 600,   	// player do ready
+	MSG_PLAYER_SET_READY ,   	// player do ready
 	// client : { dstRoomID : 2345 } ;
 	// svr : { ret : 1 , curState : 23 } // 1 you are not in room , 2 you are not state waitNextGame, tell curState ;
 	MSG_ROOM_PLAYER_READY,  // some player did ready
@@ -467,7 +495,7 @@ export enum eMsgType
 	MSG_NN_ROOM_UPDATE_TUO_GUAN,
 	// svr : { idx : 0 , isTuoGuan : 0 } 
 
-	MSG_POKER_BJ_BEGIN = 800,
+	MSG_POKER_BJ_BEGIN ,
 	
 	MSG_ROOM_BJ_START_GAME,
 	// svr : { vSelfCard : [23,23,23,2,23] }
@@ -490,7 +518,7 @@ export enum eMsgType
 	// dismissID is 1 , means system dismiss room ;
 	// dismissID biger than 1 , means player dismiss room ;
 
-	MSG_POKER_GAME_MSG_MAX = 1000,
+	MSG_POKER_GAME_MSG_MAX ,
 	
 	// dou di zhu 
 	MSG_DDZ_ROOM_WAIT_ROBOT_DZ,

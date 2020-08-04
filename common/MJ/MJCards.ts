@@ -66,6 +66,45 @@ export class MJCards extends MJCardData
 
         this.vCards = shuffle(this.vCards) ;
         XLogger.debug( "after shuffle cardCnt = " + this.vCards.length ) ;
+        let vMaked : number[] = this.makeCard();
+        if ( vMaked != null && vMaked.length > 0 )
+        {
+            XLogger.warn( "do make card take effect ") ;
+            for ( let n of vMaked )
+            {
+                let idx = this.vCards.indexOf(n) ;
+                if ( idx == -1 )
+                {
+                    XLogger.error( "delete card failed ? make card why card = " + n ) ;
+                    continue ;
+                }
+                this.vCards.splice(idx,1) ;
+            }
+    
+            this.vCards = vMaked.concat(this.vCards) ;
+        }
+    }
+
+    makeCard() : number[]
+    {
+        let vHold = [] ;
+        // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 1) ) ;
+        // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 1) ) ;
+        // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 1) ) ;
+        // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 1) ) ;
+
+        // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 2) ) ;
+        // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 2) ) ;
+        // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 2) ) ;
+
+        // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 3) ) ;
+        // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 3) ) ;
+
+        vHold = vHold.concat([65,65,65,65,66,66,66,67,67,21,83,49,50]) ;
+        vHold = vHold.concat([39,41,24,50,24,18,38,22,38,81,82,52,25]) ;
+        vHold = vHold.concat([19,57,21,68,54,41,37,38,83,54,36,54,25]) ;
+        vHold = vHold.concat([33,40,19,18,34,56,56,34,19,55,51,49,22]) ;
+        return vHold ;
     }
 
     getCard( dstCard? : number ) : number
@@ -86,6 +125,24 @@ export class MJCards extends MJCardData
         }
 
         return this.vCards.shift();
+    }
+
+    pushCardToFront( card : number )
+    {
+        let idx = this.vCards.indexOf(card) ;
+        if ( idx == 0 )
+        {
+            return ;
+        }
+        else if ( -1 == idx )
+        {
+            XLogger.warn( "do not have card to push front card = " + card ) ;
+            return ;
+        }
+
+        let card0 = this.vCards[0] ;
+        this.vCards[0] = card ;
+        this.vCards[idx] = card0 ;
     }
 
     swapCard( dstCard : number , orgCard : number  ) : boolean

@@ -59,7 +59,8 @@ export class MJDeskStateStart implements IMJDeskState
     {
         this.mLeaveStateTime = null ;
         XLogger.debug( "finished distribute time out, go to wait act deskID = " + this.mDesk.deskID + " bankerIdx = " + this.mDesk.bankerIdx ) ;
-        let data = new WaitActStateData(this.mDesk.bankerIdx, this.mDesk.getPlayerAutoChuCard(this.mDesk.bankerIdx) ) ;
+        let moCard = this.mDesk.onPlayerMo(this.mDesk.bankerIdx) ;
+        let data = new WaitActStateData(this.mDesk.bankerIdx, moCard ) ;
         this.mDesk.transferState( eMJDeskState.eState_WaitAct, data ) ;
     }
 }

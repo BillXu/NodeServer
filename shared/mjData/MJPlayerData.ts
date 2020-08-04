@@ -249,7 +249,7 @@ export class MJPlayerData implements IShareData
                 {
                     vhold.forEach( (v , idx,va )=>va[idx]=0 ) ;
                 }
-                XLogger.debug( "for desk info holdCnt = " + vhold.length + " uid = " + this.uid ) ;
+                XLogger.debug( "wantIdx = " + reqPlayerIdx +  " for desk info holdCnt = " + vhold.length + " uid = " + this.uid + " idx = " + this.nIdx ) ;
             }
         }
         return js ;

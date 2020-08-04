@@ -46,7 +46,7 @@ export class MJPlayerCardData implements IShareData
     toJson() : Object 
     {
         let js = {} ;
-        js[key.holdCards] = this.mHoldCards;
+        js[key.holdCards] = this.mHoldCards.concat([]);
         js[key.outCards ] = this.mOutCards ;
         let va = [] ;
         for ( let v of this.vActedCards )
@@ -94,7 +94,7 @@ export class MJPlayerCardData implements IShareData
 
     onDistributedCard( vCards : number[] ) : void
     {
-        this.mHoldCards = vCards ;
+        this.mHoldCards = vCards.concat([]) ;
         this.mHoldCards.sort((a,b)=>a-b) ;
     }
     
@@ -113,6 +113,7 @@ export class MJPlayerCardData implements IShareData
         }
 
         this.removeCard(card) ;
+        this.mOutCards.push(card) ;
         return true ;
     }
 
@@ -288,7 +289,7 @@ export class MJPlayerCardData implements IShareData
         }
 
         // ABx
-        if ( value <= 3 )
+        if ( value >= 3 )
         {
             let A = card - 1 ;
             let B = card - 2 ;
@@ -383,12 +384,15 @@ export class MJPlayerCardData implements IShareData
     {
         this.mHoldCards.sort() ;
         let vout = [] ;
-        for ( let idx = 0 ; (idx + 3) < this.mHoldCards.length ; idx += 4 )
+        for ( let idx = 0 ; (idx + 3) < this.mHoldCards.length ; )
         {
             if ( this.mHoldCards[idx] == this.mHoldCards[idx+3] )
             {
                 vout.push(this.mHoldCards[idx]) ;
+                idx += 4 ;
+                continue ;
             }
+            ++idx ;
         }
         return vout ;
     }

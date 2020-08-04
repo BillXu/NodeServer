@@ -1,14 +1,14 @@
 import { XLogger } from './../common/Logger';
 import { key } from './../shared/KeyDefine';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
-import { MJDeskSH } from './MJDeskSH';
+import { MJDeskSHNew } from './MJDeskSHNew';
 import { IDesk } from './../common/MJ/IDesk';
 import { DeskMgr } from './../common/MJ/DeskMgr';
 export class MJDeskMgrSH extends DeskMgr
 {
     createDesk() : IDesk 
     {
-        return new MJDeskSH();
+        return new MJDeskSHNew();
     }
 
     onRegisterToSvrApp(svrApp)
