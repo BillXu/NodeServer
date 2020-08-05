@@ -17,4 +17,5 @@ export interface IMatchLaw
     onDeskFinished( deskID : number, result : { uid : number , score : number }[] ) : void ;
     onRefreshPlayerNetState( uid : number , sessionID : number ,netState : ePlayerNetState ) : boolean ;
     setDelegate( pdel : IMatchLawDelegate ) : void ;
+    visitPlayerMatchState( jsInfo : Object , sessionID : number ) : boolean ;
 }

@@ -238,6 +238,12 @@ export class MJDeskStateWaitAct implements IMJDeskState
                     this.onPlayerHu(player) ;
                 }
                 break ;
+            case eMsgType.MSG_PLAYER_MJ_PASS:
+                {
+                    msg[key.ret] = 0 ;
+                    this.mDesk.sendMsgToPlayer(nSessionID, msgID, msg ) ;
+                }
+                break ;
             default:
                 XLogger.debug( "your msg can not process in this state msgID = " + eMsgType[msgID] ) ;
                 msg[key.ret] = 1 ;
@@ -336,7 +342,7 @@ export class MJDeskStateWaitAct implements IMJDeskState
         this.mData.mCard = card ;
 
         let vps = this.mDesk.getPlayersNeedTheCard( card, this.mData.mActIdx, this.mData.mGangCnt > 0 , true ) ;
-        if ( vps != null && vps.length == 0 )
+        if ( vps != null && vps.length > 0 )
         {
             XLogger.debug( "somebody want rob gang actIdx = " + this.mData.mActIdx + " deskID = " + this.mDesk.deskID + " wantIdxes = " + JSON.stringify(vps) ) ;
             let otherData = new WaitOtherActStateData();

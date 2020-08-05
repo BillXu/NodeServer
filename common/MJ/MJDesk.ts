@@ -779,7 +779,7 @@ export abstract class MJDesk implements IDesk
         msg[key.idx] = actIdx ;
         msg[key.invokerIdx] = invokerIdx;
         this.getPlayerByIdx(actIdx).onMingGang(card, invokerIdx) ;
-        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_PENG , msg ); 
+        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_MING_GANG , msg ); 
         this.onPlayerMo(actIdx) ;
         this.getPlayerByIdx(invokerIdx).beEatPengGang(card) ;
     }

@@ -238,8 +238,11 @@ export class MJDeskSHNew extends MJDesk
         } 
 
         ( p as MJPlayerDataSH ).onTing( chuCard );
-        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_TING, msg ) ;
+        this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_TING, msg,p.nIdx ) ;
         XLogger.warn( "ting pai ok, uid = " + p.uid + " deskID = " + this.deskID ) ;
+        
+        msg[key.holdCards] = p.getHoldCards();
+        this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_PLAYER_MJ_TING, msg ) ;
         return false ;
     }
 

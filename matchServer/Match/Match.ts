@@ -150,6 +150,24 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
             }, orgID ) ;
             return true ;
         }
+        else if ( eMsgType.MSG_PLAYER_REQ_MATCH_STATE == msgID )
+        {
+            let vlaws = this.mLaws.values() ;
+            for ( let l of vlaws )
+            {
+                if ( l.visitPlayerMatchState( msg, orgID ) )
+                {
+                    msg[key.ret] = 0 ;
+                    this.sendMsgToClient(orgID, msgID, msg) ;
+                    XLogger.debug( "replay to player playing match state = " + JSON.stringify(msg) + " matchID = " + this.matchID ) ;
+                    return true ;
+                }
+            }
+            msg[key.ret] = 1 ;
+            this.sendMsgToClient(orgID, msgID, msg) ;
+            XLogger.debug( "can not find player playing match state matchID = " + this.matchID  ) ;
+            return true ;
+        }
         return false ;
     }
 

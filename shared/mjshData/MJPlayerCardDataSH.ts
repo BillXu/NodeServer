@@ -98,7 +98,7 @@ export class MJPlayerCardDataSH extends MJPlayerCardData
     onChi( card : number ,eatWith : number[], invokerIdx : number  )
     {
         super.onChi(card, eatWith, invokerIdx) ;
-        eatWith.sort() ;
+        eatWith.sort( (a,b)=>a-b ); ;
         let v1 = MJCardData.parseCardValue(eatWith[1]);
         let v0 = MJCardData.parseCardValue(eatWith[0]);
         if ( eatWith[1] - eatWith[0] == 1  )

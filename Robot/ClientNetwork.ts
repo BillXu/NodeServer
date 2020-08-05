@@ -3,12 +3,20 @@ import  HashMap  from 'hashmap';
 import { key } from './../shared/KeyDefine';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { INetworkDelegate, Network, IOneMsgCallback } from './../common/Net/Network';
-import { IClientModule } from './IClientModule';
+
+export interface IClientNetworkDelegate
+{
+    onConnectResult( isOK : boolean ) : void ;
+    onDisconnected() : void ;
+    onReconectedResult( isOk : boolean ) : void ;
+    onLogicMsg( msgID : eMsgType , msg : Object ) : boolean ;
+}
+
 export class ClientNetwork implements INetworkDelegate
 {
     protected mNet : Network = null ;
+    protected mDelegate : IClientNetworkDelegate = null ;
     protected mCallBacks : HashMap<eMsgType,IOneMsgCallback> = new HashMap<eMsgType,IOneMsgCallback>(); 
-    protected mModules : HashMap<string,IClientModule> = new HashMap<string,IClientModule>();
 
     onVerifyResult( isOk : boolean ) : void
     {
@@ -17,12 +25,18 @@ export class ClientNetwork implements INetworkDelegate
 
     onConnectResult( isOK : boolean ) : void 
     {
-
+        if ( this.mDelegate )
+        {
+            this.mDelegate.onConnectResult(isOK) ;
+        }
     }
 
     onDisconnected() : void 
     {
-
+        if ( this.mDelegate )
+        {
+            this.mDelegate.onDisconnected() ;
+        }
     }
 
     onMsg( msgID : eMsgType , msg : Object ) : void 
@@ -37,13 +51,29 @@ export class ClientNetwork implements INetworkDelegate
 
     onReconectedResult( isOk : boolean ) : void 
     {
-
+        if ( this.mDelegate )
+        {
+            this.mDelegate.onReconectedResult(isOk) ;
+        }
     }
 
     // self function 
-    init( dstIP : string )
+    init( dstIP : string , pdelegate : IClientNetworkDelegate )
     {
+        this.mNet = new Network() ;
+        this.mNet.setDelegate(this) ;
+        this.mNet.connect(dstIP) ;
+        this.mDelegate = pdelegate ;
+    }
 
+    tryOtherIP( dstIP : string )
+    {
+        if ( null == this.mNet )
+        {
+            XLogger.error("mNet is not created, can not use try otherIP") ;
+            return ;
+        }
+        this.mNet.tryNewDstIP(dstIP) ;
     }
 
     sendMsg( msgID : eMsgType , msg : Object , dstPort : eMsgPort, dstID : number , lpCallBack? : IOneMsgCallback ) : boolean
@@ -90,16 +120,14 @@ export class ClientNetwork implements INetworkDelegate
             }
         }
 
-        // other module ;
-        let v = this.mModules.values();
-        for ( let m of v )
+        if ( this.mDelegate )
         {
-            if ( m.onLogicMsg(msgID,msg) )
+            if ( !this.mDelegate.onLogicMsg(msgID, msg) )
             {
-                return ;
+                XLogger.warn( "msg not process , msgID = " + eMsgType[msgID] + " msg = " + JSON.stringify(msg) ) ;
             }
         }
 
-        XLogger.warn( "msg not process , msgID = " + eMsgType[msgID] + " msg = " + JSON.stringify(msg) ) ;
+        return ;
     }
 }

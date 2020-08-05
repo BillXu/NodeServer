@@ -182,7 +182,7 @@ export class HuChecker {
 
     checkTing( vCards : number[] ) : { chu : number, tingCards : number[]} [] 
     {
-        vCards.sort();
+        vCards.sort( (a,b)=>a-b );
         let vresult : { chu : number, tingCards : number[]}[] = [] ;
         for ( let idx = 0 ; idx < vCards.length ; ++idx )
         {
@@ -204,7 +204,7 @@ export class HuChecker {
         let vBaiDa = vCards.filter( this.filterBaiDa.bind(this) ) ; // baida ;
         vCards = vCards.filter( ( v )=>{ return vBaiDa.indexOf(v) == -1 ;} ); // not cantin baida ;
 
-        vCards.sort();
+        vCards.sort( (a,b)=>a-b );
         let vWan = vCards.filter( ( v )=>{ return HuChecker.parseCardType(v) == eMJCardType.eCT_Wan ; } ) ;
         let vTong = vCards.filter( ( v )=>{ return HuChecker.parseCardType(v) == eMJCardType.eCT_Tong ; } ) ;
         let vTiao = vCards.filter( ( v )=>{ return HuChecker.parseCardType(v) == eMJCardType.eCT_Tiao ; } ) ;
@@ -489,7 +489,7 @@ export class HuChecker {
 
     getHuPaiGroup( vCards : number[] , vBaiDa : number[] ) : Group 
     {
-        vCards.sort();
+        vCards.sort( (a,b)=>a-b );
         // bai da no jiang 
         let jiang = [] ;
         for ( let idx = 0 ; idx + 1 < vCards.length ; )

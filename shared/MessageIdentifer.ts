@@ -151,6 +151,13 @@ export enum eMsgType
 	//svr : { rankIdx : 0 , matchID : 234 , reward : IMoney[] } 
 	// if do not have rewards , reward key will be null ;
 
+	MSG_PLAYER_REQ_MATCH_STATE,
+	// client : null
+	// svr { ret : 0 , rankIdx : number , deskID : 2345 , gamePort : eMsgPort }
+	// ret : 0 , means in game ,  1 , lose out ;
+	// when waiting other finish , have rankIdx key ;
+	// when playing in room , deskID and gamePort key exist ;
+
 
 	MSG_PLAYER_MJ_REQ_DESK_INFO = 300,
 	// client : null

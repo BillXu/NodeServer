@@ -132,6 +132,36 @@ export class MatchLaw implements IMatchLaw
         this.mDelegate = pdel ;
     }
 
+    visitPlayerMatchState( jsInfo : Object , sessionID : number ) : boolean
+    {
+        // check finished ;
+        for ( let pf of this.mFinishedPlayers )
+        {
+            if ( pf.sessionID != sessionID )
+            {
+                continue ;
+            }
+
+            jsInfo[key.rankIdx] = pf.rankIdx ;
+            return true ;
+        }
+
+        // check playing 
+        for ( let pp of this.mPlayeringPlayers )
+        {
+            if ( pp.sessionID != sessionID )
+            {
+                continue ;
+            }
+
+            jsInfo[key.deskID] = pp.stayDeskID ;
+            jsInfo[key.port] = this.mGamePort ;
+            return true ;
+        }
+        
+        return false ;
+    }
+
     // self function 
     protected putPlayersToDesk( vPlayer : MatchPlayer[] )
     {

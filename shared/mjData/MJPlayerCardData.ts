@@ -213,7 +213,7 @@ export class MJPlayerCardData implements IShareData
         // check 7 pair
         if ( this.vActedCards.length == 0 && this.enable7Pair() )
         {
-            vCheck.sort() ;
+            vCheck.sort( (a,b)=>a-b ) ;
             let is7Pair = true ;
             for ( let idx = 0 ; ( idx + 1 ) < vCheck.length ; idx +=2 )
             {
@@ -382,7 +382,6 @@ export class MJPlayerCardData implements IShareData
 
     getCanAnGangCards() : number[]
     {
-        this.mHoldCards.sort() ;
         let vout = [] ;
         for ( let idx = 0 ; (idx + 3) < this.mHoldCards.length ; )
         {

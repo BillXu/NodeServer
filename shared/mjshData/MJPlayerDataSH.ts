@@ -164,4 +164,5 @@ export class MJPlayerDataSH extends MJPlayerData
     {
         return ( this.cardData as MJPlayerCardDataSH).getTotalHuaCnt();
     }
+
 }
