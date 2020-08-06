@@ -497,7 +497,7 @@ export abstract class MJDesk implements IDesk
         this.sendDeskMsg(eMsgType.MSG_DESK_MJ_START, msg ) ;
     }
 
-    onGameOver( isHuOver : boolean )
+    onGameOver( isHuOver : boolean ) : boolean
     {
         // send msg first ;
         //let vp = [] ;
@@ -525,7 +525,10 @@ export abstract class MJDesk implements IDesk
             this.vStates[this.state].onLevelState();
             this.vPlayers.length = 0 ;
             this.mDelegate.onDeskFinished(vr, this ) ;
+            return false ;
         }
+
+        return true ;
     }
 
     protected intallDeskState()

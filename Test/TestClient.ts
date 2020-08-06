@@ -1,4 +1,3 @@
-import { clone, random, shuffle, isEqualWith, isEqual } from 'lodash';
 import { MailData, eMailState } from './../shared/playerData/PlayerMailData';
 import { XLogger } from './../common/Logger';
 import { eAccountType, eSex } from './../shared/SharedDefine';
@@ -228,5 +227,12 @@ let c = new TestClient();
 //c.init("ws://localhost:3001", "wechatNameNew3" ) ;
 // c.init("ws://localhost:3001", "wechatNameNew2" ) ;
  //c.init("ws://localhost:3001", "wechatNameNew1" ) ;
- c.init("ws://localhost:3001", "wechatNameNew0" ) ;
+ //c.init("ws://localhost:3001", "wechatNameNew0" ) ;
+
+ let xhs = new XMLHttpRequest() ;
+ xhs.open("get", "http://www.baidu.com") ;
+ xhs.onloadend = ( ev : any )=>
+ {
+
+ }
 

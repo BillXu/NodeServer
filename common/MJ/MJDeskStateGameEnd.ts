@@ -16,17 +16,20 @@ export class MJDeskStateGameEnd implements IMJDeskState
     onEnterState( isHuOver : boolean ) : void 
     {
         XLogger.debug( "GameEndState game over , huOover = " + isHuOver + " , deskID = " + this.mDesk.deskID ) ; 
-        this.mDesk.onGameOver( isHuOver ) ;
+        let isGoOn = this.mDesk.onGameOver( isHuOver ) ;
         if ( null != this.mWaitTimer )
         {
             clearTimeout(this.mWaitTimer) ;
             this.mWaitTimer = null ;
         }
 
-        let self = this ;
-        this.mWaitTimer = setTimeout(() => {
-            self.mDesk.transferState(eMJDeskState.eState_WaitStart) ;
-        }, MJDeskStateGameEnd.TIME_WAIT * 1000 );
+        if ( isGoOn )
+        {
+            let self = this ;
+            this.mWaitTimer = setTimeout(() => {
+                self.mDesk.transferState(eMJDeskState.eState_WaitStart) ;
+            }, MJDeskStateGameEnd.TIME_WAIT * 1000 );
+        }
     }
 
     onLevelState() : void 
