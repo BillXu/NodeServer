@@ -27,7 +27,7 @@ class ClientPeer
     protected mCacherMsg : string[] = [] ;
     protected mMaxCacherMsgCnt : number = 0 ;
     protected mReconnectToken : number = 0 ;
-    
+    protected mMaxMsgLeng : number = 0 ;
     get reconnectToken() : number
     {
         return this.mReconnectToken ;
@@ -283,6 +283,11 @@ class ClientPeer
     sendMsg( jsMsg : Object )
     {
         let strmsg = JSON.stringify(jsMsg);
+        if ( strmsg.length > this.mMaxMsgLeng )
+        {
+            this.mMaxMsgLeng = strmsg.length ;
+        }
+        XLogger.debug( "max msg len = " + this.mMaxMsgLeng ) ;
         if ( this.mCacherMsg.length > 0 || ( this.mMaxCacherMsgCnt > 0 && this.isWaitingReconnect() ) )
         {
             this.mCacherMsg.push( strmsg );

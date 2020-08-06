@@ -1,3 +1,4 @@
+import { MJDeskModuleSH } from './deskModule/MJDeskModuleSH';
 import { PlayerBaseData } from './../shared/playerData/PlayerBaseData';
 import { LoginModule } from './LoginModule';
 import { LocalEventEmitter } from './../common/LocalEventEmitter';
@@ -27,6 +28,7 @@ export class RobotClient extends LocalEventEmitter implements IClientNetworkDele
         this.registerModule(new LoginModule() ) ;
         this.registerModule( new BaseDataModule() ) ;
         this.registerModule( new MatchModule() ) ;
+        this.registerModule( new MJDeskModuleSH() ) ;
     }
 
     protected registerModule( pModule : IClientModule )
@@ -37,7 +39,7 @@ export class RobotClient extends LocalEventEmitter implements IClientNetworkDele
             XLogger.warn( "already register module = " + pModule.getModuleName() ) ;
             return ;
         }
-        this.mModules.set(pModule.getModuleName(), m ) ;
+        this.mModules.set(pModule.getModuleName(), pModule ) ;
         pModule.init(this) ;
     }
 
@@ -53,6 +55,7 @@ export class RobotClient extends LocalEventEmitter implements IClientNetworkDele
 
     sendMsg( msgID : eMsgType , msg : Object , dstPort : eMsgPort, dstID : number , lpCallBack? : IOneMsgCallback ) : boolean
     {
+        XLogger.debug( "send msg :  " + eMsgType[msgID] + " detail = " + JSON.stringify(msg) ) ;
         return this.mNet.sendMsg(msgID, msg, dstPort, dstID, lpCallBack ) ;
     }
 

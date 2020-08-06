@@ -398,6 +398,11 @@ export class MJPlayerCardData implements IShareData
 
     protected getCardCnt( card : number ) : number
     {
+        if ( this.mHoldCards[0] == 0 )  // client other hold
+        {
+            return 4 ;
+        }
+
         let cnt = 0 ;
         for ( let c of this.mHoldCards  )
         {
@@ -412,6 +417,11 @@ export class MJPlayerCardData implements IShareData
 
     protected removeCard( card : number , cnt : number = 1 )
     {
+        if ( this.mHoldCards[0] == 0 ) // client other hold card ;
+        {
+            card = 0 ;
+        }
+
         if ( card == this.nJustMoCard )
         {
             this.nJustMoCard = 0 ;

@@ -161,7 +161,7 @@ export enum eMsgType
 
 	MSG_PLAYER_MJ_REQ_DESK_INFO = 300,
 	// client : null
-	// svr : { ret : 0 , info : { MJDeskData } } ;
+	// svr : { ret : 0 ,  MJDeskData  } ;
 
 	MSG_PLAYER_MJ_DESK_PLAYERS_INFO,
 	// svr : { players : { MJPlayerData } } ;
@@ -217,7 +217,7 @@ export enum eMsgType
 
 	MSG_PLAYER_MJ_HU,
 	// client: null ;
-	// svr : { ret : 0 , huCard : number , invokerIdx : idx , maCard : 23 , maScore : 23  ,huInfo : [ idx : 23 , fanxing : number , bei : 2  ], players : [ { hold : number[], offset : 23 , final : 23 } , ... ] }
+	// svr : { ret : 0 , huCard : number , invokerIdx : idx , maCard : 23 , maScore : 23  ,huInfo : [ idx : 23 , fanxing : number , bei : 2  ], players : [ { idx : 2 , hold : number[], offset : 23 , final : 23 } , ... ] }
 	// ret : 0 success , 1 state error , 2 card error 
 	// maCard : mai ma card , or fly cang ying ;
 
@@ -227,7 +227,7 @@ export enum eMsgType
 	// ret : 0 success , 1 state error;
 
 	MSG_PLAYER_MJ_BU_HUA,
-	// svr: { vHua : [23,23] , vCard : [22,56] }
+	// svr: { idx : number , vHua : [23,23] , vCard : [22,56] }
 
 	MSG_PLAYER_MJ_TING,
 	// client { card : 23 }

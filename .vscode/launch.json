@@ -25,6 +25,21 @@
         },
 
         {
+
+          "type": "node",
+
+          "request": "launch",
+
+          "name": "RobotClient",
+
+          //"program": "${workspaceFolder}/build/gateServer/GateSvr.js",
+          "program": "${workspaceFolder}/Robot/index.ts",
+          "preLaunchTask": "tsc: build - Robot/tsconfig.json",
+          //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
+          "outFiles": ["${workspaceFolder}/build/**/*.js"]
+      },
+
+        {
   
             "type": "node",
   

@@ -3,6 +3,7 @@ import  HashMap  from 'hashmap';
 import { key } from './../shared/KeyDefine';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { INetworkDelegate, Network, IOneMsgCallback } from './../common/Net/Network';
+import { join } from 'path';
 
 export interface IClientNetworkDelegate
 {
@@ -109,6 +110,7 @@ export class ClientNetwork implements INetworkDelegate
 
     onLogicMsg( msgID : eMsgType , msg : Object )
     {
+        XLogger.debug( "recieved msgID = " + eMsgType[msgID] + " detail = " + JSON.stringify(msg) ) ;
         let pc = this.mCallBacks.get(msgID) ;
         if ( pc != null )
         {

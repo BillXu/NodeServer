@@ -225,6 +225,7 @@ export class MJPlayerData implements IShareData
     visitInfoForResult() : Object
     {
         let info = {} ;
+        info[key.idx] = this.nIdx;
         info[key.holdCards] = this.cardData.mHoldCards ;        
         info[key.offset] = this.offset;
         info[key.final] = this.score;
