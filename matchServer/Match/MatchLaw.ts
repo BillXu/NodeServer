@@ -1,3 +1,4 @@
+import { MatchCfg, LawRound } from './../../shared/MatchConfigData';
 import { RpcModule } from './../../common/Rpc/RpcModule';
 import { XLogger } from './../../common/Logger';
 import { key } from './../../shared/KeyDefine';
@@ -14,18 +15,29 @@ import { ILawRoundConfig } from './IMatch' ;
 export class MatchLaw implements IMatchLaw
 {
     protected mMatch : Match = null ;
-    protected mGamePort : eMsgPort = 0 ;
     protected mLawIdx : number = 0 ;
-    protected mPlayers = new HashMap<number,MatchPlayer>() // { uid : player }
-    protected mRoundIdx : number = 0 ;
+
     protected mDelegate : IMatchLawDelegate = null ;
-    protected mFinishedPlayers : MatchPlayer[] = [] ;
+    protected mAllPlayers : HashMap<number,MatchPlayer> = null ; // { uid : player }
+
+    protected mPromotedPlayers : MatchPlayer[] = [] ;
     protected mPlayeringPlayers : MatchPlayer[] = [] ;
-    init( match : Match , gamePort : eMsgPort , lawIdx : number ) : void 
+    protected mWaitRelivePlayers : MatchPlayer[] = [] ;
+    protected mRoundCfg : LawRound = null ;
+    init( match : Match ,lawIdx : number ) : void 
     {
         this.mMatch = match ;
-        this.mGamePort = gamePort ;
         this.mLawIdx = lawIdx ;
+    }
+
+    get cfg () : MatchCfg
+    {
+        return this.mMatch.mCfg ;
+    }
+
+    get gamePort() : eMsgPort
+    {
+        return this.cfg.gameType ;
     }
 
     getIdx() : number 
@@ -35,96 +47,50 @@ export class MatchLaw implements IMatchLaw
 
     startLaw( players : HashMap<number,MatchPlayer> ) : void 
     {
-        this.mPlayers.copy(players) ;
+        this.mAllPlayers = players.clone();
         // set init score ;
-        let socre = this.mMatch.mCfg.initScore ;
-        let ps = players.values() ;
+        let socre = this.cfg.initScore ;
+        let ps = this.mPromotedPlayers ;
         for ( let p of ps )
         {
             p.score = socre ;
             p.state = eMathPlayerState.eState_Playing ;
         }
 
-        this.mPlayeringPlayers = clone( players.values() );
-        this.putPlayersToDesk( this.mPlayeringPlayers ) ;
-    }
-
-    onDeskFinished( deskID : number, result : { uid : number , score : number }[] ) : void 
-    {
-        for ( let p of result )
-        {
-            let v = remove(this.mPlayeringPlayers, ( pl : MatchPlayer )=> pl.uid == p.uid );
-            if ( null == v || v.length == 0 )
-            {
-                XLogger.error( "not playing players , how to finish ? matchID = " + this.matchID + " uid = " + p.uid ) ;
-                continue ;
-            }
-
-            let pp = v[0];
-            this.mFinishedPlayers.push(pp) ;
-            pp.scoreRecorder.push(pp.score) ;
-            pp.score = p.score ;
-            pp.stayDeskID = 0 ;
-            pp.state = eMathPlayerState.eState_WaitResult;
-        }
-
-        this.mFinishedPlayers.sort( ( a : MatchPlayer , b : MatchPlayer )=>{
-            let ret = b.score - a.score
-            if ( ret == 0 && b.scoreRecorder.length > 0 && a.scoreRecorder.length > 0 )
-            {
-                return b.scoreRecorder[b.scoreRecorder.length-1] - a.scoreRecorder[a.scoreRecorder.length-1] ;
-            }
-            return ret ;
-        } ) ;  // decs sort ;
-
-        // refresh rankIdx ;
-        this.mFinishedPlayers.forEach(( p : MatchPlayer, idx : number )=>p.rankIdx = idx ) ;
-
-        if ( this.isFinalRound() == false )
-        {
-            let upgradeCnt = this.getUpgradePlayerCnt();
-            // update rankIdx and modify state and remove lose players
-            let vRemoveLosed = remove(this.mFinishedPlayers,( lp : MatchPlayer )=>{ lp.rankIdx >= upgradeCnt } ) ;
-            for ( let rl of vRemoveLosed )
-            {
-                if ( this.mDelegate )
-                {
-                    XLogger.debug( "play out of matchID = " + this.matchID + " uid = " + rl.uid + " rankIdx = " + rl.rankIdx ) ;
-                    this.mDelegate.onPlayerFinish(rl, rl.rankIdx + 1 , this ) ;
-                }
-            }
-        }
-
-        if ( this.mPlayeringPlayers.length == 0 ) // all desk finish , go on next round 
-        {
-            this.onAllDeskFinished();
-        }
+        this.putPlayersToDesk() ;
+        this.mPlayeringPlayers = this.mAllPlayers.values().concat([]) ;
+        this.mPromotedPlayers.length = 0 ;
     }
 
     onRefreshPlayerNetState( uid : number , sessionID : number ,netState : ePlayerNetState  ) : boolean 
     {
-        let p = this.mPlayers.get(uid) ;
-        if ( p == null )
+        let vPlayers = this.mPromotedPlayers.concat(this.mWaitRelivePlayers,this.mPlayeringPlayers ) ;
+        for ( let cp of vPlayers )
         {
-            return false ;
-        }
+            if ( cp.uid == uid )
+            {
+                XLogger.debug( "player update state uid = " + uid + " netState = " + ePlayerNetState[netState] ) ;
+                cp.sessionID = sessionID ;
+                if ( netState != ePlayerNetState.eState_Online )
+                {
+                    XLogger.debug( "player do not online , zero sessionID uid = " + uid ) ;
+                    cp.sessionID = 0 ;
+                }
 
-        p.sessionID = sessionID ;
-        if ( netState != ePlayerNetState.eState_Online )
-        {
-            XLogger.warn( "player do not online , zero sessionID uid = " + uid ) ;
-            p.sessionID = 0 ;
+                if ( cp.stayDeskID != 0 )
+                {
+                    XLogger.debug( "player stayin desk , infor state to deskID = " + cp.stayDeskID + " uid = " + cp.uid + " netState = " + ePlayerNetState[netState] ) ;
+                    let arg = {} ;
+                    arg[key.deskID] = cp.stayDeskID ;
+                    arg[key.uid] = cp.uid ;
+                    arg[key.sessionID] = cp.sessionID ;
+                    arg[key.state] = netState ;
+                    this.getRpc().invokeRpc(this.gamePort, cp.stayDeskID, eRpcFuncID.Func_DeskUpdatePlayerNetState, arg ) ;
+                }
+                return true ;
+            }
         }
-
-        if ( p.stayDeskID != 0 )
-        {
-            let arg = {} ;
-            arg[key.deskID] = p.stayDeskID ;
-            arg[key.uid] = p.uid ;
-            arg[key.sessionID] = p.sessionID ;
-            arg[key.state] = netState ;
-            this.getRpc().invokeRpc(this.mGamePort, p.stayDeskID, eRpcFuncID.Func_DeskUpdatePlayerNetState, arg ) ;
-        }
+        return false ;
     }
 
     setDelegate( pdel : IMatchLawDelegate ) : void 
@@ -135,7 +101,7 @@ export class MatchLaw implements IMatchLaw
     visitPlayerMatchState( jsInfo : Object , sessionID : number ) : boolean
     {
         // check finished ;
-        for ( let pf of this.mFinishedPlayers )
+        for ( let pf of this.mPromotedPlayers )
         {
             if ( pf.sessionID != sessionID )
             {
@@ -162,11 +128,282 @@ export class MatchLaw implements IMatchLaw
         return false ;
     }
 
+    onPlayerWantRelive( sessionID : number ) : boolean
+    {
+
+    }
+
+    onRobotReached( uid : number , sessionID : number )
+    {
+
+    }
+
     // self function 
+    matchingPlayers()
+    {
+        if ( this.mPromotedPlayers.length = 0 )
+        {
+            this.mPromotedPlayers = this.mAllPlayers.values().concat([]) ;
+        }
+
+        let notFullCnt = this.mPromotedPlayers.length % this.cfg.cntPerDesk ;
+        if ( notFullCnt == 0  )
+        {
+            XLogger.debug( "match player cnt prope direct matched ok matchID = " + this.matchID + " playerCnt = " + this.mPromotedPlayers.length ) ;
+            this.mPromotedPlayers = shuffle(this.mPromotedPlayers) ;
+            this.onMatchedOk();
+            return ;
+        }
+
+        // kickout robot first ;
+        let vKickOut = [] ;
+        let idx = this.mPromotedPlayers.findIndex(( p : MatchPlayer )=> p.isRobot ) ;
+        while ( idx != -1 && notFullCnt-- > 0 )
+        {
+            let vkp = this.mPromotedPlayers.splice(idx,1) ;
+            vKickOut.push(vkp[0]) ;
+            idx = this.mPromotedPlayers.findIndex(( p : MatchPlayer )=> p.isRobot ) ;
+        }
+
+        if ( notFullCnt == 0 )
+        {
+            for ( let k of vKickOut )
+            {
+                this.onPlayerLoseOut(k) ;
+            }
+            XLogger.debug( "robot kick out ok  matchID = " + this.matchID + " kick robot cnt = " + vKickOut.length ) ;
+            this.mPromotedPlayers = shuffle(this.mPromotedPlayers) ;
+            this.onMatchedOk();
+            return ;
+        }
+
+        // not enough robot kick out 
+        let vp = this.mPromotedPlayers ;
+        vKickOut.forEach((ko )=>vp.push(ko)) ; // push kicked out back ;
+        let needRobotCnt = this.cfg.cntPerDesk - notFullCnt ;
+        XLogger.warn( "not enough robot kick out , need more robot to join matchID = " + this.matchID + " need robot cnt = " + needRobotCnt ) ;
+    }
+
+    onMatchedOk()
+    {
+        if ( this.mRoundCfg == null )
+        {
+            this.mRoundCfg = this.cfg.getLawRound(0) ;
+        }
+        else
+        {
+            this.mRoundCfg = this.cfg.getLawRound(this.mRoundCfg.idx + 1 ) ;
+        }
+
+        if ( this.mRoundCfg == null )
+        {
+            XLogger.error( "already finished , why come to here matchID = " + this.matchID + " cfgID = " + this.cfg.cfgID ) ;
+            return ;
+        }
+
+        this.mPlayeringPlayers = this.mPromotedPlayers.concat([]) ;
+        this.mPromotedPlayers.length = 0 ;
+        this.putPlayersToDesk(this.mPlayeringPlayers);
+        
+        for ( let p of this.mWaitRelivePlayers )
+        {
+            this.mAllPlayers.delete(p.uid) ;
+        }
+        this.mWaitRelivePlayers.length = 0 ;
+
+        // reset rankIdx ;
+        for ( let p of this.mPlayeringPlayers )
+        {
+            p.lastRankIdx = p.rankIdx ;
+            p.rankIdx = -1 ;
+        }
+    }
+
+    onDeskFinished( deskID : number, result : { uid : number , score : number }[] ) : void 
+    {
+        let vDeskP : MatchPlayer[] = [] ;
+        for ( let p of result )
+        {
+            let v = remove(this.mPlayeringPlayers, ( pl : MatchPlayer )=> pl.uid == p.uid );
+            if ( null == v || v.length == 0 )
+            {
+                XLogger.error( "not playing players , how to finish ? matchID = " + this.matchID + " uid = " + p.uid ) ;
+                continue ;
+            }
+
+            let pp = v[0];
+            pp.score = p.score ;
+            pp.stayDeskID = 0 ;
+            vDeskP.push(pp) ;
+        }
+
+        // process promoted
+        if ( this.mRoundCfg.isByDesk )
+        {
+            vDeskP.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
+                if ( a.score != b.score )
+                {
+                    return b.score - a.score ;
+                }
+                return a.signUpTime - b.signUpTime ;
+            } );
+
+            for ( let idx = 0 ; idx < vDeskP.length ; ++idx )
+            {
+                if ( idx < this.mRoundCfg.promoteCnt )
+                {
+                    vDeskP[idx].state = eMathPlayerState.eState_Promoted;
+                    this.mPromotedPlayers.push( vDeskP[idx] ) ;
+                }
+                else
+                {
+                    vDeskP[idx].rankIdx = this.mPromotedPlayers.length + idx - this.mRoundCfg.promoteCnt;
+                    this.onPlayerLoseOut( vDeskP[idx] );
+                }
+            }
+
+            // update promated player idx ;
+            this.mPromotedPlayers.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
+                if ( a.score != b.score )
+                {
+                    return b.score - a.score ;
+                }
+                return a.signUpTime - b.signUpTime ;
+            } );
+
+            for ( let ridx = 0 ; ridx < this.mPromotedPlayers.length ; ++ ridx )
+            {
+                let p = this.mPromotedPlayers[ridx] ;
+                if ( p.rankIdx != ridx )
+                {
+                    p.rankIdx = ridx ;
+                    this.sendResultToPlayer(p, false ) ;
+                }
+            }
+        }
+        else
+        {
+            for ( let idx = 0 ; idx < vDeskP.length ; ++idx )
+            {
+                vDeskP[idx].state = eMathPlayerState.eState_Promoted;
+                this.mPromotedPlayers.push( vDeskP[idx] ) ;
+            }
+
+            this.mPromotedPlayers.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
+                if ( a.score != b.score )
+                {
+                    return b.score - a.score ;
+                }
+                return a.signUpTime - b.signUpTime ;
+            } );
+
+            // update ranker idx and inform client and process lose out ;
+            let vR : MatchPlayer[]= [] ;
+            for ( let ridx = 0 ; ridx < this.mPromotedPlayers.length ; ++ ridx )
+            {
+                let p = this.mPromotedPlayers[ridx] ;
+                if ( p.rankIdx != ridx )
+                {
+                    p.rankIdx = ridx ;
+                    if ( p.rankIdx >= this.mRoundCfg.promoteCnt )
+                    {
+                        vR.push(p) ;
+                        this.onPlayerLoseOut(p) ;
+                    }
+                    else
+                    {
+                        this.sendResultToPlayer(p, false ) ;
+                    }
+                }
+            }
+
+            remove(this.mPromotedPlayers,(ppm )=>{
+                let idx = vR.findIndex( (v)=>v.uid == ppm.uid ) ;
+                return idx != -1 ;
+            } ) ;
+        }
+
+        // check if all desk finished ;
+        if ( this.mPlayeringPlayers.length == 0 )
+        {
+            XLogger.debug( "all desk finished matchID = " + this.matchID ) ;
+            this.onAllDeskFinished();
+        }
+        else
+        {
+            XLogger.debug( "desk finished of matchID = " + this.matchID + " deskID = " + deskID + " left playercnt = " + this.mPlayeringPlayers.length ) ;
+        }
+    }
+
+    protected onPlayerLoseOut( player : MatchPlayer ) : void
+    {
+        if ( null == player )
+        {
+            XLogger.warn( "player is null , how to lose out , matchID = " + this.matchID ) ;
+            return ;
+        }
+
+        player.state = eMathPlayerState.eState_Lose;
+        // send msg info client , if can relive , must not give prize ;
+        this.sendResultToPlayer(player, true ) ;
+
+        if ( this.mRoundCfg.canRelive == false || player.isRobot )
+        {
+            if ( player.isRobot )
+            {
+                XLogger.debug( "robot do not relive , just delete player uid = " + player.uid ) ;
+            }
+            else
+            {
+                XLogger.debug( "this round can't relive , just delete player uid = " + player.uid ) ;
+            }
+            
+            this.deleteMatchPlayer( player.uid ) ;
+        }
+        else
+        {
+            XLogger.debug( "push player to wait relive vector uid = " + player.uid + " matchID = " + this.matchID ) ;
+            this.mWaitRelivePlayers.push(player) ;
+        }
+    }
+
+    protected deleteMatchPlayer( uid : number )
+    {
+        this.mAllPlayers.delete( uid ) ;
+
+        let pl = this.mWaitRelivePlayers.findIndex(( pw )=>pw.uid == uid ) ;
+        if ( pl == -1 )
+        {
+            XLogger.warn( "why already delete player from wait reliveVector uid = " + uid + " matchID = " + this.matchID + " roundIdx = " + this.mRoundCfg.idx ) ;
+            return ;
+        }
+        this.mWaitRelivePlayers.splice(pl,1) ;
+    }
+
+    waitRelive()
+    {
+
+    }
+
+    onWaitReliveFinish()
+    {
+
+    }
+
+    onMatchOvered()
+    {
+
+    }
+
+    protected sendResultToPlayer( player : MatchPlayer , isLoseOut : boolean )
+    {
+         // send msg info client , if can relive , must not give prize ;
+    }
+
     protected putPlayersToDesk( vPlayer : MatchPlayer[] )
     {
         // cacute desk need ; 
-        let cntPerDesk = this.getPlayerCntPerDesk();
+        let cntPerDesk = this.cfg.cntPerDesk ;
         if ( vPlayer.length % cntPerDesk != 0 )
         {
             XLogger.error( "put in to desk but player cnt is not porper for desk , cnt = " + vPlayer.length + " cntPerDesk = " + cntPerDesk ) ;
@@ -181,16 +418,17 @@ export class MatchLaw implements IMatchLaw
         arg[key.matchID] = this.matchID ;
         arg[key.lawIdx] = this.getIdx();
         arg[key.deskCnt] = deskCnt ;
-        arg[key.diFen] = this.getDiFenForThisRound();
-        arg[key.roundCnt] = this.getRoundForThisRound();
+        arg[key.diFen] = this.mRoundCfg.diFen;
+        arg[key.roundCnt] = this.mRoundCfg.gameRoundCnt;
+        arg[key.matchRoundIdx] = this.mRoundCfg.idx;
+        arg[key.matchRoundCnt] = this.cfg.getLawRoundCnt();
         let self = this ;
-        rpc.invokeRpc(this.mGamePort, random(100,false), eRpcFuncID.Func_CreateMatchDesk, arg,(resut : Object )=>{
+        rpc.invokeRpc(this.gamePort, random(100,false), eRpcFuncID.Func_CreateMatchDesk, arg,(resut : Object )=>{
             // push player to desk ;
             let vDesks : number[] = resut[key.deskIDs] ;
-            let vSFPlayers = shuffle(vPlayer) ;
             let idx = 0 ;
             let deskIdx = 0 ;
-            while ( idx < vSFPlayers.length )
+            while ( idx < vPlayer.length )
             {
                 if ( deskIdx >= vDesks.length )
                 {
@@ -201,31 +439,30 @@ export class MatchLaw implements IMatchLaw
                 let cnt = cntPerDesk ;
                 let vPlayesTmp = [] ;
                 let deskID = vDesks[deskIdx++] ;
-                while ( cnt-- > 0 && idx < vSFPlayers.length )
+                while ( cnt-- > 0 && idx < vPlayer.length )
                 {
-                    let p = vSFPlayers[idx++];
+                    let p = vPlayer[idx++];
                     p.stayDeskID = deskID;
                     p.state = eMathPlayerState.eState_Playing ;
                     let js = {} ;
                     js[key.uid] = p.uid ;
                     js[key.sessionID] = p.sessionID ;
                     js[key.score] = p.score ;
+                    js[key.isRobot ] = p.isRobot ? 1 : 0 ;
                     vPlayesTmp.push(js) ;
                 }
 
                 if ( vPlayesTmp.length != cntPerDesk )
                 {
-                    XLogger.warn( "a desk is not full cnt = " + vPlayesTmp.length + " total cnt = " + vSFPlayers.length + " matchID = " + self.matchID ) ;
+                    XLogger.warn( "a desk is not full cnt = " + vPlayesTmp.length + " total cnt = " + vPlayer.length + " matchID = " + self.matchID ) ;
                 }
 
                 // put to desk ;
                 let argt = {} ;
-                //argt[key.matchID] = self.matchID ;
-                // argt[key.lawIdx] = self.getIdx();
                 argt[key.deskID] = deskID ;
                 argt[key.players] = vPlayesTmp ;
                 XLogger.debug( "rpc call put player to desk matchID = " + self.matchID + " deskID = " + deskID + " lawIdx = " + self.getIdx() + " players = " + JSON.stringify(vPlayesTmp) ) ;
-                rpc.invokeRpc(self.mGamePort, deskID, eRpcFuncID.Func_PushPlayersToDesk, argt ) ;
+                rpc.invokeRpc(self.gamePort, deskID, eRpcFuncID.Func_PushPlayersToDesk, argt ) ;
             }
 
         } ) ;
@@ -234,133 +471,17 @@ export class MatchLaw implements IMatchLaw
 
     protected onAllDeskFinished()
     {
-        if ( this.isFinalRound() )
-        {
-            if ( this.isGuaFenMode() )
-            {
-                let gufenCnt = this.getGuaFenPlayerCnt();
-                let vRemoveLosed = remove(this.mFinishedPlayers,( lp : MatchPlayer )=>{ lp.rankIdx >= gufenCnt; } ) ;
-                for ( let rl of vRemoveLosed )
-                {
-                    XLogger.debug( "can not join guaFen ,play out of matchID = " + this.matchID + " uid = " + rl.uid + " rankIdx = " + rl.rankIdx ) ;
-                    this.mDelegate.onPlayerFinish(rl, rl.rankIdx + 1 , this ) ;
-                }
-                XLogger.debug( "match guaFen mode finished matchID = " + this.matchID ) ;
-                if ( this.mFinishedPlayers.length != gufenCnt )
-                {
-                    XLogger.warn("this.mFinishedPlayers.length != gufenCnt , matchID = " + this.matchID + " cfgID = " + this.mMatch.mCfgID ) ;
-                }
-                this.mDelegate.onGuaFenResultFinished(this.mFinishedPlayers, this ) ;
-            }
-            else
-            {
-                XLogger.debug(" match finish matchID = " + this.matchID ) ;
-                if ( this.mFinishedPlayers.length != this.getPlayerCntPerDesk() )
-                {
-                    XLogger.warn("this.mFinishedPlayers.length != this.getPlayerCntPerDesk() , matchID = " + this.matchID + " cfgID = " + this.mMatch.mCfgID ) ;
-                }
-
-                for ( let v of this.mFinishedPlayers )
-                { 
-                    this.mDelegate.onPlayerFinish(v, v.rankIdx + 1, this ) ;
-                }
-            }
-
-            XLogger.debug( "on law finished matchID = " + this.matchID + " idx = " + this.getIdx() ) ;
-            this.mDelegate.onLawFinished( this ) ;
-            this.clear();
-        }
-        else
-        {
-            // if not finish all , go on next round ;
-            ++this.mRoundIdx ;
-            if ( this.mPlayeringPlayers.length != 0 )
-            {
-                XLogger.warn( "playing players not equal zero ? how finish this law ? matchID = " + this.matchID ) ;
-            }
-            this.mPlayeringPlayers.length = 0 ;
-            let tmp = this.mPlayeringPlayers ;
-            this.mPlayeringPlayers = this.mFinishedPlayers;
-            this.mFinishedPlayers = tmp;
-            this.putPlayersToDesk(this.mPlayeringPlayers) ;
-        }
+        // if final round give all promted prize and finish match ;
+        // if can relife , give some time relive ;
+        // if can not relive direct matching a bit late if need ?;
     }
 
     protected clear()
     {
-        this.mPlayers.clear();
-        this.mRoundIdx = 0 ;
-        this.mFinishedPlayers.length = 0 ;
+        this.mAllPlayers.clear();
+        this.mPromotedPlayers.length = 0 ;
         this.mPlayeringPlayers.length = 0 ;
-    }
-
-    protected getPlayerCntPerDesk() : number
-    {
-        return this.mMatch.mCfg.playerCntPerDesk || 4 ;
-    }
-
-    protected getDiFenForThisRound() : number 
-    {
-        return this.getLawConfigForThisRound().diFen || 1 ;
-    }
-
-    protected getRoundForThisRound() : number
-    {
-        return this.getLawConfigForThisRound().gameRoundCnt || 4 ;
-    }
-
-    protected getUpgradePlayerCnt() : number
-    {
-        let cfg = this.getLawConfigForThisRound() ;
-        return cfg.upgradeCnt ;
-    }
-
-    protected getLawConfigForThisRound() : ILawRoundConfig
-    {
-        let vcfgs = this.mMatch.mCfg.laws ;
-        if ( vcfgs == null || vcfgs.length == 0 )
-        {
-            XLogger.error( "match law can not be null cfgID = " + this.mMatch.mCfgID ) ;
-            return null ;
-        }
-
-        let usround = null ;
-        for ( let v of vcfgs )
-        {
-            if ( v.roundIdx == this.mRoundIdx )
-            {
-                usround = v ;
-                break ;
-            }
-        }
-
-        if ( usround == null )
-        {
-            XLogger.error( "can not find proper law config round idx = " + this.mRoundIdx + " cfgID = " + this.mMatch.mCfgID ) ;
-        }
-        return usround ;
-    }
-
-    protected isFinalRound()
-    {
-        let vcfgs = this.mMatch.mCfg.laws ;
-        if ( vcfgs == null || vcfgs.length == 0 )
-        {
-            XLogger.error( "match law can not be null cfgID = " + this.mMatch.mCfgID ) ;
-            return null ;
-        }
-
-        let usround = null ;
-        for ( let v of vcfgs )
-        {
-            if ( v.roundIdx == this.mRoundIdx + 1 )
-            {
-                usround = v ;
-                break ;
-            }
-        }
-
-        return usround == null ;
+        this.mRoundCfg = null ;
     }
 
     protected get matchID() : number
@@ -371,15 +492,5 @@ export class MatchLaw implements IMatchLaw
     protected getRpc() : RpcModule
     {
         return this.mMatch.mMatchMgr.getSvrApp().getRpc();
-    }
-
-    protected isGuaFenMode() : boolean
-    {
-        return this.getGuaFenPlayerCnt() > 0 ;
-    }
-
-    protected getGuaFenPlayerCnt() : number
-    {
-        return this.mMatch.mCfg.guaFenPlayerCnt || 0 ;
     }
 }

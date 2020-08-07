@@ -26,11 +26,11 @@ export class PlayerSimpleInfoCacher extends IModule
         }
 
         let reqID = msg[key.reqUID] ;
-        let selfSessionID = msg[key.selfSessionID] ;
+        let selfSessionID = orgID;
         if ( reqID % this.getSvrApp().getCurPortMaxCnt() != this.getSvrApp().getCurSvrIdx() )
         {
             XLogger.warn( "uid is never in this server , uid = " + reqID + " target uid = " + targetID + " target id should equal uid "  ) ;
-            this.sendMsg(msgID, { ret : 1 } , eMsgPort.ID_MSG_PORT_CLIENT, selfSessionID, orgID ) ;
+            this.sendMsg(msgID, { ret : 1 } , eMsgPort.ID_MSG_PORT_CLIENT, orgID, orgID ) ;
             return true;
         }
 

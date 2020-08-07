@@ -199,6 +199,11 @@ export class MJDeskSHNew extends MJDesk
         msg[key.huInfo] = vHuInfo ;
         msg[key.players] = this.makePlayersInfoForResult();
         this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_HU, msg ) ;
+        
+        if ( isBuGang == false )
+        {
+            this.mDeskInfo.lastChuIdx = -1;
+        }
     }
 
     protected makePlayersInfoForResult() : Object
@@ -243,7 +248,9 @@ export class MJDeskSHNew extends MJDesk
         
         msg[key.holdCards] = p.getHoldCards();
         this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_PLAYER_MJ_TING, msg ) ;
-        return false ;
+
+        this.mDeskInfo.lastChuIdx = p.nIdx;
+        return true ;
     }
 
     checkPlayerBuHua( idx : number ) : number

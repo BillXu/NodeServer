@@ -29,11 +29,11 @@ export enum eRpcFuncID
     Func_SetPlayingMatch,
     // arg { uid : 234 , matchID : 234, isStart : 0  }  // start or end ;
     Func_DeductionMoney,
-    // arg : { uid : 2345 , sessionID : 23 , moneyType : eItemType , cnt : 234 , comment : "descript why this option" }
+    // arg : { uid : 2345 , sessionID : 23 , matchFee : IMoneyType , comment : "descript why this option" }
     // result : { ret : 0 , moneyType : eItemType , cnt : 234 }
     // ret : 0 , success , 1 uid error , 2 money not enough ;
-    Func_addMoney,
-    // arg : { uid : 2345, moneyType : eItemType , cnt : 234,comment : "descript why this option" }
+    Func_ReturnBackMatchFee,
+    // arg : { uid : 2345, matchFee : IMoney ,comment : "descript why this option" }
     Func_CheckUID, // data svr ;
     // arg : { uid : 235, sessionID : 234 }
     // result : { ret : 0 }
@@ -45,10 +45,10 @@ export enum eRpcFuncID
     Func_MatchResult,
     // arg : { uid : 235 , rankIdx : 2 ,  reward : IMoney[] , matchID : 2345 , matchName : "this is a match" }
     Func_CreateMatchDesk,
-    // arg : { matchID : 234 , lawIdx : 2 , deskCnt : 4 , roundCnt : 2  ,diFen : 23 }
+    // arg : { matchID : 234 , lawIdx : 2 , deskCnt : 4 , roundCnt : 2  ,diFen : 23, matchRoundIdx : 0 , matchRoundCnt : 23 }
     // result : { deskIDs : number[] }
     Func_PushPlayersToDesk,
-    // arg : { deskID : 2 , players : { uid : 234 , sessionID : 234 , score : 234 }[] }
+    // arg : { deskID : 2 , players : { uid : 234 , sessionID : 234 , score : 234, isRobot : 0 }[] }
     Func_InformDeskResult,
     // arg : { matchID : 234 , lawIdx : 23 , deksID : 2 , players : { uid : 23 , score : 23 }[] }
     Func_MatchUpdatePlayerNetState,

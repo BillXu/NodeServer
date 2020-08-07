@@ -16,7 +16,7 @@ export class MJDeskMgrSH extends DeskMgr
         super.onRegisterToSvrApp(svrApp) ;
         // arg : { matchID : 234 , lawIdx : 2 , deskCnt : 4 , roundCnt : 2  ,diFen : 23 }
         let d = this.createDesk();
-        d.init(200, 1, 2, this ,this ) ;
+        d.init(200, 1, 20, this ,this ) ;
         d.setMatchInfo( 200, 0 ) ;
         this.mDesks.set(d.deskID, d ) ;
 

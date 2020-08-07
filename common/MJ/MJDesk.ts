@@ -410,7 +410,7 @@ export abstract class MJDesk implements IDesk
                 break;
             case eMJActType.eMJAct_Hu:
                 {
-                    return this.canPlayerHu(idx, card, false, haveGang, invokerIdx)
+                    return this.canPlayerHu(idx, card, false, haveGang, invokerIdx) ;
                 }
                 break;
             default:
@@ -488,6 +488,7 @@ export abstract class MJDesk implements IDesk
             p.onGameStart();
         }
 
+        this.mDeskInfo.lastChuIdx = -1 ;
         this.mDeskInfo.vDice.length = 0 ;
         this.mDeskInfo.vDice.push( random(5) + 1 , random(5) + 1 ) ;
         let msg = {} ;
@@ -680,6 +681,7 @@ export abstract class MJDesk implements IDesk
             this.sendMsgToPlayer(player.sessionID, eMsgType.MSG_PLAYER_MJ_CHU , msg ) ; 
             return false ;
         }
+        this.mDeskInfo.lastChuIdx = player.nIdx;
         this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_CHU , msg ); 
         return true ;
     }
@@ -710,6 +712,7 @@ export abstract class MJDesk implements IDesk
         {
             this.getPlayerByIdx(invokerIdx).beEatPengGang(card) ;
         }
+        this.mDeskInfo.lastChuIdx = -1;
     }
 
     onPlayerAnGang( player : MJPlayerData , card : number , orgInvokerIdx : number ) : boolean
@@ -755,6 +758,8 @@ export abstract class MJDesk implements IDesk
 
     onPlayerEat( actIdx : number , card : number , eatWith : number[], invokerIdx : number ) : void
     {
+        this.mDeskInfo.lastChuIdx = -1;
+
         let msg = {} ;
         msg[key.card] = card ;
         msg[key.idx] = actIdx ;
@@ -767,6 +772,8 @@ export abstract class MJDesk implements IDesk
 
     onPlayerPeng( actIdx : number , card : number , invokerIdx : number ) : void
     {
+        this.mDeskInfo.lastChuIdx = -1;
+
         let msg = {} ;
         msg[key.card] = card ;
         msg[key.idx] = actIdx ;
@@ -778,6 +785,8 @@ export abstract class MJDesk implements IDesk
 
     onPlayerMingGang( actIdx : number , card : number , invokerIdx : number ) : void
     {
+        this.mDeskInfo.lastChuIdx = -1;
+
         let msg = {} ;
         msg[key.card] = card ;
         msg[key.idx] = actIdx ;

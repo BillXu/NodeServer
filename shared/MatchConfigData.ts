@@ -65,13 +65,13 @@ export class GuaFenReward
     }
 }
 
-
 export class LawRound
 {
     idx : number = 0 ;
     gameRoundCnt : number = 2 ;
     canRelive : boolean = false ;
     reliveTicketCnt : number = 1 ;
+    diFen : number = 10 ;
     promoteCnt : number = 2 ;
     isByDesk : boolean = false ;
     
@@ -83,17 +83,19 @@ export class LawRound
         this.reliveTicketCnt = js["reliveTicketCnt"] || 0 ;
         this.promoteCnt = js["promoteCnt"] ;
         this.isByDesk = js["isByDesk"] == 1 ;
+        this.diFen = js["diFen"] ;
     }
 
     toJs() : Object
     {
         let js = {} ;
-        js[""] = this.idx ;
+        js["idx"] = this.idx ;
         js["gameRoundCnt"] = this.gameRoundCnt ;
         js["canRelive"] = this.canRelive ? 1 : 0 ;
         js["reliveTicketCnt"] = this.reliveTicketCnt ;
         js["promoteCnt"] = this.promoteCnt ;
         js["isByDesk"] = this.isByDesk ? 1 : 0 ;
+        js["diFen"] = this.diFen ;
         return js ;
     }
 }
@@ -112,7 +114,7 @@ export class MatchCfg
     vRewards : RewardItem[] = [] ;
     mGuaFenReward : GuaFenReward = null ;
     vLawRounds : LawRound[] = [] ;
-
+    initScore : number = 0 ;
     parse( js : Object )
     {
         this.cfgID = js["cfgID"] ;
@@ -122,6 +124,7 @@ export class MatchCfg
             this.fee = new IMoney();
         }
         this.fee.parse( js["fee"] ) ;
+        this.initScore = js["initScore"] ;
         this.gameType = js["gameType"] ;
         this.matchType = js["matchType"] ;
         this.cntPerDesk = js["cntPerDesk"] ;
@@ -161,6 +164,7 @@ export class MatchCfg
         js["matchType"] = this.matchType;
         js["cntPerDesk"] = this.cntPerDesk ;
         js["playerCntLimit"] = this.playerCntLimit ;
+        js["initScore"] = this.initScore;
         js["startTime"] = this.startTime;
         js["repeatTime"] = this.repeatTime;
         let vR : Object[] = []  ;
@@ -215,8 +219,33 @@ export class MatchCfg
         return null ;
     }
 
+    getLawRoundCnt()
+    {
+        return this.vLawRounds.length ;
+    }
+
     isLastRound( idx : number ) : boolean
     {
         return null == this.getLawRound( idx + 1 ) ;
+    }
+
+    getTopLimit() : number
+    {
+        if ( this.playerCntLimit.length < 1 )
+        {
+            console.error("player cnt limt array length is < 1") ;
+            return 100 ;
+        }
+        return this.playerCntLimit[1] ;
+    }
+
+    getLowLimit() : number
+    {
+        if ( this.playerCntLimit.length == 0 )
+        {
+            console.error("player cnt limt array length is zero") ;
+            return 100 ;
+        }
+        return this.playerCntLimit[0] ;
     }
 }

@@ -78,7 +78,7 @@ export enum eMsgType
 	// ip : other device 's ip ;
 
 	MSG_REQUEST_PLAYER_SIMPLE_INFO, // request player simpleInfo  
-	// client : { reqUID : 23 , selfSessionID : 234 }
+	// client : { reqUID : 23  }
 	// svr : { ret : 0 , uid : 23 , nickeName : "hello" , headUrl : "http://weshg.wx.com",sex : 1 ,isOnline : 0  }
 	// ret : 0 success , 1 can not find target player , uid should equal target id ; 
 

@@ -1,3 +1,4 @@
+import { MatchCfg } from './../../shared/MatchConfigData';
 import { ePlayerNetState } from './../../common/commonDefine';
 import { IMoney } from './../../shared/IMoney';
 import { eMatchType, eItemType } from './../../shared/SharedDefine';
@@ -33,7 +34,7 @@ export interface IMatchConfig
 
 export interface IMatch
 {
-    init( cfg : IMatchConfig , matchID : number ,mgr : MatchMgr ) : void;
+    init( cfg : MatchCfg , matchID : number ,mgr : MatchMgr ) : void;
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number ) : boolean ;
     onVisitInfo( jsInfo : Object ) : void ;
     onDeskFinished( lawIdx : number , deskID : number, result : { uid : number , score : number }[] ) : void ;
@@ -41,4 +42,5 @@ export interface IMatch
     getType() : eMatchType ; 
     getMatchID() : number ;
     isClosed() : boolean ;
+    clear() : void ;
 }

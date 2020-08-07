@@ -6,10 +6,10 @@ export class MatchQuick extends Match
     onPlayerSignedUp( uid : number , sessionID : number )
     {
         super.onPlayerSignedUp(uid, sessionID ) ;
-        if ( this.mSignedPlayers.count() >= this.mCfg.playerCntLimt[0] )
+        if ( this.mEnrollPlayers.count() >= this.mCfg.getLowLimit() )
         {
             this.doEneterMatchBattle();
         }
-        this.mState = eMatchState.eMatch_SignUp ;
+        this.mState = eMatchState.eMatch_Enroll ;
     }
 }

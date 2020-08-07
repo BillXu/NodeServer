@@ -12,7 +12,6 @@ import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { IModule } from "../common/IModule";
 import { eRpcFuncID } from '../common/Rpc/RpcFuncID';
 import { IServerApp } from '../common/IServerApp';
-import { del } from 'request';
 
 export class MatchMgr extends IModule
 {
@@ -113,8 +112,10 @@ export class MatchMgr extends IModule
     // self function 
     deleteMatch( matchID : number )
     {
-        if ( this.mMatchs.has(matchID) )
+        let m = this.mMatchs.get( matchID ) ;
+        if ( m != null )
         {
+            m.clear();
             this.mMatchs.delete( matchID ) ;
         }
         else

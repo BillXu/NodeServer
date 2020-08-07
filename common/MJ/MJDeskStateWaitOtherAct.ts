@@ -195,6 +195,11 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
             p.addLouPeng(card);
         }
 
+        if ( eMJActType.eMJAct_Hu != act && this.mDesk.canPlayerDoActWithOtherCard( p.nIdx, eMJActType.eMJAct_Hu ,card , this.mData.mInvokerIdx , this.mData.mGangCnt > 0 ,this.mChosedEatWith ) )
+        {
+            p.addLouHu(card) ;
+        }
+
         // msg[key.ret] = 0 ;
         // this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
 

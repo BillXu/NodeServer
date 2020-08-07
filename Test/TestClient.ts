@@ -1,3 +1,5 @@
+import { MatchCfg } from './../shared/MatchConfigData';
+import { IMoney } from './../shared/IMoney';
 import { MailData, eMailState } from './../shared/playerData/PlayerMailData';
 import { XLogger } from './../common/Logger';
 import { eAccountType, eSex } from './../shared/SharedDefine';
@@ -228,11 +230,13 @@ let c = new TestClient();
 // c.init("ws://localhost:3001", "wechatNameNew2" ) ;
  //c.init("ws://localhost:3001", "wechatNameNew1" ) ;
  //c.init("ws://localhost:3001", "wechatNameNew0" ) ;
+// let p = {"cfgID":8,"name":"123","fee":{"1":100},"gameType":0,"matchType":1,"cntPerDesk":4,"playerCntLimit":[5,10],"startTime":"2020-08-07T16:36","repeatTime":60,"vRewards":[{"startIdx":"1","endIdx":"1","rewards":{"5":100},"desc":"\u7b2c\u4e00\u540d100\u7ea2\u5305"},{"startIdx":"2","endIdx":"3","rewards":{"5":30},"desc":"2-3\u540d30\u7ea2\u5305"}],"mGuaFenReward":{"playerCnt":"20","reward":{"5":100},"desc":"12345"},"vLawRounds":[{"idx":1,"gameRoundCnt":3,"canRelive":0,"reliveTicketCnt":0,"promoteCnt":2,"isByDesk":1},{"idx":2,"gameRoundCnt":3,"canRelive":0,"reliveTicketCnt":0,"promoteCnt":2,"isByDesk":1},{"idx":3,"gameRoundCnt":3,"canRelive":1,"reliveTicketCnt":1,"promoteCnt":2,"isByDesk":1}]}
 
- let xhs = new XMLHttpRequest() ;
- xhs.open("get", "http://www.baidu.com") ;
- xhs.onloadend = ( ev : any )=>
- {
+// let mcfg = new MatchCfg();
+// mcfg.parse(p) ;
 
- }
-
+let v = [2,3,5] ;
+let v2 = [ 4,8] ;
+let v9 = [1,9] ;
+let v0 = [];
+console.log( v + " v " + v2 + " v2 " + v9 + "v9 " + v0  ) ;

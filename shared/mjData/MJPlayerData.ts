@@ -14,6 +14,7 @@ export class MJPlayerData implements IShareData
     offset : number = 0 ;
     cardData : MJPlayerCardData = null ;
     vLouPeng : number[] = [] ;
+    vLouHu : number[] = [] ;
     huCard : number = 0 ;
 
     init( uid : number , sessionID : number , score : number ,idx? : number )
@@ -36,6 +37,7 @@ export class MJPlayerData implements IShareData
         js[key.score] = this.score ; 
         js[key.state] = this.state ;
         js[key.vLouPeng] = this.vLouPeng ;
+        js[key.vLouHu] = this.vLouHu||[];
         js[key.isOnline ] = this.isOnline ? 1 : 0 ;
         if ( this.cardData != null )
         {
@@ -53,6 +55,7 @@ export class MJPlayerData implements IShareData
         this.state = js[key.state] ;
         this.vLouPeng = js[key.vLouPeng] || [] ;
         this.isOnline = js[key.isOnline] == 1 ;
+        this.vLouHu = js[key.vLouHu] || [] ;
         if ( this.cardData == null )
         {
             this.cardData = this.createMJPlayerCardData();
@@ -67,6 +70,11 @@ export class MJPlayerData implements IShareData
     addLouPeng( card : number )
     {
         this.vLouPeng.push(card) ;
+    }
+
+    addLouHu( card : number )
+    {
+        this.vLouHu.push(card) ;
     }
 
     createMJPlayerCardData() : MJPlayerCardData
@@ -109,6 +117,7 @@ export class MJPlayerData implements IShareData
     {
         this.cardData.onMoCard(card) ;
         this.vLouPeng.length = 0 ;
+        this.vLouHu.length = 0 ;
     }
 
     onChu( card : number ) : boolean

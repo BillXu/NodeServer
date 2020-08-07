@@ -11,7 +11,7 @@ export interface IMatchLawDelegate
 
 export interface IMatchLaw
 {
-    init( match : Match , gamePort : eMsgPort , lawIdx : number ) : void ;
+    init( match : Match , lawIdx : number ) : void ;
     getIdx() : number ;
     startLaw( players : HashMap<number,MatchPlayer> ) : void ;
     onDeskFinished( deskID : number, result : { uid : number , score : number }[] ) : void ;

@@ -17,6 +17,7 @@ export class MJDeskData implements IShareData
     stateInfo : Object = {}; // key value depoend on state , diffent state , diffent info ;
     leftCardCnt : number = 0 ;
     vDice : number[] = [] ;
+    lastChuIdx : number = -1 ;
 
     toJson() : Object 
     {
@@ -34,6 +35,7 @@ export class MJDeskData implements IShareData
         js[key.leftCardCnt] = this.leftCardCnt ;
         js[key.vDice] = this.vDice ;
         js[key.port] = this.gamePort ;
+        js[key.lastChuIdx] = this.lastChuIdx ;
         return js ;
     }
 
@@ -52,5 +54,6 @@ export class MJDeskData implements IShareData
         this.leftCardCnt = js[key.leftCardCnt] ;
         this.vDice = js[key.vDice] ;
         this.gamePort = js[key.port] ;
+        this.lastChuIdx = js[key.lastChuIdx] ;
     }
 }

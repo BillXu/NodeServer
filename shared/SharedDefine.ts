@@ -39,11 +39,9 @@ export enum eMatchType
 
 export enum eMatchState
 {
-    eMatch_Stoped,  // did not open during some time ; 
-    eMatch_WaitOpenSignUp,
-    eMatch_SignUp,
+    eMatch_Enroll,
     eMatch_Playing,
-    eMatch_Closed,
+    eMatch_Finished,
     eMatch_Max,
 }
 
@@ -68,5 +66,5 @@ export class G_ARG
 {
     static TIME_MJ_BU_HUA : number = 0.8 ;
     static TIME_MJ_WAIT_ACT : number = 100000 ;
-    static TIME_MJ_WAIT_ACT_TUOGUAN : number = 300000 ; 
+    static TIME_MJ_WAIT_ACT_TUOGUAN : number = 3 ; 
 }

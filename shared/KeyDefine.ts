@@ -39,6 +39,8 @@ export class key
     static treeCDEndTime = "treeCDEndTime" ;
     static matchs = "matchs" ;
     static matchID = "matchID" ;
+    static matchRoundIdx = "matchRoundIdx";
+    static matchRoundCnt = "matchRoundCnt" ;
     static matchName = "matchName" ;
     static moneyType = "moneyType" ;
     static comment = "comment" ;
@@ -84,6 +86,7 @@ export class key
     static port = "port" ;
     static isTing = "isTing" ;
     static vLouPeng = "vLouPeng" ;
+    static vLouHu = "vLouHu" ;
     static justChu = "justChu" ;
     static vHuaCards = "vHuaCards" ;
     static huaCnt = "huaCnt" ;
@@ -96,4 +99,7 @@ export class key
     static offset = "offset" ;
     static final = "final" ;
     static tingChu = "tingChu" ;
+    static lastChuIdx = "lastChuIdx" ;
+    static matchFee = "matchFee" ;
+    static isRobot = "isRobot" ;
 }

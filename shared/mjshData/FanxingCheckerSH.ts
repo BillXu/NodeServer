@@ -32,7 +32,7 @@ export class FanxingCheckerSH
     checkFanxing( playerData : MJPlayerDataSH , isGangKia : boolean , isRobGang : boolean , diFen : number ) : { fanxing : number , beiShu : number , score : number  } 
     {
         let fanxing = 0 ;
-        let vh = playerData.getHoldHuaCards();
+        let vh = playerData.getHoldCards();
         let vac = playerData.getActedCards();
         if ( vh.length % 3 != 2 )
         {

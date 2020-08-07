@@ -305,7 +305,10 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     {
                         XLogger.warn( "result ending match is not playing match ,why ? uid = " + this.uid + " playing matchID = " + this.playingMatchID + " ending MatchID = " + mid ) ;
                     }
-                    this.playingMatchID = 0 ; // clear playing flag ;
+                    else
+                    {
+                        this.playingMatchID = 0 ; // clear playing flag ;
+                    }
                 }
                 break ;
             default:
