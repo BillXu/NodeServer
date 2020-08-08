@@ -26,6 +26,11 @@ export enum eMailType
 export enum eItemType
 {
     eItem_Diamond,
+    eItem_ReliveTicket,
+    eItem_Honour,
+    eItem_RedBag,
+    eItem_Money = 20 ,
+
     eItem_Max,
 }
 
@@ -67,4 +72,5 @@ export class G_ARG
     static TIME_MJ_BU_HUA : number = 0.8 ;
     static TIME_MJ_WAIT_ACT : number = 100000 ;
     static TIME_MJ_WAIT_ACT_TUOGUAN : number = 3 ; 
+    static TIME_MATCH_WAIT_RELIVE : number = 3 ;
 }

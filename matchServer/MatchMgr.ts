@@ -1,3 +1,4 @@
+import { MatchCfg } from './../shared/MatchConfigData';
 import { MatchRepeatTime } from './Match/MatchRepeatTime';
 import { MatchFixTime } from './Match/MatchFixTime';
 import { MatchQuick } from './Match/MatchQuick';
@@ -7,7 +8,7 @@ import { XLogger } from './../common/Logger';
 import { key } from './../shared/KeyDefine';
 import { eMatchType } from './../shared/SharedDefine';
 import HashMap  from 'hashmap';
-import { IMatch, IMatchConfig } from './Match/IMatch';
+import { IMatch } from './Match/IMatch';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { IModule } from "../common/IModule";
 import { eRpcFuncID } from '../common/Rpc/RpcFuncID';
@@ -124,7 +125,7 @@ export class MatchMgr extends IModule
         }
     }
 
-    protected loadCfgResult( cfgs : IMatchConfig[], loader : MatchConfigLoader )
+    protected loadCfgResult( cfgs : MatchCfg[], loader : MatchConfigLoader )
     {
         for ( let cfg of cfgs )
         {
@@ -139,15 +140,15 @@ export class MatchMgr extends IModule
             }
             else if ( cfg.matchType == eMatchType.eMatch_RepeatTime )
             {
-                XLogger.debug( "create match type = " + eMatchType[cfg.matchType] + " cfgID = " + cfg.id ) ;
+                XLogger.debug( "create match type = " + eMatchType[cfg.matchType] + " cfgID = " + cfg.cfgID ) ;
                 m = new MatchRepeatTime();
             }
             else
             {
-                XLogger.error( "unknown matchType = " + cfg.matchType + " cfgID = " + cfg.id ) ;
+                XLogger.error( "unknown matchType = " + cfg.matchType + " cfgID = " + cfg.cfgID ) ;
                 continue ;
             }
-            XLogger.debug( "create match type = " + eMatchType[cfg.matchType] + " cfgID = " + cfg.id ) ;
+            XLogger.debug( "create match type = " + eMatchType[cfg.matchType] + " cfgID = " + cfg.cfgID ) ;
             m.init(cfg, this.generateMatchID(), this ) ;
             this.mMatchs.set(m.matchID,m) ;
             let type = m.getType();

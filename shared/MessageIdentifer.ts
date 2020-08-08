@@ -148,7 +148,7 @@ export enum eMsgType
 	// ret : 0 , success , 1 you are not login , 2 uid error , 3 you are not in sign list , 4 match not in wait signe up state;
 
 	MSG_PLAYER_MATCH_RESULT,
-	//svr : { rankIdx : 0 , matchID : 234 , reward : IMoney[] } 
+	//svr : { rankIdx : 0 , matchID : 234 , state : eMJPlayerState , canRelive : 0  , reward : IMoney[] } 
 	// if do not have rewards , reward key will be null ;
 
 	MSG_PLAYER_REQ_MATCH_STATE,
@@ -158,6 +158,10 @@ export enum eMsgType
 	// when waiting other finish , have rankIdx key ;
 	// when playing in room , deskID and gamePort key exist ;
 
+	MSG_PLAYER_REQ_MATCH_RELIVE,
+	// client : { uid : 234 }
+	// svr { ret : 0 }
+	// ret : 0 success , 1 money not enough , 2 not allow relive , 3 uid error ;
 
 	MSG_PLAYER_MJ_REQ_DESK_INFO = 300,
 	// client : null

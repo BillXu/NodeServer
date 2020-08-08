@@ -3,11 +3,14 @@ import { key } from './../KeyDefine';
 export class PlayerBaseData extends PlayerSimpleInfo
 {
     diamond : number = 0 ;
+    reliveTicket : number = 0 ;
+    redBag : number = 0 ; 
+    honour : number = 0 ;
     inviter : number = 0 ;
     ip : string = "" ;
     treeLevel : number = 1 ;
     fertilizer : number = 0 ;
-    playingMatchID : number = 0 ;
+    playingMatchIDs : number[] = [] ;
     signedMatches : number[] = [] ;
     // share Data func ;
     toJson() : Object 
@@ -18,7 +21,10 @@ export class PlayerBaseData extends PlayerSimpleInfo
         js[key.ip] = this.ip ;
         js[key.treeLevel] = this.treeLevel ;
         js[key.fertilizer] = this.fertilizer ;
-        js[key.playingMatchID] = this.playingMatchID ;
+        js[key.playingMatchIDs] = JSON.stringify(this.playingMatchIDs) ;
+        js[key.reliveTicket] = this.reliveTicket  ;
+        js[key.redBag] = this.redBag;
+        js[key.honour] = this.honour;
         js[key.signedMatches] = JSON.stringify( this.signedMatches ) ;
         return js ;
     }
@@ -31,7 +37,14 @@ export class PlayerBaseData extends PlayerSimpleInfo
         this.ip = js[key.ip] ;
         this.treeLevel = js[key.treeLevel] ;
         this.fertilizer = js[key.fertilizer] ;
-        this.playingMatchID = js[key.playingMatchID] || 0 ;
+        this.reliveTicket = js[key.reliveTicket] ;
+        this.redBag = js[key.redBag] ;
+        this.honour = js[key.honour] ;
+        if ( js[key.playingMatchIDs] != null && (js[key.playingMatchIDs] as string).length > 2 )
+        {
+            this.playingMatchIDs = JSON.parse(js[key.playingMatchIDs]) ;
+        }
+
         if ( js[key.signedMatches] != null && (js[key.signedMatches] as string).length > 2 )
         {
             this.signedMatches = JSON.parse(js[key.signedMatches]) ;

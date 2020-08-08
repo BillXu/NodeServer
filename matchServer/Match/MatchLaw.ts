@@ -1,17 +1,17 @@
+import { G_ARG } from './../../shared/SharedDefine';
 import { MatchCfg, LawRound } from './../../shared/MatchConfigData';
 import { RpcModule } from './../../common/Rpc/RpcModule';
 import { XLogger } from './../../common/Logger';
 import { key } from './../../shared/KeyDefine';
 import { eRpcFuncID } from './../../common/Rpc/RpcFuncID';
-import { random, shuffle, clone, remove } from 'lodash';
+import { random, shuffle,remove, countBy } from 'lodash';
 import  HashMap  from 'hashmap';
-import { eMsgPort } from './../../shared/MessageIdentifer';
+import { eMsgPort, eMsgType } from './../../shared/MessageIdentifer';
 import { MatchPlayer, eMathPlayerState } from './MatchPlayer';
 import { ePlayerNetState } from './../../common/commonDefine';
 import { IMatchLaw, IMatchLawDelegate } from './IMatchLaw';
 import { Match } from './Match';
-import { ILawRoundConfig } from './IMatch' ;
-
+ 
 export class MatchLaw implements IMatchLaw
 {
     protected mMatch : Match = null ;
@@ -20,10 +20,11 @@ export class MatchLaw implements IMatchLaw
     protected mDelegate : IMatchLawDelegate = null ;
     protected mAllPlayers : HashMap<number,MatchPlayer> = null ; // { uid : player }
 
-    protected mPromotedPlayers : MatchPlayer[] = [] ;
+    protected mFinishedPlayers : MatchPlayer[] = [] ;
     protected mPlayeringPlayers : MatchPlayer[] = [] ;
-    protected mWaitRelivePlayers : MatchPlayer[] = [] ;
+
     protected mRoundCfg : LawRound = null ;
+    protected mReliveTimer : NodeJS.Timeout = null ;
     init( match : Match ,lawIdx : number ) : void 
     {
         this.mMatch = match ;
@@ -40,6 +41,11 @@ export class MatchLaw implements IMatchLaw
         return this.cfg.gameType ;
     }
 
+    protected get matchID() : number
+    {
+        return this.mMatch.matchID ;
+    }
+
     getIdx() : number 
     {
         return this.mLawIdx ;
@@ -50,47 +56,42 @@ export class MatchLaw implements IMatchLaw
         this.mAllPlayers = players.clone();
         // set init score ;
         let socre = this.cfg.initScore ;
-        let ps = this.mPromotedPlayers ;
-        for ( let p of ps )
+        this.mFinishedPlayers = this.mAllPlayers.values().concat([]) ;
+        for ( let p of this.mFinishedPlayers )
         {
             p.score = socre ;
-            p.state = eMathPlayerState.eState_Playing ;
+            p.state = eMathPlayerState.eState_Promoted ;
         }
-
-        this.putPlayersToDesk() ;
-        this.mPlayeringPlayers = this.mAllPlayers.values().concat([]) ;
-        this.mPromotedPlayers.length = 0 ;
+        this.matchingPlayers();
     }
 
     onRefreshPlayerNetState( uid : number , sessionID : number ,netState : ePlayerNetState  ) : boolean 
     {
-        let vPlayers = this.mPromotedPlayers.concat(this.mWaitRelivePlayers,this.mPlayeringPlayers ) ;
-        for ( let cp of vPlayers )
+        let cp = this.mAllPlayers.get(uid) ;
+        if ( cp == null )
         {
-            if ( cp.uid == uid )
-            {
-                XLogger.debug( "player update state uid = " + uid + " netState = " + ePlayerNetState[netState] ) ;
-                cp.sessionID = sessionID ;
-                if ( netState != ePlayerNetState.eState_Online )
-                {
-                    XLogger.debug( "player do not online , zero sessionID uid = " + uid ) ;
-                    cp.sessionID = 0 ;
-                }
-
-                if ( cp.stayDeskID != 0 )
-                {
-                    XLogger.debug( "player stayin desk , infor state to deskID = " + cp.stayDeskID + " uid = " + cp.uid + " netState = " + ePlayerNetState[netState] ) ;
-                    let arg = {} ;
-                    arg[key.deskID] = cp.stayDeskID ;
-                    arg[key.uid] = cp.uid ;
-                    arg[key.sessionID] = cp.sessionID ;
-                    arg[key.state] = netState ;
-                    this.getRpc().invokeRpc(this.gamePort, cp.stayDeskID, eRpcFuncID.Func_DeskUpdatePlayerNetState, arg ) ;
-                }
-                return true ;
-            }
+            return false ;
         }
-        return false ;
+
+        XLogger.debug( "player update state uid = " + uid + " netState = " + ePlayerNetState[netState] ) ;
+        cp.sessionID = sessionID ;
+        if ( netState != ePlayerNetState.eState_Online )
+        {
+            XLogger.debug( "player do not online , zero sessionID uid = " + uid ) ;
+            cp.sessionID = 0 ;
+        }
+
+        if ( cp.stayDeskID != 0 )
+        {
+            XLogger.debug( "player stayin desk , infor state to deskID = " + cp.stayDeskID + " uid = " + cp.uid + " netState = " + ePlayerNetState[netState] ) ;
+            let arg = {} ;
+            arg[key.deskID] = cp.stayDeskID ;
+            arg[key.uid] = cp.uid ;
+            arg[key.sessionID] = cp.sessionID ;
+            arg[key.state] = netState ;
+            this.getRpc().invokeRpc(this.gamePort, cp.stayDeskID, eRpcFuncID.Func_DeskUpdatePlayerNetState, arg ) ;
+        }
+        return true ;
     }
 
     setDelegate( pdel : IMatchLawDelegate ) : void 
@@ -100,37 +101,129 @@ export class MatchLaw implements IMatchLaw
 
     visitPlayerMatchState( jsInfo : Object , sessionID : number ) : boolean
     {
+        let ps = this.mAllPlayers.values();
         // check finished ;
-        for ( let pf of this.mPromotedPlayers )
+        for ( let pf of ps )
         {
             if ( pf.sessionID != sessionID )
             {
                 continue ;
             }
 
-            jsInfo[key.rankIdx] = pf.rankIdx ;
+            pf.onVisitInfo(jsInfo ) ;
             return true ;
         }
-
-        // check playing 
-        for ( let pp of this.mPlayeringPlayers )
-        {
-            if ( pp.sessionID != sessionID )
-            {
-                continue ;
-            }
-
-            jsInfo[key.deskID] = pp.stayDeskID ;
-            jsInfo[key.port] = this.mGamePort ;
-            return true ;
-        }
-        
         return false ;
     }
 
-    onPlayerWantRelive( sessionID : number ) : boolean
+    onPlayerWantRelive( sessionID : number , uid : number  ) : boolean
     {
+        let pss = this.mAllPlayers.get(uid);
+        if ( pss == null ) // player not in this law ;
+        {
+            return false ;
+        }
 
+        if ( pss.sessionID != sessionID )
+        {
+            XLogger.debug( "uid error , not equal with sessionID uid = " + uid + " sessionID = " + pss.sessionID ) ;
+            this.mMatch.sendMsgToClient(sessionID, eMsgType.MSG_PLAYER_REQ_MATCH_RELIVE, { ret : 3 } ) ;
+            return true ;
+        }
+
+        if ( this.canPlayerRelive(sessionID) == false )
+        {
+            XLogger.debug( "cur state can not relive uid = " + uid + " matchID = " + this.matchID ) ;
+            this.mMatch.sendMsgToClient(sessionID, eMsgType.MSG_PLAYER_REQ_MATCH_RELIVE, { ret : 2 } ) ;
+            return true ;
+        }
+
+        let rpc = this.getRpc() ;
+        let arg = {} ;
+        // arg : { uid : 23 , fee : IItem[] , matchID : 23 , cfgID : 234 }
+        arg[key.uid] = uid ;
+        arg[key.fee] = this.mRoundCfg.reliveMoney ;
+        arg[key.matchID] = this.matchID;
+        arg[key.cfgID] = this.cfg.cfgID;
+        let self = this ;
+        XLogger.debug( "relive match , try to give fee uid = " + uid + " matchID = " + this.matchID ) ;
+        rpc.invokeRpc( eMsgPort.ID_MSG_PORT_DATA , uid, eRpcFuncID.Func_MatchReqRelive, arg, ( jsResult : Object )=>{
+            let ret = jsResult[key.ret] ;
+            if ( ret == 0 )
+            {
+                if ( self.canPlayerRelive(sessionID) )
+                {
+                    XLogger.debug( "after fee do relive success uid = " + uid + " matchID = " + self.matchID  ) ;
+                    self.doPlayerRelive(sessionID) ;
+                    self.mMatch.sendMsgToClient(sessionID, eMsgType.MSG_PLAYER_REQ_MATCH_RELIVE, { ret : 0 } ) ;
+                }
+                else
+                {
+                    XLogger.debug( "after fee bu state can not  relive  give back fee uid = " + uid + " matchID = " + self.matchID  ) ;
+                    self.mMatch.sendMsgToClient(sessionID, eMsgType.MSG_PLAYER_REQ_MATCH_RELIVE, { ret : 2 } ) ;
+                    // give back relive fee ;
+                    let argReback = {} ;
+                    // arg : { uid : 2345, matchID : 323 , fee : IItem }
+                    argReback[key.uid] = uid ;
+                    argReback[key.matchID] = self.matchID;
+                    argReback[key.fee] = self.mRoundCfg.reliveMoney;
+                    arg[key.cfgID] = self.cfg.cfgID;
+                    rpc.invokeRpc(eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_ReturnBackMatchReliveFee, argReback ) ;
+                }
+            }
+            else
+            {
+                XLogger.debug( "fee not engoug  relive failed uid = " + uid + " matchID = " + self.matchID + " ret = " + ret ) ;
+                self.mMatch.sendMsgToClient(sessionID, eMsgType.MSG_PLAYER_REQ_MATCH_RELIVE, { ret : ret } ) ;
+            }
+        } , null, uid ) ;
+        return true ;
+    }
+
+    protected doPlayerRelive( sessionID : number )
+    {
+        let pidx = this.mFinishedPlayers.findIndex( ( p : MatchPlayer)=> p.sessionID == sessionID  ) ;
+        this.mFinishedPlayers[pidx].state = eMathPlayerState.eState_Relived;
+        let uid = this.mFinishedPlayers[pidx].uid;
+        // relase playingMatch var in data ;
+        let arg = { } ; arg[key.uid] = uid ; arg[key.matchID] = this.matchID ; arg[key.isStart] = 1 ;
+        this.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_SetPlayingMatch , arg ) ;
+
+        // check wait end ;
+        let ploseIdx = this.mFinishedPlayers.findIndex( ( p : MatchPlayer)=> p.state == eMathPlayerState.eState_Lose  ) ;
+        if ( ploseIdx == -1 )
+        {
+            XLogger.debug( "all player relived , so finish wait relive matchID = " + this.matchID ) ;
+            if ( this.mReliveTimer != null )
+            {
+                clearTimeout(this.mReliveTimer) ;
+                this.mReliveTimer = null ;
+            }
+            this.onWaitReliveFinish();
+        }
+    }
+
+    protected canPlayerRelive( sessionID : number ) : boolean 
+    {
+        if ( this.mRoundCfg.canRelive == false )
+        {
+            XLogger.warn( "this round can not relive , cfgID = " + this.cfg.cfgID + " sessionID = " + sessionID + " roundIdx = " + this.mRoundCfg.idx ) ;
+            return false;
+        }
+
+        let pidx = this.mFinishedPlayers.findIndex( ( p : MatchPlayer)=> p.sessionID == sessionID  ) ;
+        if ( pidx == -1 )
+        {
+            XLogger.debug( "you are not in finish queue , so can't relive matchID = " + this.matchID + " sessionID = " + sessionID ) ;
+            return false ;
+        }
+
+        if ( this.mFinishedPlayers[pidx].state != eMathPlayerState.eState_Lose )
+        {
+            XLogger.debug( "you are not in lose state , can not relive matchiID = " + this.matchID + " your state = " + eMathPlayerState[this.mFinishedPlayers[pidx].state] + " uid = " + this.mFinishedPlayers[pidx].uid ) ;
+            return false ;
+        }
+        return true ;
     }
 
     onRobotReached( uid : number , sessionID : number )
@@ -141,45 +234,41 @@ export class MatchLaw implements IMatchLaw
     // self function 
     matchingPlayers()
     {
-        if ( this.mPromotedPlayers.length = 0 )
+        if ( this.mFinishedPlayers.length = 0 )
         {
-            this.mPromotedPlayers = this.mAllPlayers.values().concat([]) ;
+            this.mFinishedPlayers = this.mAllPlayers.values().concat([]) ;
+            XLogger.error( "start law should set finished players , matchID = " + this.matchID ) ;
         }
 
-        let notFullCnt = this.mPromotedPlayers.length % this.cfg.cntPerDesk ;
+        // remve losed player , that will not join next round ;
+        remove(this.mFinishedPlayers,( p )=> p.state != eMathPlayerState.eState_Promoted && eMathPlayerState.eState_Relived != p.state ) ;
+
+        let notFullCnt = this.mFinishedPlayers.length % this.cfg.cntPerDesk ;
         if ( notFullCnt == 0  )
         {
-            XLogger.debug( "match player cnt prope direct matched ok matchID = " + this.matchID + " playerCnt = " + this.mPromotedPlayers.length ) ;
-            this.mPromotedPlayers = shuffle(this.mPromotedPlayers) ;
+            XLogger.debug( "match player cnt prope direct matched ok matchID = " + this.matchID + " playerCnt = " + this.mFinishedPlayers.length ) ;
             this.onMatchedOk();
             return ;
         }
 
         // kickout robot first ;
-        let vKickOut = [] ;
-        let idx = this.mPromotedPlayers.findIndex(( p : MatchPlayer )=> p.isRobot ) ;
-        while ( idx != -1 && notFullCnt-- > 0 )
+        let cntr = countBy(this.mFinishedPlayers,( p : MatchPlayer )=>p.isRobot ? 1 : 0 ) ;
+        if ( cntr["1"] >= notFullCnt ) // kick will be ok 
         {
-            let vkp = this.mPromotedPlayers.splice(idx,1) ;
-            vKickOut.push(vkp[0]) ;
-            idx = this.mPromotedPlayers.findIndex(( p : MatchPlayer )=> p.isRobot ) ;
-        }
-
-        if ( notFullCnt == 0 )
-        {
-            for ( let k of vKickOut )
+            let idx = this.mFinishedPlayers.findIndex(( p : MatchPlayer )=> p.isRobot ) ;
+            XLogger.debug( "kick robot to keep desk cnt ok not full = " + notFullCnt + " matchID = " + this.matchID + " robot cnt = " + cntr["1"] ) ;
+            while ( idx != -1 && notFullCnt-- > 0 )
             {
-                this.onPlayerLoseOut(k) ;
+                let pd = this.mFinishedPlayers.splice(idx,1) ;
+                this.onPlayerMatchResult(pd[0],true ) ;
+                idx = this.mFinishedPlayers.findIndex(( p : MatchPlayer )=> p.isRobot ) ;
             }
-            XLogger.debug( "robot kick out ok  matchID = " + this.matchID + " kick robot cnt = " + vKickOut.length ) ;
-            this.mPromotedPlayers = shuffle(this.mPromotedPlayers) ;
+            
             this.onMatchedOk();
             return ;
         }
 
         // not enough robot kick out 
-        let vp = this.mPromotedPlayers ;
-        vKickOut.forEach((ko )=>vp.push(ko)) ; // push kicked out back ;
         let needRobotCnt = this.cfg.cntPerDesk - notFullCnt ;
         XLogger.warn( "not enough robot kick out , need more robot to join matchID = " + this.matchID + " need robot cnt = " + needRobotCnt ) ;
     }
@@ -201,21 +290,17 @@ export class MatchLaw implements IMatchLaw
             return ;
         }
 
-        this.mPlayeringPlayers = this.mPromotedPlayers.concat([]) ;
-        this.mPromotedPlayers.length = 0 ;
+        this.mPlayeringPlayers = shuffle( this.mFinishedPlayers );
+        this.mFinishedPlayers.length = 0 ;
         this.putPlayersToDesk(this.mPlayeringPlayers);
-        
-        for ( let p of this.mWaitRelivePlayers )
-        {
-            this.mAllPlayers.delete(p.uid) ;
-        }
-        this.mWaitRelivePlayers.length = 0 ;
 
         // reset rankIdx ;
         for ( let p of this.mPlayeringPlayers )
         {
             p.lastRankIdx = p.rankIdx ;
             p.rankIdx = -1 ;
+            p.roundIdx = this.mRoundCfg.idx ;
+            p.state = eMathPlayerState.eState_Playing ;
         }
     }
 
@@ -234,7 +319,9 @@ export class MatchLaw implements IMatchLaw
             let pp = v[0];
             pp.score = p.score ;
             pp.stayDeskID = 0 ;
+            pp.state = eMathPlayerState.eState_Promoted;
             vDeskP.push(pp) ;
+            this.mFinishedPlayers.push(pp) ;
         }
 
         // process promoted
@@ -248,22 +335,23 @@ export class MatchLaw implements IMatchLaw
                 return a.signUpTime - b.signUpTime ;
             } );
 
+            let vLosedPlayer = [] ;
             for ( let idx = 0 ; idx < vDeskP.length ; ++idx )
             {
-                if ( idx < this.mRoundCfg.promoteCnt )
+                if ( idx >= this.mRoundCfg.promoteCnt )
                 {
-                    vDeskP[idx].state = eMathPlayerState.eState_Promoted;
-                    this.mPromotedPlayers.push( vDeskP[idx] ) ;
-                }
-                else
-                {
-                    vDeskP[idx].rankIdx = this.mPromotedPlayers.length + idx - this.mRoundCfg.promoteCnt;
-                    this.onPlayerLoseOut( vDeskP[idx] );
+                    vDeskP[idx].state = eMathPlayerState.eState_Lose;
+                    vLosedPlayer.push(vDeskP[idx]);
                 }
             }
 
-            // update promated player idx ;
-            this.mPromotedPlayers.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
+            // sort idx ;
+            this.mFinishedPlayers.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
+                if ( a.state != b.state )
+                {
+                    return a.state - b.state ;
+                }
+
                 if ( a.score != b.score )
                 {
                     return b.score - a.score ;
@@ -271,56 +359,46 @@ export class MatchLaw implements IMatchLaw
                 return a.signUpTime - b.signUpTime ;
             } );
 
-            for ( let ridx = 0 ; ridx < this.mPromotedPlayers.length ; ++ ridx )
+            // inform players ;
+            for ( let lp of vLosedPlayer )
             {
-                let p = this.mPromotedPlayers[ridx] ;
-                if ( p.rankIdx != ridx )
-                {
-                    p.rankIdx = ridx ;
-                    this.sendResultToPlayer(p, false ) ;
-                }
+                this.onPlayerMatchResult( lp, true );
             }
         }
         else
         {
-            for ( let idx = 0 ; idx < vDeskP.length ; ++idx )
-            {
-                vDeskP[idx].state = eMathPlayerState.eState_Promoted;
-                this.mPromotedPlayers.push( vDeskP[idx] ) ;
-            }
-
-            this.mPromotedPlayers.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
+            this.mFinishedPlayers.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
                 if ( a.score != b.score )
                 {
                     return b.score - a.score ;
                 }
                 return a.signUpTime - b.signUpTime ;
             } );
+        }
 
-            // update ranker idx and inform client and process lose out ;
-            let vR : MatchPlayer[]= [] ;
-            for ( let ridx = 0 ; ridx < this.mPromotedPlayers.length ; ++ ridx )
+        // update ranker idx and inform client and process lose out ;
+        for ( let ridx = 0 ; ridx < this.mFinishedPlayers.length ; ++ ridx )
+        {
+            let p = this.mFinishedPlayers[ridx] ;
+            if ( p.rankIdx != ridx )
             {
-                let p = this.mPromotedPlayers[ridx] ;
-                if ( p.rankIdx != ridx )
+                p.rankIdx = ridx ;
+                if ( this.mRoundCfg.isByDesk == false && p.rankIdx >= this.mRoundCfg.promoteCnt && p.state == eMathPlayerState.eState_Promoted )
                 {
-                    p.rankIdx = ridx ;
-                    if ( p.rankIdx >= this.mRoundCfg.promoteCnt )
-                    {
-                        vR.push(p) ;
-                        this.onPlayerLoseOut(p) ;
-                    }
-                    else
-                    {
-                        this.sendResultToPlayer(p, false ) ;
-                    }
+                    p.state = eMathPlayerState.eState_Lose ;
+                    this.onPlayerMatchResult(p, true );
+                }
+                else if ( p.state == eMathPlayerState.eState_Promoted || p.state == eMathPlayerState.eState_Relived )
+                {
+                    // inform rank idx changed ;
+                    let msg = {} ;
+                    msg[key.matchID] = this.matchID ;
+                    msg[key.rankIdx] = p.rankIdx  ;
+                    msg[key.state] = p.state;
+                    msg[key.canRelive] = this.mRoundCfg.canRelive ? 1 : 0 ;
+                    this.mMatch.sendMsgToClient(p.sessionID, eMsgType.MSG_PLAYER_MATCH_RESULT, msg ) ;
                 }
             }
-
-            remove(this.mPromotedPlayers,(ppm )=>{
-                let idx = vR.findIndex( (v)=>v.uid == ppm.uid ) ;
-                return idx != -1 ;
-            } ) ;
         }
 
         // check if all desk finished ;
@@ -335,69 +413,77 @@ export class MatchLaw implements IMatchLaw
         }
     }
 
-    protected onPlayerLoseOut( player : MatchPlayer ) : void
+    protected onPlayerMatchResult( player : MatchPlayer , isLose : boolean )
     {
-        if ( null == player )
-        {
-            XLogger.warn( "player is null , how to lose out , matchID = " + this.matchID ) ;
-            return ;
-        }
+         // relase playingMatch var in data ;
+        let arg = { } ; arg[key.uid] = player.uid ; arg[key.matchID] = this.matchID ; arg[key.isStart] = 0 ;
+        this.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DATA, player.uid, eRpcFuncID.Func_SetPlayingMatch , arg ) ;
+         
+         // give prize ; // tell data svr ;
+         let rewards = this.cfg.getRewardItemByIdx(player.rankIdx) ;
+         if ( rewards != null )
+         {
+             if ( this.mRoundCfg.canRelive )
+             {
+                 XLogger.error( "this round can relive , can not get reward when lose cfgID = " + this.cfg.cfgID + " roundIdx = " + this.mRoundCfg.idx ) ;
+             }
+             else
+             {
+                // arg : { uid : 235 , rankIdx : 2 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , matchName : "adfffs" }
+                let argR = {} ;
+                argR[key.uid] = player.uid ;
+                argR[key.rankIdx] = player.rankIdx ;
+                argR[key.reward] = rewards.rewards; 
+                argR[key.matchID] = this.matchID ;
+                argR[key.cfgID] = this.cfg.cfgID ;
+                argR[key.matchName] = this.cfg.name ;
+                this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, player.uid, eRpcFuncID.Func_MatchReward, arg ) ;
+             }
 
-        player.state = eMathPlayerState.eState_Lose;
-        // send msg info client , if can relive , must not give prize ;
-        this.sendResultToPlayer(player, true ) ;
+         }
 
-        if ( this.mRoundCfg.canRelive == false || player.isRobot )
-        {
-            if ( player.isRobot )
-            {
-                XLogger.debug( "robot do not relive , just delete player uid = " + player.uid ) ;
-            }
-            else
-            {
-                XLogger.debug( "this round can't relive , just delete player uid = " + player.uid ) ;
-            }
-            
-            this.deleteMatchPlayer( player.uid ) ;
-        }
-        else
-        {
-            XLogger.debug( "push player to wait relive vector uid = " + player.uid + " matchID = " + this.matchID ) ;
-            this.mWaitRelivePlayers.push(player) ;
-        }
-    }
-
-    protected deleteMatchPlayer( uid : number )
-    {
-        this.mAllPlayers.delete( uid ) ;
-
-        let pl = this.mWaitRelivePlayers.findIndex(( pw )=>pw.uid == uid ) ;
-        if ( pl == -1 )
-        {
-            XLogger.warn( "why already delete player from wait reliveVector uid = " + uid + " matchID = " + this.matchID + " roundIdx = " + this.mRoundCfg.idx ) ;
-            return ;
-        }
-        this.mWaitRelivePlayers.splice(pl,1) ;
+         // send msg info client , if can relive , must not give prize ;
+         let msg = {} ;
+         msg[key.matchID] = this.matchID ;
+         msg[key.rankIdx] = player.rankIdx  ;
+         msg[key.moneyType ] = rewards != null ? rewards.getMoneyJs() : null ;
+         msg[key.state] = player.state;
+         msg[key.canRelive] = this.mRoundCfg.canRelive ? 1 : 0 ;
+         this.mMatch.sendMsgToClient(player.sessionID, eMsgType.MSG_PLAYER_MATCH_RESULT, msg ) ;
     }
 
     waitRelive()
     {
-
+        if ( this.mReliveTimer != null )
+        {
+            clearTimeout(this.mReliveTimer) ;
+            this.mReliveTimer = null ;
+        }
+        let self = this;
+        this.mReliveTimer = setTimeout(() => {
+            self.mReliveTimer = null ;
+            XLogger.debug( "wait relive finished matchID = " + this.matchID ) ;
+            self.onWaitReliveFinish();
+        }, G_ARG.TIME_MATCH_WAIT_RELIVE );
     }
 
     onWaitReliveFinish()
     {
-
+        this.matchingPlayers();
     }
 
     onMatchOvered()
     {
-
-    }
-
-    protected sendResultToPlayer( player : MatchPlayer , isLoseOut : boolean )
-    {
-         // send msg info client , if can relive , must not give prize ;
+        XLogger.debug( "match do finished , matchID = " + this.matchID + " idx = " + this.mLawIdx ) ;
+        for ( let player of this.mFinishedPlayers )
+        {
+            if ( player.state == eMathPlayerState.eState_Promoted )
+            {
+                this.onPlayerMatchResult(player, false ) ;
+            }
+        }  
+        // save to db ;
+        this.mDelegate.onLawFinished(this) ;
     }
 
     protected putPlayersToDesk( vPlayer : MatchPlayer[] )
@@ -443,7 +529,6 @@ export class MatchLaw implements IMatchLaw
                 {
                     let p = vPlayer[idx++];
                     p.stayDeskID = deskID;
-                    p.state = eMathPlayerState.eState_Playing ;
                     let js = {} ;
                     js[key.uid] = p.uid ;
                     js[key.sessionID] = p.sessionID ;
@@ -471,22 +556,43 @@ export class MatchLaw implements IMatchLaw
 
     protected onAllDeskFinished()
     {
+        XLogger.debug( "match desk finished ,matchID = " + this.matchID + " roundIdx = " + this.mRoundCfg.idx ) ;
         // if final round give all promted prize and finish match ;
-        // if can relife , give some time relive ;
+        if ( this.cfg.isLastRound(this.mRoundCfg.idx) )
+        {
+            XLogger.debug( "this is final round , match finish matchID = " + this.matchID + " finalPlayer cnt = " + this.mFinishedPlayers.length ) ;
+            this.onMatchOvered();
+            return ;
+        }
+
+        // if can relife , give some time to relive ;
+        if ( this.mRoundCfg.canRelive )
+        {
+            let idxLose = this.mFinishedPlayers.findIndex( (p)=>p.state == eMathPlayerState.eState_Lose ) ;
+            if ( idxLose != -1 )
+            {
+                XLogger.debug( "this round can relive , so wait player relive matchID = " + this.matchID ) ;
+                this.waitRelive();
+                return ;
+            }
+        }
+
+        XLogger.debug( "start to next round direct matching players matchID = " + this.matchID ) ;
         // if can not relive direct matching a bit late if need ?;
+        this.matchingPlayers();
     }
 
-    protected clear()
+    clear()
     {
         this.mAllPlayers.clear();
-        this.mPromotedPlayers.length = 0 ;
+        this.mFinishedPlayers.length = 0 ;
         this.mPlayeringPlayers.length = 0 ;
         this.mRoundCfg = null ;
-    }
-
-    protected get matchID() : number
-    {
-        return this.mMatch.matchID ;
+        if ( this.mReliveTimer != null )
+        {
+            clearTimeout(this.mReliveTimer) ;
+            this.mReliveTimer = null ;
+        }
     }
 
     protected getRpc() : RpcModule

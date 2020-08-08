@@ -1,3 +1,4 @@
+import { IItem } from './../shared/IMoney';
 import { eItemType, eMailType } from './../shared/SharedDefine';
 import { DataSvr } from './DataSvr';
 import { XLogger } from './../common/Logger';
@@ -140,7 +141,7 @@ export class MailModule extends IModule
         XLogger.debug( "finish load mailModule mails cnt = " + this.mails.count() ) ;
     }
 
-    static sendNormalMail( targetID : number , titile : string , content : string , mails? : { type : eItemType , cnt : number } [] )
+    static sendNormalMail( targetID : number , titile : string , content : string , mails? : IItem [] )
     {
         let pmail = new MailData();
         pmail.id = this.s_Mail.generateMailID();

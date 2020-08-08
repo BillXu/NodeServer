@@ -1,7 +1,6 @@
 import { MatchCfg } from './../../shared/MatchConfigData';
 import { MatchLaw } from './MatchLaw';
 import { ePlayerNetState } from './../../common/commonDefine';
-import { IMoney } from './../../shared/IMoney';
 import { XLogger } from './../../common/Logger';
 import { eRpcFuncID } from './../../common/Rpc/RpcFuncID';
 import { key } from './../../shared/KeyDefine';
@@ -31,7 +30,15 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
         this.mMatchMgr = mgr ;
     }
 
-    clear(){} ;
+    clear()
+    {
+        let v = this.mLaws.values() ;
+        for ( let l of v )
+        {
+            l.clear();
+        }
+    } 
+
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number ) : boolean 
     {
         if ( eMsgType.MSG_PLAYER_MATCH_SIGN_UP == msgID )
@@ -70,17 +77,17 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
                     return ;
                 }
 
-                let matchID = result[key.matchID] || 0 ;
-                if ( self.matchID == matchID )
+                let matchIDs : number[] = result[key.matchID] || 0 ;
+                if ( matchIDs.indexOf(self.matchID) != -1 )
                 {
                     XLogger.debug( "already in this match uid = " + uid + " matchID = " + self.matchID ) ;
                     self.sendMsgToClient(orgID, msgID, { ret : 4, matchID : self.getMatchID()  , type : self.mType } ) ;
                     return ;
                 }
 
-                if ( matchID != 0 )
+                if ( matchIDs.length != 0 )
                 {
-                    XLogger.debug( "already playing other match player uid = " + uid + " matchID = " + self.matchID + " other matchID = " + matchID ) ;
+                    XLogger.debug( "already playing other match player uid = " + uid + " matchID = " + self.matchID + " other matchID = " + matchIDs ) ;
                     self.sendMsgToClient(orgID, msgID, { ret : 3 , matchID : self.getMatchID()  , type : self.mType } ) ;
                     return ;
                 }
@@ -89,9 +96,9 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
                 let argFee = {} ;
                 argFee[key.uid] = uid ;
                 argFee[key.sessionID] = orgID ;
-                argFee[key.matchFee] = this.mCfg.fee.toJs() ;
-                argFee[key.comment] = "signUpFee matchID = " + self.matchID ;
-                rpc.invokeRpc( eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_DeductionMoney, argFee,( result : Object )=>{
+                argFee[key.fee] = self.mCfg.fee;
+                argFee[key.matchID] = self.matchID ;
+                rpc.invokeRpc( eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_ReqEnrollMatchFee, argFee,( result : Object )=>{
                     let ret = result[key.ret] ;
                     self.sendMsgToClient(orgID, msgID, { ret : ret , matchID : self.getMatchID() , type : self.mType } ) ;
                     if ( ret != 0 )
@@ -145,9 +152,9 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
                     return ;
                 }
                 XLogger.debug( "player do canncel match sigup matchID = " + self.matchID + " uid = " + uid ) ;
-                self.doCanncelSignedUp(uid) ;
+                self.doCanncelSignedUp( uid, false ) ;
                 self.sendMsgToClient(orgID, msgID, { ret : 0 , matchID : self.matchID } ) ;
-            }, orgID ) ;
+            }, null , orgID ) ;
             return true ;
         }
         else if ( eMsgType.MSG_PLAYER_REQ_MATCH_STATE == msgID )
@@ -166,6 +173,21 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
             msg[key.ret] = 1 ;
             this.sendMsgToClient(orgID, msgID, msg) ;
             XLogger.debug( "can not find player playing match state matchID = " + this.matchID  ) ;
+            return true ;
+        }
+        else if ( eMsgType.MSG_PLAYER_REQ_MATCH_RELIVE == msgID )
+        {
+            let vlaws = this.mLaws.values() ;
+            for ( let l of vlaws )
+            {
+                if ( l.onPlayerWantRelive( orgID, msg[key.uid] ) )
+                {
+                    return true ;
+                }
+            }
+            msg[key.ret] = 2 ;
+            this.sendMsgToClient(orgID, msgID, msg) ;
+            XLogger.debug( "can not find player playing match state can relive matchID = " + this.matchID + " sessionID = " + orgID ) ;
             return true ;
         }
         return false ;
@@ -231,73 +253,9 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
     }
 
     // imatchLaw delegate
-    onPlayerFinish( player : MatchPlayer , rankIdx : number , matchLaw : IMatchLaw ) : void 
-    {
-        let rewards = this.mCfg.getRewardItemByIdx(rankIdx);
-        // give prize ;
-        // relase playingMatch var in data ;
-        // tell data svr ;
-        let arg = {} ;
-        arg[key.uid] = player.uid ;
-        arg[key.rankIdx] = rankIdx ;
-        arg[key.reward] = rewards != null ? rewards.rewards : null ; 
-        arg[key.matchID] = this.matchID ;
-        arg[key.matchName] = this.mCfg.name ;
-        this.mMatchMgr.getSvrApp().getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, player.uid, eRpcFuncID.Func_MatchResult, arg ) ;
-
-        // tell player ;
-        let msg = {} ;
-        msg[key.matchID] = this.matchID ;
-        msg[key.rankIdx] = rankIdx ;
-        msg[key.moneyType ] = rewards != null ? rewards.rewards : null ;
-        this.sendMsgToClient(player.sessionID, eMsgType.MSG_PLAYER_MATCH_RESULT, msg ) ;
-        return ;
-    }
-
-    onGuaFenResultFinished( player : MatchPlayer[] , matchLaw : IMatchLaw )
-    {
-        if ( this.mCfg.mGuaFenReward == null )
-        {
-            XLogger.debug("why gua fen reword is null ? cfgID = " + this.mCfgID ) ; 
-            return ;
-        }
-
-        if ( player.length > this.mCfg.mGuaFenReward.playerCnt )
-        {
-            XLogger.debug( "real player cnt > design guaFen cnt matchID = " + this.matchID ) ;
-            return ;
-        }
-        
-        let moneyReword = this.mCfg.mGuaFenReward.reward ;
-        let vgufen = this.guaFen( moneyReword.cnt * 100 , this.mCfg.mGuaFenReward.playerCnt ) ; // yuan to fen , keep interger .
-        let rM = new IMoney() ;
-        rM.type = moneyReword.type ;
-        for ( let idx = 0 ; idx < player.length ; ++idx )
-        {
-            let p = player[idx] ;
-            // give prize ;
-            // relase playingMatch var in data ;
-            // tell data svr ;
-            rM.cnt = vgufen[idx] / 100 ;
-            let arg = {} ;
-            arg[key.uid] = p.uid ;
-            arg[key.rankIdx] = p.rankIdx;
-            arg[key.reward] = rM.toJs();
-            arg[key.matchID] = this.matchID ;
-            arg[key.matchName] = this.mCfg.name ;
-            this.mMatchMgr.getSvrApp().getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, p.uid, eRpcFuncID.Func_MatchResult, arg ) ;
-
-            // tell player ;
-            let msg = {} ;
-            msg[key.matchID] = this.matchID ;
-            msg[key.rankIdx] = idx + 1 ;
-            msg[key.moneyType ] = [rM.toJs()] ;
-            this.sendMsgToClient(p.sessionID, eMsgType.MSG_PLAYER_MATCH_RESULT, msg ) ;
-        }
-    }
-
     onLawFinished( matchLaw : IMatchLaw ) : void 
     {
+        matchLaw.clear();
         this.mLaws.delete( matchLaw.getIdx() ) ;
     }
 
@@ -376,7 +334,7 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
         this.mState = eMatchState.eMatch_Playing ;
     }
 
-    protected doCanncelSignedUp( uid : number )
+    protected doCanncelSignedUp( uid : number , isSystem : boolean  )
     {
         let p = this.mEnrollPlayers.get(uid) ;
         if ( !p )
@@ -389,12 +347,21 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
 
         let rpc = this.mMatchMgr.getSvrApp().getRpc();
 
-        let argAddMone = {} ;
-        argAddMone[key.matchFee] = this.mCfg.fee.toJs();
         if ( this.mCfg.fee.cnt != 0 )
         {
-            argAddMone[key.uid] = uid ; argAddMone[key.comment] = "cannecl match give back money uid = " + this.matchID ;
-            rpc.invokeRpc( eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_ReturnBackMatchFee, argAddMone ,null,null, uid ) ;
+            let argAddMone = {} ;
+            argAddMone[key.fee] = this.mCfg.fee;
+            argAddMone[key.uid] = uid ; 
+            argAddMone[key.matchID] = this.matchID;
+            if ( isSystem )
+            {
+                argAddMone[key.notice] = "尊敬的玩家您好，您报名的【 " + this.mCfg.name + "因人数不足而取消，报名费已经退还。感谢您的参与和支持，敬请关注其他赛事，谢谢！" ;
+            }
+            else
+            {
+                argAddMone[key.notice] = "您取消了【 " + this.mCfg.name + "】的报名，系统退还报名费用,期待您再次参与，祝您好运！" ;
+            }
+            rpc.invokeRpc( eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_ReturnBackEnrollMatchFee, argAddMone ,null,null, uid ) ;
             XLogger.debug( "cannecl match give back money uid = " + uid + " matchID = " + this.matchID + " money = " + argAddMone[key.moneyType] + " cnt = " + argAddMone[key.cnt] ) ;
         }
         else

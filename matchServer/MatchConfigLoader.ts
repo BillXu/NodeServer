@@ -1,5 +1,5 @@
+import { MatchCfg } from './../shared/MatchConfigData';
 import { XLogger } from './../common/Logger';
-import { IMatchConfig } from './Match/IMatch';
 import request from 'request';
 let cfg = [
     {
@@ -71,9 +71,9 @@ let cfg = [
 ;
 export class MatchConfigLoader
 {
-    mConfigs : IMatchConfig[] = cfg ;
-    callBack : ( cfgs : IMatchConfig[], loader : MatchConfigLoader )=>void  = null ;
-    loadConfig( url? : string , callBack? : ( cfgs : IMatchConfig[], loader : MatchConfigLoader )=>void )
+    mConfigs : MatchCfg[] = null ;
+    callBack : ( cfgs : MatchCfg[], loader : MatchConfigLoader )=>void  = null ;
+    loadConfig( url? : string , callBack? : ( cfgs : MatchCfg[], loader : MatchConfigLoader )=>void )
     {
         this.callBack = callBack ;
         // request confg 
@@ -88,11 +88,11 @@ export class MatchConfigLoader
         }
     }
 
-    getConfigByID( cfgID : number ) : IMatchConfig
+    getConfigByID( cfgID : number ) : MatchCfg
     {
         for ( let cfg of this.mConfigs )
         {
-            if ( cfgID == cfg.id )
+            if ( cfgID == cfg.cfgID )
             {
                 return cfg ;
             }
@@ -100,7 +100,7 @@ export class MatchConfigLoader
         return null ;
     }
 
-    getConfigs() : IMatchConfig[]
+    getConfigs() : MatchCfg[]
     {
         return this.mConfigs ;
     }

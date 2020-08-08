@@ -46,8 +46,11 @@ export class key
     static comment = "comment" ;
     static isAdd = "isAdd" ;
     static isStart = "isStart" ;
-    static playingMatchID = "playingMatchID" ;
+    static playingMatchIDs = "playingMatchIDs" ;
     static signedMatches = "signedMatches" ;
+    static reliveTicket = "reliveTicket" ;
+    static redBag = "redBag" ;
+    static honour = "honour";
     static notice = "notice" ;
     static cfgID = "cfgID" ;
     static leftTime = "leftTime" ;
@@ -100,6 +103,8 @@ export class key
     static final = "final" ;
     static tingChu = "tingChu" ;
     static lastChuIdx = "lastChuIdx" ;
-    static matchFee = "matchFee" ;
+    static fee = "fee" ;
     static isRobot = "isRobot" ;
+    static rewards = "rewards" ;
+    static canRelive = "canRelive" ;
 }

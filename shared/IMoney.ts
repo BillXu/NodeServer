@@ -1,8 +1,15 @@
 import { eItemType } from './SharedDefine';
-export class IMoney
+export interface IItem
 {
     type : eItemType ;
     cnt : number ;
+}
+
+export class Item implements IItem
+{
+    type : eItemType ;
+    cnt : number ;
+
     parse( js : Object )
     {
         this.type = js["type"] ;

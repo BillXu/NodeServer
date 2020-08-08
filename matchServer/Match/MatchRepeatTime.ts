@@ -26,6 +26,7 @@ export class MatchRepeatTime extends Match
 
     clear()
     {
+        super.clear();
         if ( this.mRepeatTimer != null )
         {
             clearInterval(this.mRepeatTimer) ;

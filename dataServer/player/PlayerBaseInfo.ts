@@ -1,4 +1,4 @@
-import { IMoney } from './../../shared/IMoney';
+import { IItem } from './../../shared/IMoney';
 import { eItemType } from './../../shared/SharedDefine';
 import { key } from './../../shared/KeyDefine';
 import { XLogger } from './../../common/Logger';
@@ -142,7 +142,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
 
     onMoneyChanged( isRefreshToClient : boolean = false )
     {
-        let arg = { sql : "update playerData set diamond = " + this.diamond + " , fertilizer = " + this.fertilizer + " where uid = " + this.uid + " limit 1 ;" } ;
+        let arg = { sql : "update playerData set diamond = " + this.diamond + " , fertilizer = " + this.fertilizer  + " , reliveTicket = " + this.reliveTicket + " , honour = " + this.honour + " , redBag = " + this.redBag  + " where uid = " + this.uid + " limit 1 ;" } ;
         this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, arg ) ;
 
         if ( isRefreshToClient )
@@ -150,6 +150,9 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
             let msg = {} ;
             msg[key.diamond] = this.diamond ;
             msg[key.fertilizer] = this.fertilizer ;
+            msg[key.reliveTicket] = this.reliveTicket ;
+            msg[key.honour] = this.honour;
+            msg[key.redBag] = this.redBag;
             this.mPlayer.sendMsgToClient(eMsgType.MSG_PLAYER_REFRESH_MONEY, msg )  ;
         }
 
@@ -187,17 +190,21 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
 
     protected informMatchNetState()
     {
-        if ( this.playingMatchID != 0 )
+        if ( this.playingMatchIDs.length > 0 )
         {
             // arg : { matchID : 234 , uid : 23 , sessionID : 234 , state : ePlayerNetState }
-            let arg = {} ;
-            arg[key.matchID] = this.playingMatchID ;
-            arg[key.uid] = this.uid ;
-            arg[key.sessionID] = this.mPlayer.sessionID ;
-            arg[key.state] = this.mNetState ;
-            this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_MATCH, this.playingMatchID, eRpcFuncID.Func_MatchUpdatePlayerNetState, arg ) ;
+            for ( let pid of this.playingMatchIDs )
+            {
+                let arg = {} ;
+                arg[key.matchID] = pid ;
+                arg[key.uid] = this.uid ;
+                arg[key.sessionID] = this.mPlayer.sessionID ;
+                arg[key.state] = this.mNetState ;
+                this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_MATCH, pid, eRpcFuncID.Func_MatchUpdatePlayerNetState, arg ) ;
+            }
         }
     }
+
     onLoadBaseInfoFinished() : void{}
 
     protected sendDataInfoToClient()
@@ -219,46 +226,57 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         {
             case eRpcFuncID.Func_ReqPlayerPlayingMatch:
                 {
-                    return { ret : 0 , matchID : this.playingMatchID } ;
+                    return { ret : 0 , matchID : this.playingMatchIDs } ;
                 }
                 break ;
             case eRpcFuncID.Func_SetPlayingMatch:
                 {
                     let mid = arg[key.matchID] ;
                     let isStart = arg[key.isStart] == 1 ;
-                    if ( isStart == false && mid != this.playingMatchID )
+                    let idx = this.playingMatchIDs.indexOf(mid) ;
+                    if ( isStart == false && idx == -1 )
                     {
-                        XLogger.warn( "ending match is not playing match ,why ? uid = " + this.uid + " playing matchID = " + this.playingMatchID + " ending MatchID = " + mid ) ;
+                        XLogger.warn( "ending match is not playing match ,why ? uid = " + this.uid + " playing matchID = " + this.playingMatchIDs + " ending MatchID = " + mid ) ;
                     }
                     
-                    if ( isStart && this.playingMatchID != 0 )
+                    if ( isStart && idx != -1 )
                     {
-                        XLogger.warn( "playing matchID is not 0 , how can start another game uid = " + this.uid + " starting matchID = " + mid + " playing matchID " + this.playingMatchID  ) ;
+                        XLogger.warn( "playing matchID is not 0 , how can start another game uid = " + this.uid + " starting matchID = " + mid + " playing matchID " + this.playingMatchIDs  ) ;
+                    }
+  
+                    if ( isStart && idx == -1 )
+                    {
+                        this.playingMatchIDs.push( mid ) ;
+
+                        let vR = remove(this.signedMatches,( id : number )=> id == mid ) || [];
+                        if ( vR.length == 0 )
+                        {
+                            XLogger.warn( "remove signed math to playing match , but can not find uid = " + this.uid + " matchID = " + mid ) ;
+                        }
                     }
 
-                    this.playingMatchID = isStart ? mid : 0 ;
-                    let vR = remove(this.signedMatches,( id : number )=> id == mid ) || [];
-                    if ( vR.length == 0 )
+                    if ( isStart == false && idx != -1 )
                     {
-                        XLogger.warn( "remove signed math to playing match , but can not find uid = " + this.uid + " matchID = " + mid ) ;
+                        this.playingMatchIDs.splice(idx,1) ;
                     }
+
+                    XLogger.debug( "cur playing matchIDs = " + this.playingMatchIDs + " uid = " + this.uid ) ;
                 }
                 break ;
-            case eRpcFuncID.Func_DeductionMoney:
+            case eRpcFuncID.Func_ReqEnrollMatchFee:
                 {
-                    // arg : { uid : 2345 , sessionID : 23 , moneyType : eItemType , cnt : 234 , comment : "descript why this option" }
-                    // result : { ret : 0 , moneyType : eItemType , cnt : 234 }
+                    // arg : { uid : 2345 , sessionID : 23 , fee : IItem , matchID : 23  }
+                    // result : { ret : 0 }
                     // ret : 0 , success , 1 uid error , 2 money not enough ;
-                    arg[key.ret] = this.onModifyMoney( arg[key.moneyType], arg[key.cnt] * -1 ,arg[key.comment] ) ? 0 : 2 ;
+                    let fee : IItem = arg[key.fee] ;
+                    fee.cnt *= -1 ;
+                    arg[key.ret] = this.onModifyMoney( fee, true ) ? 0 : 2 ;
+                    if ( arg[key.ret] == 0 )
+                    {
+                        XLogger.debug( "enroll successed , uid = " + this.uid + " matchID = " + arg[key.matchID] ) ;
+                    }
                     XLogger.debug( "player deduction money uid = " + this.uid + " result = " + ( arg[key.ret] == 0  ? " success " : " failed "  ) + " detail : " + JSON.stringify(arg) );
                     return arg ;
-                }
-                break ;
-            case eRpcFuncID.Func_addMoney:
-                {
-                    // arg : { uid : 2345, moneyType : eItemType , cnt : 234,comment : "descript why this option" }
-                    this.onModifyMoney( arg[key.moneyType], arg[key.cnt] ,arg[key.comment] ) ? 0 : 2 ;
-                    XLogger.debug( "player add money uid = " + this.uid + " type = " + arg[key.moneyType] + " cnt = " + arg[key.cnt] + " comment = " + key.comment ) ;
                 }
                 break ;
             case eRpcFuncID.Func_ModifySignedMatch:
@@ -283,34 +301,61 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     XLogger.debug( "stop complie remove unuse var , so print r = " + r  ) ;
                 }
                 break ;
-            case eRpcFuncID.Func_MatchResult:
+            case eRpcFuncID.Func_MatchReward:
                 {
-                    // arg : { uid : 235 , rankIdx : 2 ,  reward : IMoney[] , matchID : 2345 , matchName : "this is a match" }
-                    let vRwards : IMoney[] = arg[key.reward] ;
+                    // arg : { uid : 235 , rankIdx : 2 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , matchName : "adkfja" }
+                    XLogger.debug( "recieved match reward rankIdx = " + arg[key.rankIdx] + " uid = " + this.uid + " cfgID = " + arg[key.cfgID] ) ;
+                    let vRwards : IItem[] = arg[key.reward] ;
                     let mid = arg[key.matchID] ;
                     if ( vRwards == null )
                     {
-                        XLogger.debug( "player do not get reward uid = " + this.uid + " matchID = " + mid ) ;
+                        XLogger.warn( "player do not get reward uid = " + this.uid + " matchID = " + mid ) ;
                     }
                     else
                     {
+                        let moneyDirty = false ;
                         for ( let m of vRwards )
                         {
-                            this.onModifyMoney(m.type, m.cnt, arg[key.matchName] + " 获奖名次：" + arg[key.rankIdx] ,false ) ;
+                            if ( m.type <= eItemType.eItem_Money )
+                            {
+                                moneyDirty = true ;
+                                this.onModifyMoney( m,false ) ;
+                            }
+                            else
+                            {
+                                this.recievedRealGoodReward(m, mid, arg[key.cfgID], arg[key.matchName] ) ;
+                            } 
                         }
-                        this.onMoneyChanged(true) ;
-                    }
 
-                    if ( mid != this.playingMatchID )
-                    {
-                        XLogger.warn( "result ending match is not playing match ,why ? uid = " + this.uid + " playing matchID = " + this.playingMatchID + " ending MatchID = " + mid ) ;
-                    }
-                    else
-                    {
-                        this.playingMatchID = 0 ; // clear playing flag ;
+                        if ( moneyDirty )
+                        {
+                            this.onMoneyChanged(true) ;
+                        }
                     }
                 }
                 break ;
+            case eRpcFuncID.Func_ReturnBackMatchReliveFee:
+                {
+                    // arg : { uid : 2345, matchID : 323 , fee : IItem , cfgID : 234  }
+                    let fee : IItem = arg[key.fee] ;
+                    XLogger.debug( "recieved relive failed back fee , cfgID = " + arg[key.cfgID] + " cnt = " + fee.cnt + " type = " + eItemType[fee.type] ) ;
+                    this.onModifyMoney( fee, true );
+                }
+                break;
+            case eRpcFuncID.Func_MatchReqRelive:
+                {
+                    // arg : { uid : 23 , fee : IItem[] , matchID : 23 , cfgID : 234 }
+                    let fee : IItem = arg[key.fee] ;
+                    fee.cnt *= -1 ;
+                    arg[key.ret] = this.onModifyMoney( fee, true ) ? 0 : 1 ;
+                    if ( arg[key.ret] == 0 )
+                    {
+                        XLogger.debug( "relive successed , uid = " + this.uid + " matchID = " + arg[key.matchID] ) ;
+                    }
+                    XLogger.debug( "player relive deduction money uid = " + this.uid + " result = " + ( arg[key.ret] == 0  ? " success " : " failed "  ) + " detail : " + JSON.stringify(arg) );
+                    return arg ;
+                }
+                break;
             default:
                 XLogger.warn("unknown rpc call for player rpc funcID = " + eRpcFuncID[funcID] + " uid = " + this.uid + " arg = " + JSON.stringify(arg || {} )) ; 
                 return {} ;
@@ -318,11 +363,18 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         return {} ;
     }
 
-    onModifyMoney( moneyType : eItemType , cnt : number , commont : string, isSaveDB : boolean = true  ) : boolean 
+    recievedRealGoodReward( item : IItem , matchID : number , cfgID : number , matchName : string )
     {
+        XLogger.debug( "recieved real good reward , please save to db uid = " + this.uid + " matchName = " + matchName + " item type = " + eItemType[item.type] ) ;
+    }
+
+    onModifyMoney( item : IItem , isSaveDB : boolean = true  ) : boolean 
+    {
+        let cnt = item.cnt ;
+        let moneyType = item.type ;
         if ( cnt == 0 )
         {
-            XLogger.warn( "modify money cnt = 0 type = " + moneyType + " uid = " + this.uid + " comment = " + commont ) ;
+            XLogger.warn( "modify money cnt = 0 type = " + moneyType + " uid = " + this.uid ) ;
             return true ;
         }
 
@@ -340,8 +392,48 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
             }
             return true ;
         }
+        else if ( moneyType == eItemType.eItem_RedBag )
+        {
+            if ( isAdd == false && this.redBag < Math.abs(cnt) )
+            {
+                return false ;
+            }
+            this.redBag += cnt ;
+            if ( isSaveDB )
+            {
+                this.onMoneyChanged( false ) ;
+            }
+            return true ;
+        }
+        else if ( moneyType == eItemType.eItem_ReliveTicket )
+        {
+            if ( isAdd == false && this.reliveTicket < Math.abs(cnt) )
+            {
+                return false ;
+            }
+            this.reliveTicket += cnt ;
+            if ( isSaveDB )
+            {
+                this.onMoneyChanged( false ) ;
+            }
+            return true ;
+        }
+        else if ( eItemType.eItem_Honour == moneyType )
+        {
+            if ( isAdd == false )
+            {
+                XLogger.warn( "what situation need to decrease honour value ?  uid = " +  this.uid + " cnt = " + cnt ) ;
+            }
 
-        XLogger.warn( "known money type = " + moneyType + " cnt = " + cnt + " uid = " + this.uid ) ;
+            this.honour += cnt ;
+            if ( isSaveDB )
+            {
+                this.onMoneyChanged( false ) ;
+            }
+            return true ;
+        }
+
+        XLogger.warn( "known money type = " + eItemType[moneyType] + " cnt = " + cnt + " uid = " + this.uid ) ;
         return false ;
     }
 }

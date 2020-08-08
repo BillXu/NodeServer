@@ -1,3 +1,4 @@
+import { merge } from 'lodash';
 import { MailModule } from './MailModule';
 import { key } from './../shared/KeyDefine';
 import { DataSvr } from './DataSvr';
@@ -86,6 +87,51 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             return true ;
         }
         return false ;
+    }
+
+    onRpcCall( funcID : eRpcFuncID , arg : Object , sieral : number , outResult : Object ) : boolean
+    {
+        switch ( funcID )
+        {
+            case eRpcFuncID.Func_MatchReqRelive:
+                {
+                    // arg : { uid : 23 , fee : IItem[] , matchID : 23 , cfgID : 234 }
+                    let uid = arg[key.uid] ;
+                    let p = this.getPlayerByUID(uid, false ) ;
+                    if ( !p )
+                    {
+                        outResult[key.ret] = 3 ;
+                        break ;
+                    }
+
+                    let js = p.onRPCCall( funcID , arg) ;
+                    if ( js[key.ret] == null )
+                    {
+                        XLogger.warn( "forget ret key in eRpcFuncID.Func_MatchReqRelive" ) ;
+                    }
+                    merge(outResult,js) ;
+                }
+                break;
+            case eRpcFuncID.Func_ReturnBackMatchReliveFee:
+                {
+                    // arg : { uid : 2345, matchID : 323 , fee : IItem , cfgID : 234  }
+                    let uid = arg[key.uid] ;
+                    let p = this.getPlayerByUID(uid, false ) ;
+                    if ( !p )
+                    {
+                        XLogger.warn( "player should online , why offline uid = " + uid + " Func_ReturnBackMatchReliveFee " ) ;
+                        MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : funcID, arg : arg } ) ; 
+                        break ;
+                    }
+        
+                    let js = p.onRPCCall( funcID , arg) ;
+                    merge(outResult,js) ;
+                }
+                break;
+            default:
+                return false ;
+        }
+        return true ;
     }
     // self function
     installRPCTask()
@@ -218,7 +264,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             return js ;
         } ) ;
 
-        rpc.registerRPC(eRpcFuncID.Func_DeductionMoney,( sierNum : number, arg : Object )=>{
+        rpc.registerRPC(eRpcFuncID.Func_ReqEnrollMatchFee,( sierNum : number, arg : Object )=>{
             let uid = arg[key.uid] ;
             let sessionID = arg[key.sessionID] ;
             let p = self.getPlayerByUID(uid, false ) ;
@@ -232,7 +278,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 return { ret : 2 };
             }
 
-            let js = p.onRPCCall( eRpcFuncID.Func_DeductionMoney , arg) ;
+            let js = p.onRPCCall( eRpcFuncID.Func_ReqEnrollMatchFee , arg) ;
             if ( js[key.ret] == null )
             {
                 XLogger.warn( "forget ret key in eRpcFuncID.Func_ReqPlayerPlayingMatch" ) ;
@@ -240,17 +286,12 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             return js ;
         } ) ;
 
-        rpc.registerRPC(eRpcFuncID.Func_addMoney,( sierNum : number, arg : Object )=>{
+        rpc.registerRPC(eRpcFuncID.Func_ReturnBackEnrollMatchFee,( sierNum : number, arg : Object )=>{
+            // arg : { uid : 2345, matchID : 323 , fee : IItem ,notice : "descript why this option" }
             let uid = arg[key.uid] ;
-            let p = self.getPlayerByUID(uid, false ) ;
-            if ( !p )
-            {
-                MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_addMoney, arg : arg } ) ; 
-                return {} ;
-            }
-
-            let js = p.onRPCCall( eRpcFuncID.Func_addMoney , arg) ;
-            return js ;
+            XLogger.debug( "send a mail to player sign out matchID = " + arg[key.matchID] + " uid = " + uid ) ;
+            MailModule.sendNormalMail(uid, "", arg[key.notice],[ arg[key.fee] ] ) ;
+            return {} ;
         } ) ;
 
         rpc.registerRPC(eRpcFuncID.Func_CheckUID,( sierNum : number, arg : Object )=>{
@@ -297,16 +338,17 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             return {} ;
         } ) ;
 
-        rpc.registerRPC(eRpcFuncID.Func_MatchResult, ( sierNum : number, arg : Object )=>{
+        rpc.registerRPC(eRpcFuncID.Func_MatchReward, ( sierNum : number, arg : Object )=>{
+            // arg : { uid : 235 , rankIdx : 2 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , matchName : "adkfja" }
             let uid = arg[key.uid] ;
             let p = self.getPlayerByUID(uid, false ) ;
             if ( !p )
             {
-                MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_MatchResult, arg : arg } ) ; 
+                MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_MatchReward, arg : arg } ) ; 
                 return {} ;
             }
 
-            let js = p.onRPCCall( eRpcFuncID.Func_MatchResult , arg) ;
+            let js = p.onRPCCall( eRpcFuncID.Func_MatchReward , arg) ;
             return js ;
         } ) ;
     } 

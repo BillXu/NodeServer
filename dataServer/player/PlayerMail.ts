@@ -1,3 +1,4 @@
+import { IItem } from './../../shared/IMoney';
 import { eItemType } from './../../shared/SharedDefine';
 import { key } from './../../shared/KeyDefine';
 import { XLogger } from './../../common/Logger';
@@ -224,7 +225,7 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
     }
 
     // self function 
-    protected gotItemsInMail( mails : { type : eItemType , cnt : number } [] )
+    protected gotItemsInMail( mails : IItem [] )
     {
         for ( let m of mails )
         {

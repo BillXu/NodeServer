@@ -1,11 +1,12 @@
+import { key } from './KeyDefine';
 import { eMatchType } from './SharedDefine';
 import { eMsgPort } from './MessageIdentifer';
-import { IMoney } from './IMoney';
+import { Item } from './IMoney';
 export class RewardItem
 {
     startRankIdx : number = 0 ; // both include , zero base idx ;
     endRankIdx : number = 0 ; // both include 
-    rewards : IMoney[] = [] ;
+    rewards : Item[] = [] ;
     desc : string = "" ;
     
     parse( js : Object )
@@ -16,8 +17,8 @@ export class RewardItem
         let vr : Object[] = js["rewards"] ;
         for ( let v of vr )
         {
-            let m = new IMoney() ;
-            m.parse(js) ;
+            let m = new Item() ;
+            m.parse(v) ;
             this.rewards.push(m) ;
         }
     }
@@ -33,15 +34,25 @@ export class RewardItem
         {
             v.push( vr.toJs() ) ;
         }
-        js["rewards"] = v ;
+        js[key.rewards] = v ;
         return js;
+    }
+
+    getMoneyJs() : Object
+    {
+        let v = [] ;
+        for ( let vr of this.rewards )
+        {
+            v.push( vr.toJs() ) ;
+        }
+        return v ;
     }
 }
 
 export class GuaFenReward
 {
     playerCnt : number = 0 ;
-    reward : IMoney = null ;
+    reward : Item = null ;
     desc : string = "" ;
 
     parse( js : Object )
@@ -49,7 +60,7 @@ export class GuaFenReward
         this.playerCnt = js["playerCnt"] ;
         if ( null == this.reward )
         {
-            this.reward = new IMoney();
+            this.reward = new Item();
         }
         this.reward.parse(js["reward"]) ;
         this.desc = js["desc"] ;
@@ -70,7 +81,7 @@ export class LawRound
     idx : number = 0 ;
     gameRoundCnt : number = 2 ;
     canRelive : boolean = false ;
-    reliveTicketCnt : number = 1 ;
+    reliveMoney : Item = null ;
     diFen : number = 10 ;
     promoteCnt : number = 2 ;
     isByDesk : boolean = false ;
@@ -80,7 +91,11 @@ export class LawRound
         this.idx = js["idx"] ;
         this.gameRoundCnt = js["gameRoundCnt"] ;
         this.canRelive = js["canRelive"] == 1 ;
-        this.reliveTicketCnt = js["reliveTicketCnt"] || 0 ;
+        if ( this.canRelive )
+        {
+            this.reliveMoney = new Item();
+            this.reliveMoney.parse(js["reliveMoney"]) ;
+        }
         this.promoteCnt = js["promoteCnt"] ;
         this.isByDesk = js["isByDesk"] == 1 ;
         this.diFen = js["diFen"] ;
@@ -92,7 +107,11 @@ export class LawRound
         js["idx"] = this.idx ;
         js["gameRoundCnt"] = this.gameRoundCnt ;
         js["canRelive"] = this.canRelive ? 1 : 0 ;
-        js["reliveTicketCnt"] = this.reliveTicketCnt ;
+        if ( this.canRelive )
+        {
+            js["reliveTicketCnt"] = this.reliveMoney.toJs() ;
+        }
+        
         js["promoteCnt"] = this.promoteCnt ;
         js["isByDesk"] = this.isByDesk ? 1 : 0 ;
         js["diFen"] = this.diFen ;
@@ -104,7 +123,7 @@ export class MatchCfg
 {
     cfgID : number = 0 ;
     name : string = "" ;
-    fee : IMoney = null ;
+    fee : Item = null ;
     gameType : eMsgPort = eMsgPort.ID_MSG_PORT_MAX ;
     matchType : eMatchType = eMatchType.eMatch_Max ;
     cntPerDesk : number = 4 ;
@@ -121,7 +140,7 @@ export class MatchCfg
         this.name = js["name"] ;
         if ( null == this.fee )
         {
-            this.fee = new IMoney();
+            this.fee = new Item();
         }
         this.fee.parse( js["fee"] ) ;
         this.initScore = js["initScore"] ;

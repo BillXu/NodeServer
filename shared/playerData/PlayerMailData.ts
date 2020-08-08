@@ -1,5 +1,6 @@
+import { IItem } from './../IMoney';
 import { key } from './../KeyDefine';
-import { eMailType, eItemType } from './../SharedDefine';
+import { eMailType } from './../SharedDefine';
 import { IShareData } from './../IShareData';
 export enum eMailState
 {
@@ -19,7 +20,7 @@ export class MailData implements IShareData
     title : string = "" ;
     content : string = "";
     state : eMailState = eMailState.eState_Unread;
-    items : { type : eItemType , cnt : number } [] = null ;
+    items : IItem [] = null ;
 
     toJson() : Object 
     {
@@ -31,7 +32,14 @@ export class MailData implements IShareData
         jsm[key.content] = this.content ;
         jsm[key.state] = this.state ;
         jsm[key.senderID] = this.senderID;
-        jsm[key.items] = this.items != null ? JSON.stringify(this.items) : "";
+        if ( this.items != null )
+        {
+            jsm[key.items] = JSON.stringify(this.items);
+        }
+        else
+        {
+            jsm[key.items] = "";
+        }
         return jsm ;
     }
 

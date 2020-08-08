@@ -1,3 +1,4 @@
+import { key } from './../../shared/KeyDefine';
 import { eItemType } from './../../shared/SharedDefine';
 export enum eMathPlayerState
 {
@@ -19,6 +20,15 @@ export class MatchPlayer
     score : number = 0;
     lastRankIdx : number = -1 ;
     rankIdx : number = -1 ;
+    roundIdx : number = 0 ;
     isRobot : boolean = false ;
+    
+    onVisitInfo( info : Object ) : void 
+    {
+        info[key.uid] = this.uid ;
+        info[key.state] = this.state;
+        info[key.deskID] = this.stayDeskID;
+        info[key.rankIdx] = this.rankIdx;
+    }
     //feeMoney : { moneyType : eItemType , cnt : number } ;
 }
