@@ -190,7 +190,24 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
             XLogger.debug( "can not find player playing match state can relive matchID = " + this.matchID + " sessionID = " + orgID ) ;
             return true ;
         }
+        else if ( msgID == eMsgType.MSG_R_JOIN_MATCH )
+        {
+            let ret = this.onRobotReached( msg[key.uid] ,orgID, msg[key.lawIdx] ) ? 0 : 1; 
+            this.sendMsgToClient(orgID, msgID, { ret : ret } ) ;
+            return true ;
+        }
         return false ;
+    }
+
+    onRobotReached( uid : number , sessionID : number , lawIdx : number ) : boolean
+    {
+        let law = this.mLaws.get(lawIdx) ;
+        if ( null == law )
+        {
+            XLogger.warn( "robot req a null law idx = " + lawIdx + " matchID = " + this.matchID );
+            return false ;
+        }
+        return law.onRobotReached(uid, sessionID) ;
     }
 
     onVisitInfo( jsInfo : Object ) : void 
@@ -260,35 +277,6 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
     }
 
     // self function ;
-    protected guaFen( total : number , cnt : number  ) : number[]
-    {
-        let aver = ( total / cnt ) * 0.05;
-        let base = Math.floor(aver) ;
-        base = Math.max( base, 1 ) ;
-        let vp = new Array<number>();
-        for ( let idx = 0 ; idx < cnt ; ++idx )
-        {
-            vp.push(base) ;
-        }
-
-        total -= base * cnt ;
-        let step = ( total / Math.max(100 ,cnt ) ) ;
-        step = Math.floor(step) ;
-        step = Math.max(step,1) ;
-        while ( total != 0 )
-        {
-            let real = step ;
-            if ( step >= total )
-            {
-                real = total ;
-            }
-            let idx = random(cnt-1,false);         
-            vp[idx] += real ;
-            total -= real ;
-        }
-        return vp ;
-    }
-
     sendMsgToClient( nSessionID : number , msgID : eMsgType , msg : Object )
     {
         this.mMatchMgr.sendMsg(msgID, msg,eMsgPort.ID_MSG_PORT_CLIENT , nSessionID, this.matchID ) ;

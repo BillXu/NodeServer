@@ -87,6 +87,7 @@ export class MJCards extends MJCardData
 
     makeCard() : number[]
     {
+        return null ;
         let vHold = [] ;
         // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 1) ) ;
         // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 1) ) ;
@@ -117,8 +118,54 @@ export class MJCards extends MJCardData
         vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 9) ) ;
         vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 1) ) ;
         vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 2) ) ;
+        //vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 3) ) ;
+        //vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tiao, 3) ) ;
+        vHold.push(82,81) ;
+
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 1) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 2) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 3) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 4) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 5) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 6) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 7) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 8) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 9) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 1) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 2) ) ;
         vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 3) ) ;
         vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tiao, 3) ) ;
+
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 1) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 2) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 3) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 4) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 5) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 6) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 7) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 8) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 9) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 1) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 2) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 3) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tiao, 3) ) ;
+
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 1) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 2) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 3) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 4) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 5) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 6) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 7) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 8) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 9) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 1) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 2) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Wan, 3) ) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 3) ) ;
+
+        vHold.push(81,82) ;
+
         return vHold ;
     }
 

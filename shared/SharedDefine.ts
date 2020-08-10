@@ -70,7 +70,8 @@ export enum eMJPlayerState
 export class G_ARG
 {
     static TIME_MJ_BU_HUA : number = 0.8 ;
-    static TIME_MJ_WAIT_ACT : number = 100000 ;
+    static TIME_MJ_WAIT_ACT : number = 1000 ;
     static TIME_MJ_WAIT_ACT_TUOGUAN : number = 3 ; 
     static TIME_MATCH_WAIT_RELIVE : number = 3 ;
+    static TIME_QUICK_MATCH_WAIT : number = 15 ;
 }

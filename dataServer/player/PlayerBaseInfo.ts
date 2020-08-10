@@ -1,3 +1,4 @@
+import { MailModule } from './../MailModule';
 import { IItem } from './../../shared/IMoney';
 import { eItemType } from './../../shared/SharedDefine';
 import { key } from './../../shared/KeyDefine';
@@ -17,6 +18,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
     protected mNetState : ePlayerNetState = ePlayerNetState.eState_Online ;
     protected mLastCheckGlobalMailID : number = -1 ;
     treeCDEndTime : number = 0 ;
+    protected mIsRobot : boolean  = false ;
 
     get isLoaded() : boolean
     {
@@ -117,6 +119,16 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     this.sendDataInfoToClient();
                 }
                 break ;
+            case eMsgType.MSG_R_TELL:
+                {
+                    this.mIsRobot = true ;
+                    let arg = {} ;
+                    arg[key.uid] = this.uid;
+                    arg[key.sessionID] = this.mPlayer.sessionID ;
+                    this.mPlayer.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_R, 0, eRpcFuncID.Func_OnRobotLogin, arg) ;
+                    XLogger.debug( "tell robot svr , robot login uid = " + this.uid ) ;
+                }
+                break ;
             default:
                 return false ;
         }
@@ -138,6 +150,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         this.mNetState = state ;
         XLogger.debug( "player update netState = " + state + "sessionID = " + this.mPlayer.sessionID ) ;
         this.informMatchNetState();
+        this.informRobotSvrNetState();
     }
 
     onMoneyChanged( isRefreshToClient : boolean = false )
@@ -205,6 +218,19 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         }
     }
 
+    protected informRobotSvrNetState()
+    {
+        if ( this.mIsRobot )
+        {
+            let arg = {} ;
+            arg[key.uid] = this.uid;
+            arg[key.sessionID] = this.mPlayer.sessionID ;
+            arg[key.state] = this.mNetState ;
+            this.mPlayer.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_R, 0, eRpcFuncID.Func_InformPlayerNetState, arg) ;
+            XLogger.debug( "tell robot svr robot state changed uid = " + this.uid + " state = " + ePlayerNetState[this.mNetState] ) ;
+        }
+    }
+
     onLoadBaseInfoFinished() : void{}
 
     protected sendDataInfoToClient()
@@ -234,12 +260,12 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     let mid = arg[key.matchID] ;
                     let isStart = arg[key.isStart] == 1 ;
                     let idx = this.playingMatchIDs.indexOf(mid) ;
-                    if ( isStart == false && idx == -1 )
+                    if ( isStart == false && idx == -1 && this.mIsRobot == false )
                     {
                         XLogger.warn( "ending match is not playing match ,why ? uid = " + this.uid + " playing matchID = " + this.playingMatchIDs + " ending MatchID = " + mid ) ;
                     }
                     
-                    if ( isStart && idx != -1 )
+                    if ( isStart && idx != -1  && this.mIsRobot == false )
                     {
                         XLogger.warn( "playing matchID is not 0 , how can start another game uid = " + this.uid + " starting matchID = " + mid + " playing matchID " + this.playingMatchIDs  ) ;
                     }
@@ -261,6 +287,15 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     }
 
                     XLogger.debug( "cur playing matchIDs = " + this.playingMatchIDs + " uid = " + this.uid ) ;
+
+                    if ( this.mIsRobot )
+                    {
+                        let arg = {} ;
+                        arg[key.uid] = this.uid;
+                        arg["isJoin"] = isStart ? 1 : 0 ;
+                        this.mPlayer.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_R, 0, eRpcFuncID.Func_RobotWorkingState, arg) ;
+                        XLogger.debug( "robot working state changed , is working ? = " + ( isStart ? "working " : " finished " ) ) ;
+                    }
                 }
                 break ;
             case eRpcFuncID.Func_ReqEnrollMatchFee:
@@ -330,6 +365,20 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                         if ( moneyDirty )
                         {
                             this.onMoneyChanged(true) ;
+                        }
+                    }
+
+                    if ( arg[key.isBoLeMode] != null && arg[key.isBoLeMode] == 1 )
+                    {
+                        if ( arg[key.rankIdx] == 0 )
+                        {
+                            XLogger.debug( "in boLe Mode , player rank no.1 invite will also get prize uid = " + this.uid +  "inviteID = " + this.inviter ) ;
+                        }
+                        
+                        if ( this.inviter != 0 )
+                        {
+                            // do give prize 
+                            MailModule.sendNormalMail(this.inviter, "", "恭喜您获奖了，您邀请的玩家【" + this.nickName + "+ (ID:" + this.uid + ")】获得了【" + arg[key.matchName] + "】的冠军，您也获得同样奖励，感谢您为我们推荐优秀的玩家！" , vRwards ) ;
                         }
                     }
                 }

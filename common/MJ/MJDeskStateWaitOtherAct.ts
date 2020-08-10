@@ -76,6 +76,13 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
         t = setTimeout(() => {
             self.mDesk.onPlayerEnterTuoGuanState(idx) ;
             self.waitActTimeOut(idx) ;
+            let tt = self.waitTimers.get(idx) ;
+            if ( null != tt )
+            {
+                clearTimeout(tt) ;
+                this.waitTimers.delete(idx) ;
+            }
+
         }, time * 1000 );
 
         this.waitTimers.set(idx, t ) ;

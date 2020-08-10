@@ -21,7 +21,7 @@ export class MatchModule extends IClientModule
             if ( msg[key.ret] != 0 )
             {
                 XLogger.debug( "recieved state back , player do not have playing match , uid = " + this.getClient().uid + " ret = " + msg[key.ret] ) ;
-                this.getClient().getBaseData().playingMatchID = 0 ;
+                this.getClient().getBaseData().playingMatchIDs.length = 0 ;
                 return true;
             }
 
@@ -36,8 +36,8 @@ export class MatchModule extends IClientModule
             let port = msg[key.port] ;
             if ( deskID == null ||  null == port )
             {
-                XLogger.error( "recievd mathc state but argument is null , uid = " + this.getClient().uid + " matchID = " + this.getClient().getBaseData().playingMatchID ) ;
-                this.getClient().getBaseData().playingMatchID = 0 ;
+                XLogger.error( "recievd mathc state but argument is null , uid = " + this.getClient().uid + " matchID = " + this.getClient().getBaseData().playingMatchIDs ) ;
+                this.getClient().getBaseData().playingMatchIDs.length = 0 ;
                 return true ;
             }
 
@@ -50,17 +50,31 @@ export class MatchModule extends IClientModule
         {
             XLogger.debug( "recived match result id = " + msg[key.matchID] + " uid = " + this.getClient().uid + " detail = " + JSON.stringify(msg) ) ;
             let data = this.getClient().getBaseData();
-            if ( msg[key.matchID] == data.playingMatchID )
+            if ( -1 != data.playingMatchIDs.indexOf(msg[key.matchID]) )
             {
-                data.playingMatchID = 0 ;
+                data.playingMatchIDs.splice(data.playingMatchIDs.indexOf(msg[key.matchID]),1 ) ;
             }
             else
             {
-                XLogger.warn( "finish mathch is not playing one now , uid = " + data.uid + " matchID = " + data.playingMatchID + " finishID = " + msg[key.matchID] ) ;
+                XLogger.warn( "finish mathch is not playing one now , uid = " + data.uid + " matchID = " + data.playingMatchIDs + " finishID = " + msg[key.matchID] ) ;
             }
             return  true ;
         }
+        else if ( eMsgType.MSG_R_ORDER_JOIN == msgID )
+        {
+            XLogger.debug( "recived order to join matchID = " + msg[key.matchID] + " uid = " + this.getClient().uid + " lawIdx = " + msg[key.lawIdx] ) ;
+            this.sendMsg(eMsgType.MSG_R_JOIN_MATCH, msg, eMsgPort.ID_MSG_PORT_MATCH, msg[key.matchID] ) ;
+        }
+        else if ( eMsgType.MSG_R_JOIN_MATCH == msgID )
+        {
+            let ret = msg[key.ret] ;
+            if ( ret != 0 )
+            {
+                this.sendMsg(eMsgType.MSG_R_ORDER_JOIN, msg, eMsgPort.ID_MSG_PORT_R, 0 ) ;
+            }
 
+            XLogger.debug( "player joint match result = " + ret + " uid = " + this.getClient().uid ) ;
+        }
         return false ;
     }
 
@@ -73,7 +87,7 @@ export class MatchModule extends IClientModule
     onRecivdBaseData()
     {
         let data = this.getClient().getBaseData();
-        XLogger.debug( "playing matchID = " + data.playingMatchID + " uid = " + data.uid ) ;
+        XLogger.debug( "playing matchID = " + data.playingMatchIDs + " uid = " + data.uid ) ;
         XLogger.debug( "signed matchIDs = " + data.signedMatches + " uid = " + data.uid  ) ;
     }
 
@@ -118,12 +132,12 @@ export class MatchModule extends IClientModule
     reqPlayingMatchState()
     {
         let data = this.getClient().getBaseData();
-        if ( data.playingMatchID == 0 )
+        if ( data.playingMatchIDs.length == 0 )
         {
             XLogger.debug( "player do not have playering match so do not req match State . uid = " + this.getClient().uid ) ;
             return ;
         }
         let msg = {} ;
-        this.sendMsg( eMsgType.MSG_PLAYER_REQ_MATCH_STATE, msg, eMsgPort.ID_MSG_PORT_MATCH, data.playingMatchID ) ;
+        this.sendMsg( eMsgType.MSG_PLAYER_REQ_MATCH_STATE, msg, eMsgPort.ID_MSG_PORT_MATCH, data.playingMatchIDs[0] ) ;
     }
 }

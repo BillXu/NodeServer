@@ -7,7 +7,7 @@ export class MJDeskStateGameEnd implements IMJDeskState
 {
     protected mDesk : MJDesk = null ;
     protected mWaitTimer : NodeJS.Timeout = null ;
-    static TIME_WAIT : number = 2 ;
+    static TIME_WAIT : number = 10 ;
     init( desk : MJDesk ) : void 
     {
         this.mDesk = desk ;
@@ -27,6 +27,7 @@ export class MJDeskStateGameEnd implements IMJDeskState
         {
             let self = this ;
             this.mWaitTimer = setTimeout(() => {
+                self.mWaitTimer = null ;
                 self.mDesk.transferState(eMJDeskState.eState_WaitStart) ;
             }, MJDeskStateGameEnd.TIME_WAIT * 1000 );
         }

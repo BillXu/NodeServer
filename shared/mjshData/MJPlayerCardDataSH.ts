@@ -93,6 +93,7 @@ export class MJPlayerCardDataSH extends MJPlayerCardData
         let self = this ;
         huas.forEach((v : number)=>self.removeCard(v) ) ;
         newCards.forEach((v : number)=>self.onMoCard(v) ) ;
+        this.vHuaCard = this.vHuaCard.concat(huas) ;
     }
 
     onChi( card : number ,eatWith : number[], invokerIdx : number  )

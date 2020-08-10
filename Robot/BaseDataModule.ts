@@ -1,6 +1,6 @@
 import { XLogger } from './../common/Logger';
 import { PlayerBaseData } from './../shared/playerData/PlayerBaseData';
-import { eMsgType } from './../shared/MessageIdentifer';
+import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { IClientModule } from "./IClientModule";
 
 export class BaseDataModule extends IClientModule
@@ -30,9 +30,16 @@ export class BaseDataModule extends IClientModule
             this.mData.parse(msg) ;
             XLogger.debug( "player recieved base data uid = " + this.mData.uid ) ;
             this.getClient().emit(BaseDataModule.EVENT_RECIVED_BASE_DATA) ;
+            
+            this.tellRobot();
             return true ;
         }
 
         return false ;
+    }
+
+    tellRobot()
+    {
+        this.sendMsg(eMsgType.MSG_R_TELL, {}, eMsgPort.ID_MSG_PORT_DATA, this.uid ) ;
     }
 }

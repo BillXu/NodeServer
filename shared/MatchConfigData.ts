@@ -1,5 +1,7 @@
+import { XLogger } from './../common/Logger';
+import { random } from 'lodash';
 import { key } from './KeyDefine';
-import { eMatchType } from './SharedDefine';
+import { eMatchType, eItemType } from './SharedDefine';
 import { eMsgPort } from './MessageIdentifer';
 import { Item } from './IMoney';
 export class RewardItem
@@ -53,11 +55,13 @@ export class GuaFenReward
 {
     playerCnt : number = 0 ;
     reward : Item = null ;
+    honour : number = 0 ;
     desc : string = "" ;
 
     parse( js : Object )
     {
         this.playerCnt = js["playerCnt"] ;
+        this.honour = js["honour"] ;
         if ( null == this.reward )
         {
             this.reward = new Item();
@@ -72,6 +76,7 @@ export class GuaFenReward
         js["playerCnt"] = this.playerCnt;
         js["reward"] = this.reward.toJs();
         js["desc"] = this.desc;
+        js["honour"] = this.honour ;
         return js ;
     }
 }
@@ -134,6 +139,8 @@ export class MatchCfg
     mGuaFenReward : GuaFenReward = null ;
     vLawRounds : LawRound[] = [] ;
     initScore : number = 0 ;
+    isBoLeMode : boolean = false ;
+    ruleDesc : string = "" ;
     parse( js : Object )
     {
         this.cfgID = js["cfgID"] ;
@@ -150,6 +157,8 @@ export class MatchCfg
         this.playerCntLimit = js["playerCntLimit"] ;
         this.startTime = js["startTime"] ;
         this.repeatTime = js["repeatTime"] ;
+        this.isBoLeMode = js["isBoLeMode"] == 1 ;
+        this.ruleDesc = js["ruleDesc"] ;
         let vR : Object[] = js["vRewards"]||[] ;
         for ( let v of vR )
         {
@@ -186,6 +195,8 @@ export class MatchCfg
         js["initScore"] = this.initScore;
         js["startTime"] = this.startTime;
         js["repeatTime"] = this.repeatTime;
+        js["isBoLeMode"] = this.isBoLeMode ? 1 : 0 ;
+        js["ruleDesc"] = this.ruleDesc;
         let vR : Object[] = []  ;
         for ( let v of this.vRewards )
         {
@@ -207,13 +218,33 @@ export class MatchCfg
         return js ;
     }
 
-    isGuaFenReward()
-    {
-        return this.vRewards != null && ( this.vRewards == null || this.vRewards.length == 0 );
-    }
-
     getRewardItemByIdx( rankIdx : number ) : RewardItem 
     {
+        if ( this.mGuaFenReward != null && this.vRewards.length == 0 )
+        {
+            XLogger.debug( "this is gua fen mode , cfgID = " + this.cfgID + " cnt = " + this.mGuaFenReward.reward.cnt + " honour = " + this.mGuaFenReward.honour ) ;
+            let v = this.guaFen(this.mGuaFenReward.reward.cnt * 100, this.mGuaFenReward.playerCnt ) ;
+            for ( let c of v )
+            {
+                let rv = new RewardItem() ;
+                rv.startRankIdx = rv.endRankIdx = this.vRewards.length ;
+                let item = new Item();
+                item.type = this.mGuaFenReward.reward.type ;
+                item.cnt = c/100;
+                rv.rewards.push(item) ;
+
+                if ( this.mGuaFenReward.honour != 0 )
+                {
+                    let hi = new Item();
+                    hi.cnt = this.mGuaFenReward.honour ;
+                    hi.type = eItemType.eItem_Honour ;
+                    rv.rewards.push(hi) ;
+                }
+
+                this.vRewards.push(rv) ;
+            }
+        }
+
         for ( let v of this.vRewards )
         {
             if ( v.startRankIdx <= rankIdx && rankIdx << v.endRankIdx )
@@ -266,5 +297,34 @@ export class MatchCfg
             return 100 ;
         }
         return this.playerCntLimit[0] ;
+    }
+
+    protected guaFen( total : number , cnt : number  ) : number[]
+    {
+        let aver = ( total / cnt ) * 0.05;
+        let base = Math.floor(aver) ;
+        base = Math.max( base, 1 ) ;
+        let vp = new Array<number>();
+        for ( let idx = 0 ; idx < cnt ; ++idx )
+        {
+            vp.push(base) ;
+        }
+
+        total -= base * cnt ;
+        let step = ( total / Math.max(100 ,cnt ) ) ;
+        step = Math.floor(step) ;
+        step = Math.max(step,1) ;
+        while ( total != 0 )
+        {
+            let real = step ;
+            if ( step >= total )
+            {
+                real = total ;
+            }
+            let idx = random(cnt-1,false);         
+            vp[idx] += real ;
+            total -= real ;
+        }
+        return vp ;
     }
 }

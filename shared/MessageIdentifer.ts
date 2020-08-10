@@ -10,6 +10,7 @@ export enum eMsgPort
 	ID_MSG_PORT_MATCH,
 	ID_MSG_PORT_MJXY, // xiang yang ka wu xing ;
 	ID_MSG_PORT_MJSH, // shang hai ma jiang ;
+	ID_MSG_PORT_R,
 	ID_MSG_PORT_ALL_SERVER,
 	ID_MSG_PORT_MAX,
 };
@@ -162,6 +163,20 @@ export enum eMsgType
 	// client : { uid : 234 }
 	// svr { ret : 0 }
 	// ret : 0 success , 1 money not enough , 2 not allow relive , 3 uid error ;
+
+	MSG_R_BEGIN = 260,
+
+	MSG_R_TELL,
+	// client : null
+	MSG_R_ORDER_JOIN,
+	// svr : { matchID : 23 , lawIdx : 23 }
+	// client : { ret : 0 , uid : 23 }
+	// only when failed respone to svr ;
+
+	MSG_R_JOIN_MATCH,
+	// client : { lawIdx : 0 , uid : 234  }
+	// svr : { ret }
+	// ret: 0 success , 1 not need ;
 
 	MSG_PLAYER_MJ_REQ_DESK_INFO = 300,
 	// client : null

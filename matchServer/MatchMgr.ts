@@ -70,7 +70,7 @@ export class MatchMgr extends IModule
         if ( null == this.mCfgLoader )
         {
             this.mCfgLoader = new MatchConfigLoader();
-            this.mCfgLoader.loadConfig(null, this.loadCfgResult.bind(this) ) ;
+            this.mCfgLoader.loadConfig( "http://192.168.6.168:8087/mobile/getMatchList", this.loadCfgResult.bind(this) ) ;
         }
     }
 

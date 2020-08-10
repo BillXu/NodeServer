@@ -11,7 +11,15 @@ import { MatchPlayer, eMathPlayerState } from './MatchPlayer';
 import { ePlayerNetState } from './../../common/commonDefine';
 import { IMatchLaw, IMatchLawDelegate } from './IMatchLaw';
 import { Match } from './Match';
- 
+enum eLawState
+{
+    eMatching,
+    ePlaying,
+    eWaitRelive,
+    eOvered,
+    eWaitMax,
+}
+
 export class MatchLaw implements IMatchLaw
 {
     protected mMatch : Match = null ;
@@ -25,6 +33,7 @@ export class MatchLaw implements IMatchLaw
 
     protected mRoundCfg : LawRound = null ;
     protected mReliveTimer : NodeJS.Timeout = null ;
+    protected mState : eLawState = eLawState.eMatching ;
     init( match : Match ,lawIdx : number ) : void 
     {
         this.mMatch = match ;
@@ -184,6 +193,7 @@ export class MatchLaw implements IMatchLaw
     {
         let pidx = this.mFinishedPlayers.findIndex( ( p : MatchPlayer)=> p.sessionID == sessionID  ) ;
         this.mFinishedPlayers[pidx].state = eMathPlayerState.eState_Relived;
+        this.mFinishedPlayers[pidx].score = this.cfg.initScore;
         let uid = this.mFinishedPlayers[pidx].uid;
         // relase playingMatch var in data ;
         let arg = { } ; arg[key.uid] = uid ; arg[key.matchID] = this.matchID ; arg[key.isStart] = 1 ;
@@ -211,6 +221,12 @@ export class MatchLaw implements IMatchLaw
             return false;
         }
 
+        if ( eLawState.eWaitRelive != this.mState && eLawState.ePlaying != this.mState )
+        {
+            XLogger.debug( "current state can not relive state = " + eLawState[this.mState] ) ;
+            return false ;
+        }
+
         let pidx = this.mFinishedPlayers.findIndex( ( p : MatchPlayer)=> p.sessionID == sessionID  ) ;
         if ( pidx == -1 )
         {
@@ -226,14 +242,44 @@ export class MatchLaw implements IMatchLaw
         return true ;
     }
 
-    onRobotReached( uid : number , sessionID : number )
+    onRobotReached( uid : number , sessionID : number ) : boolean
     {
+        if ( this.mState != eLawState.eMatching )
+        {
+            XLogger.debug( "this state do not need robot uid = " + uid + " state = " + eLawState[this.mState] ) ;
+            return false ;
+        }
 
+        let p = new MatchPlayer();
+        p.isRobot = true ;
+        p.lastRankIdx = -1 ;
+        p.rankIdx = this.mFinishedPlayers.length ;
+        p.roundIdx = null == this.mRoundCfg ? 0 :  this.mRoundCfg.idx ;
+        p.score = this.cfg.initScore ;
+        p.sessionID = sessionID ;
+        p.signUpTime = 0 ;
+        p.state = eMathPlayerState.eState_Relived ;
+        p.stayDeskID = 0 ;
+        p.uid = uid ;
+        this.mFinishedPlayers.push(p) ;
+
+        // set playing matchingID ;
+        let arg = { } ; arg[key.uid] = uid ; arg[key.matchID] = this.matchID ; arg[key.isStart] = 1 ;
+        this.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_SetPlayingMatch , arg ) ;
+
+        XLogger.debug( "robot join match law , uid = " + uid + " matchID = " + this.matchID ) ;
+        if ( (this.mFinishedPlayers.length % this.cfg.cntPerDesk) == 0 )
+        {
+            XLogger.debug( "matching ok , for the coming of robot uid = " + uid ) ;
+            this.onMatchedOk();
+        }
+        return true ;
     }
 
     // self function 
     matchingPlayers()
     {
+        this.mState = eLawState.eMatching;
         if ( this.mFinishedPlayers.length = 0 )
         {
             this.mFinishedPlayers = this.mAllPlayers.values().concat([]) ;
@@ -271,6 +317,21 @@ export class MatchLaw implements IMatchLaw
         // not enough robot kick out 
         let needRobotCnt = this.cfg.cntPerDesk - notFullCnt ;
         XLogger.warn( "not enough robot kick out , need more robot to join matchID = " + this.matchID + " need robot cnt = " + needRobotCnt ) ;
+        let arg = {} ;
+        // arg { matchID : 23 , lawIdx : 23 , cnt : 23 }
+        arg[key.matchID] = this.matchID;
+        arg[key.lawIdx] = this.getIdx();
+        arg[key.cnt] = needRobotCnt ;
+        this.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_R, 0, eRpcFuncID.Func_ReqRobot, arg , ( result : Object )=>{
+            if ( result["lackCnt"] > 0 )
+            {
+                XLogger.warn( "do not have enough robot for this match ? lackCnt = " + result["lackCnt"] + " matchID = " + this.matchID + " lawIdx = " + this.mLawIdx ) ;
+            }
+            else
+            {
+                XLogger.debug( "have enough robot for this match matchID = " + this.matchID + " lawIdx = " + this.mLawIdx ) ;
+            }
+        }) ;
     }
 
     onMatchedOk()
@@ -289,6 +350,8 @@ export class MatchLaw implements IMatchLaw
             XLogger.error( "already finished , why come to here matchID = " + this.matchID + " cfgID = " + this.cfg.cfgID ) ;
             return ;
         }
+
+        this.mState = eLawState.ePlaying;
 
         this.mPlayeringPlayers = shuffle( this.mFinishedPlayers );
         this.mFinishedPlayers.length = 0 ;
@@ -429,7 +492,7 @@ export class MatchLaw implements IMatchLaw
              }
              else
              {
-                // arg : { uid : 235 , rankIdx : 2 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , matchName : "adfffs" }
+                // arg : { uid : 235 , rankIdx : 2 ,  reward : IItem[] , isBoLeMode : 0 , matchID : 2345, cfgID : 234 , matchName : "adfffs" }
                 let argR = {} ;
                 argR[key.uid] = player.uid ;
                 argR[key.rankIdx] = player.rankIdx ;
@@ -437,6 +500,7 @@ export class MatchLaw implements IMatchLaw
                 argR[key.matchID] = this.matchID ;
                 argR[key.cfgID] = this.cfg.cfgID ;
                 argR[key.matchName] = this.cfg.name ;
+                argR[key.isBoLeMode] = this.cfg.isBoLeMode ? 1 : 0 ;
                 this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, player.uid, eRpcFuncID.Func_MatchReward, arg ) ;
              }
 
@@ -454,6 +518,8 @@ export class MatchLaw implements IMatchLaw
 
     waitRelive()
     {
+        this.mState = eLawState.eWaitRelive;
+
         if ( this.mReliveTimer != null )
         {
             clearTimeout(this.mReliveTimer) ;
@@ -474,6 +540,7 @@ export class MatchLaw implements IMatchLaw
 
     onMatchOvered()
     {
+        this.mState = eLawState.eOvered ;
         XLogger.debug( "match do finished , matchID = " + this.matchID + " idx = " + this.mLawIdx ) ;
         for ( let player of this.mFinishedPlayers )
         {

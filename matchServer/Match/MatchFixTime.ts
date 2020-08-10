@@ -22,6 +22,7 @@ export class MatchFixTime extends Match
             let self = this;
             this.mStartTimer = setTimeout(() => {
                 XLogger.debug( "reach start time , startId matchID = " + self.matchID + " cfgID = " + self.mCfg.cfgID ) ;
+                self.mStartTimer = null ;
                 self.onStartEnterBattle();
             }, t );
         }

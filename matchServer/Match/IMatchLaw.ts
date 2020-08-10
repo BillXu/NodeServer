@@ -18,4 +18,5 @@ export interface IMatchLaw
     setDelegate( pdel : IMatchLawDelegate ) : void ;
     visitPlayerMatchState( jsInfo : Object , sessionID : number ) : boolean ;
     onPlayerWantRelive( sessionID : number , uid : number ) : boolean ;
+    onRobotReached( uid : number , sessionID : number ) : boolean ;
 }

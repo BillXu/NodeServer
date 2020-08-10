@@ -43,7 +43,7 @@ export enum eRpcFuncID
     Func_InformNotice,
     // arg : { uid : 234 , notice : "2345" }
     Func_MatchReward,
-    // arg : { uid : 235 , rankIdx : 2 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , matchName : "adkfja" }
+    // arg : { uid : 235 , rankIdx : 2 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , isBoLeMode : 0 , matchName : "adkfja" }
     Func_MatchReqRelive,
     // arg : { uid : 23 , fee : IItem , matchID : 23 , cfgID : 234 }
     // result : { ret : 1 }
@@ -61,5 +61,12 @@ export enum eRpcFuncID
     // arg : { matchID : 234 , uid : 23 , sessionID : 234 , state : ePlayerNetState }
     Func_DeskUpdatePlayerNetState,
     // arg : { deskID : 234 , uid : 23 , sessionID : 234 , state : ePlayerNetState }
+    Func_OnRobotLogin,
+    // arg : { uid : 2344 , sessionID : 23 }
+    Func_RobotWorkingState,
+    // arg: { isJoin : 0 , uid : 234 }
+    Func_ReqRobot,
+    // arg { matchID : 23 , lawIdx : 23 , cnt : 23 }
+    // result { lackCnt : 23 } 
     Func_Max,
 }

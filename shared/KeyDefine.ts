@@ -42,6 +42,7 @@ export class key
     static matchRoundIdx = "matchRoundIdx";
     static matchRoundCnt = "matchRoundCnt" ;
     static matchName = "matchName" ;
+    static isBoLeMode = "isBoLeMode" ;
     static moneyType = "moneyType" ;
     static comment = "comment" ;
     static isAdd = "isAdd" ;

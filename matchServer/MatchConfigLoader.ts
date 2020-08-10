@@ -71,7 +71,7 @@ let cfg = [
 ;
 export class MatchConfigLoader
 {
-    mConfigs : MatchCfg[] = null ;
+    mConfigs : MatchCfg[] = [] ;
     callBack : ( cfgs : MatchCfg[], loader : MatchConfigLoader )=>void  = null ;
     loadConfig( url? : string , callBack? : ( cfgs : MatchCfg[], loader : MatchConfigLoader )=>void )
     {
@@ -115,13 +115,19 @@ export class MatchConfigLoader
             } catch (error) {
                 XLogger.error( "invalid json type , just use default" ) ;
             }
-            if ( c != null )
+            if ( c == null )
             {
-                this.mConfigs = c ;
+                XLogger.error( "match config is null" ) ;
             }
             else
             {
-                XLogger.error( "match config is null" ) ;
+                let vCs : Object[] = c["list"] ;
+                for ( let m of vCs )
+                {
+                    let pm = new MatchCfg();
+                    pm.parse(m) ;
+                    this.mConfigs.push(pm);
+                }
             }
         }
         else

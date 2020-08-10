@@ -280,7 +280,7 @@ export class MJDeskStateWaitAct implements IMJDeskState
         }
 
         let self = this ;
-        this.waitTimer = setTimeout( ()=>{ self.mDesk.onPlayerEnterTuoGuanState(self.mData.mActIdx); self.waitActTimeOut(); } , this.mWaitTimeSecons * 1000 ) ;
+        this.waitTimer = setTimeout( ()=>{ self.waitTimer = null; self.mDesk.onPlayerEnterTuoGuanState(self.mData.mActIdx); self.waitActTimeOut(); } , this.mWaitTimeSecons * 1000 ) ;
     }
 
     onPlayerLeaveTuoGuanState( idx : number )
