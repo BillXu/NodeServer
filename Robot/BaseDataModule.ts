@@ -32,6 +32,7 @@ export class BaseDataModule extends IClientModule
             this.getClient().emit(BaseDataModule.EVENT_RECIVED_BASE_DATA) ;
             
             this.tellRobot();
+            this.onLoginOk();
             return true ;
         }
 
@@ -41,5 +42,11 @@ export class BaseDataModule extends IClientModule
     tellRobot()
     {
         this.sendMsg(eMsgType.MSG_R_TELL, {}, eMsgPort.ID_MSG_PORT_DATA, this.uid ) ;
+    }
+
+    onLoginOk()
+    {
+        XLogger.debug("join a room ") ;
+        
     }
 }

@@ -44,7 +44,7 @@ export class MJPlayerDataSH extends MJPlayerData
 
     onChu( card : number ) : boolean
     {
-        if ( this.isTing && card != this.cardData.justMoCard )
+        if ( this.isTing && card != this.cardData.justMoCard && this.cardData.mHoldCards[0] != 0 ) // client other ;
         {
             console.error( "player already ting , so only can chu just mo card , uid = " + this.uid );
             return false ;

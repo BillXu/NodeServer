@@ -202,9 +202,8 @@ export class MJCards extends MJCardData
             return ;
         }
 
-        let card0 = this.vCards[0] ;
-        this.vCards[0] = card ;
-        this.vCards[idx] = card0 ;
+        this.vCards.splice(idx,1) ;
+        this.vCards.unshift(card);
     }
 
     swapCard( dstCard : number , orgCard : number  ) : boolean

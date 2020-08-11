@@ -39,7 +39,7 @@ export class ActedCards implements IShareData
 export class MJPlayerCardData implements IShareData
 {
     mHoldCards : number[] = [] ;
-    protected mOutCards : number[] = [] ;
+    mOutCards : number[] = [] ;
     vActedCards : ActedCards[] = [] ;
     protected nJustMoCard : number = 0 ;
     protected nBuGanging : number = 0 ;

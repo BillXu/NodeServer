@@ -1,9 +1,10 @@
+import { XLogger } from './../../common/Logger';
+import { MJPlayerCardData } from './../../shared/mjData/MJPlayerCardData';
 import { MJCardData } from './../../shared/mjData/MJCardData';
 import { eMJActType, eMJCardType } from './../../shared/mjData/MJDefine';
-import { MJPlayerData } from './../../shared/mjData/MJPlayerData';
 import { IStrategy } from './IStrategy';
-import { remove } from 'lodash';
-class LackInfo
+import { remove, filter } from 'lodash';
+export class LackInfo
 {
     lackCnt : number = 0 ;
     supplyCnt : number = 0 ;
@@ -33,59 +34,288 @@ class LackInfo
 
 export class PingHuStrategy implements IStrategy
 {
-    getChuCard( data : MJPlayerData ) : number 
+    getChuCard( vHolds : number[] , limitCards : number[] , out : LackInfo = null ) : number 
     {
-        let vHold = data.getHoldCards().concat([]);
+        let vHold = vHolds.concat([]);
         let wan = remove(vHold, (c)=> MJCardData.parseCardType(c) == eMJCardType.eCT_Wan ) ;
         let tong = remove(vHold, (c)=> MJCardData.parseCardType(c) == eMJCardType.eCT_Tong ) ;
         let tiao = remove(vHold, (c)=> MJCardData.parseCardType(c) == eMJCardType.eCT_Tiao ) ;
         let feng = remove(vHold, (c)=> MJCardData.parseCardType(c) == eMJCardType.eCT_Feng ) ;
 
+
         let v = [ wan,tong,tiao,feng ] ;
         let card = 0 ;
         let pl : LackInfo = null ;
-        for ( let p of v )
+        for ( let idx = 0 ; idx < v.length ; ++idx )
         {
-            if ( p.length == 0 )
+            if ( v[idx].length == 0 )
             {
                 continue ;
             }
 
-            let lt = new LackInfo();
-            let cardTmp = this.getBestChu(p, MJCardData.parseCardType(p[0]) == eMJCardType.eCT_Feng, lt );
+            let cur = new LackInfo();
+            let chu = this.getBestChu(v[idx], this.isCardMustKezi(v[idx][0] ), cur , limitCards );
+            if ( chu == 0 && cur.getFinalLackCnt() == 0 )
+            {
+                continue ;
+            }
+
+            let vG = v.concat([]) ;
+            vG.splice(idx,1) ;
+            let tl = this.getGroupLackValue(vG) ;
+            cur.lackCnt += tl.lackCnt;
+            cur.supplyCnt += tl.supplyCnt;
+            
             if ( card == 0 )
             {
-                card = cardTmp ;
-                pl = lt ;
-                continue ;
+                card = chu;
+                pl = cur;
             }
-
-            if ( lt.getFinalLackCnt() < pl.getFinalLackCnt() )
+            else
             {
-                card = cardTmp ;
-                pl = lt ;
-            }
-            else if ( lt.getFinalLackCnt() == pl.getFinalLackCnt() )
-            {
-                if ( lt.getFinalSupplyCnt() > pl.getFinalSupplyCnt() )
+                if ( cur.getFinalLackCnt() < pl.getFinalLackCnt() )
                 {
-                    card = cardTmp ;
-                    pl = lt ;
+                    card = chu ;
+                    pl = cur ;
+                }
+                else if ( cur.getFinalLackCnt() == pl.getFinalLackCnt() )
+                {
+                    if ( cur.getFinalSupplyCnt() > pl.getFinalSupplyCnt() )
+                    {
+                        card = chu ;
+                        pl = cur ;
+                    }
                 }
             }
         }
 
+        if ( null != out )
+        {
+            out.next = pl ;
+        }
         return card ;
     }
 
-    onDecideActWithOtherCard( data : MJPlayerData, actOpts : eMJActType[] ) : eMJActType 
+    onDecideActWithOtherCard( vHolds : number[], actOpts : eMJActType[] , otherCard : number , vEatWith : number[] ) : eMJActType 
     {
+        // peng , ming gang , hu , eat ;
+        if ( -1 != actOpts.indexOf( eMJActType.eMJAct_Hu ) )
+        {
+            return eMJActType.eMJAct_Hu ;
+        }
 
+        let vHold = vHolds.concat([]);
+        let wan = remove(vHold, (c)=> MJCardData.parseCardType(c) == eMJCardType.eCT_Wan ) ;
+        let tong = remove(vHold, (c)=> MJCardData.parseCardType(c) == eMJCardType.eCT_Tong ) ;
+        let tiao = remove(vHold, (c)=> MJCardData.parseCardType(c) == eMJCardType.eCT_Tiao ) ;
+        let feng = remove(vHold, (c)=> MJCardData.parseCardType(c) == eMJCardType.eCT_Feng ) ;
+
+
+        let vG = [ wan,tong,tiao,feng ] ;
+        let pCur = this.getGroupLackValue(vG) ;
+        let BestAct = eMJActType.eMJAct_Pass ;
+
+        // check peng ;
+        if ( -1 != actOpts.indexOf( eMJActType.eMJAct_Peng ) )
+        {
+            let vPengH = vHolds.concat([]) ;
+             let idx = vPengH.indexOf(otherCard) ;
+             if ( idx == -1 || vPengH.length <= (idx + 1) || vPengH[idx + 1] != otherCard )
+             {
+                 console.error( "can not peng , why let me peng , other card = " + MJCardData.getCardStr(otherCard) ) ;
+             }
+             else
+             {
+                 vPengH.splice(idx,2) ;
+                 let pengLack = new LackInfo();
+                 this.getChuCard(vPengH,[],pengLack ) ;
+                 if ( pengLack.getFinalLackCnt() < pCur.getFinalLackCnt() || ( pengLack.getFinalLackCnt() == pCur.getFinalLackCnt() && pengLack.getFinalSupplyCnt() > pCur.getFinalSupplyCnt() ) )
+                 {
+                     BestAct = eMJActType.eMJAct_Peng;
+                     pCur = pengLack ;
+                 }
+             }
+        }
+
+        // check minggang 
+        if ( -1 != actOpts.indexOf( eMJActType.eMJAct_MingGang ) )
+        {
+            let vMingGangH = vHolds.concat([]) ;
+             let idx = vMingGangH.indexOf(otherCard) ;
+             if ( idx == -1 || vMingGangH.length <= (idx + 2) || vMingGangH[idx+2] == otherCard )
+             {
+                 console.error( "can not ming gang , why let me ming gang , other card = " + MJCardData.getCardStr(otherCard) ) ;
+             }
+             else
+             {
+                vMingGangH.splice(idx,3) ;
+                let mingLack = new LackInfo();
+                this.getChuCard(vMingGangH,[],mingLack ) ;
+                if ( mingLack.getFinalLackCnt() < pCur.getFinalLackCnt() || ( mingLack.getFinalLackCnt() == pCur.getFinalLackCnt() && mingLack.getFinalSupplyCnt() > pCur.getFinalSupplyCnt() ) )
+                {
+                    BestAct = eMJActType.eMJAct_MingGang;
+                    pCur = mingLack ;
+                }
+             }
+        }       
+        
+        // check eat 
+        if ( -1 == actOpts.indexOf( eMJActType.eMJAct_Chi ) )
+        {
+            return BestAct ;
+        }
+
+        let vOpts : number[] = this.getChiOpts(otherCard, vHolds ) ;
+        if ( vOpts == null || vOpts.length == 0 )
+        {
+            console.error( "can not eat why tell me eat" ) ;
+            return BestAct ;
+        }
+
+        for ( let idx = 0 ; ( idx + 1 ) < vOpts.length; idx += 2  )
+        {
+            let vEat = vHolds.concat([]) ;
+            let ridx = vEat.indexOf(vOpts[idx]) ;
+            vEat.splice(ridx,1) ;
+
+            ridx = vEat.indexOf(vOpts[idx + 1 ]) ;
+            vEat.splice(ridx,1) ;
+ 
+
+            let eatL = new LackInfo();
+            this.getChuCard(vEat,[],eatL ) ;
+            if ( eatL.getFinalLackCnt() < pCur.getFinalLackCnt() || ( eatL.getFinalLackCnt() == pCur.getFinalLackCnt() && eatL.getFinalSupplyCnt() > pCur.getFinalSupplyCnt() ) )
+            {
+                BestAct = eMJActType.eMJAct_Chi;
+                pCur = eatL ;
+                vEatWith.length = 0 ;
+                vEatWith.push( vOpts[idx] , vOpts[idx+1] ) ;
+            }
+        }
+
+        return BestAct;
     }
 
-    onDecideActWithSelfCard( data : MJPlayerData, actOpts : eMJActType[] ) : eMJActType 
+    onDecideActWithSelfCard( playerCard : MJPlayerCardData, actOpts : eMJActType[] ) : { act : eMJActType , card : number } 
     {
+        if ( -1 != actOpts.indexOf( eMJActType.eMJAct_Hu ) )
+        {
+            return { act : eMJActType.eMJAct_Hu, card : 0 };
+        }
 
+        // an gang ;
+        if ( -1 != actOpts.indexOf( eMJActType.eMJAct_AnGang ) )
+        {
+            let vHold = playerCard.mHoldCards.concat([]);
+ 
+            let an = playerCard.getCanAnGangCards();
+            if ( an == null || an.length == 0 )
+            {
+                console.error( "can not an Gang , why call me AnGang ? " ) ;
+            }
+            else
+            {
+                for ( let a of an )
+                {
+                    let vA = filter(vHold,c=> MJCardData.parseCardType(c) == MJCardData.parseCardType(a) );
+                    let befor = new LackInfo();
+                    this.getLackValue(vA, this.isCardMustKezi(a) , befor );
+    
+                    let after = new LackInfo();
+                    vA.splice(vA.indexOf(a),4) ;
+                    this.getLackValue(vA, this.isCardMustKezi(a) , after );
+                    if ( after.getFinalLackCnt() <= befor.getFinalLackCnt() )
+                    {
+                        return { act : eMJActType.eMJAct_AnGang, card : a };
+                    }
+                }
+            }
+
+        }
+        // bu gang ;
+
+        if ( -1 != actOpts.indexOf( eMJActType.eMJAct_BuGang_Declare ) )
+        {
+            let vHold = playerCard.mHoldCards.concat([]);
+ 
+            let bu = playerCard.getCanBuGangCards();
+            if ( bu == null || bu.length == 0 )
+            {
+                console.error( "can not bu Gang , why call me bu ? " ) ;
+            }
+            else
+            {
+                for ( let a of bu )
+                {
+                    let vA = filter(vHold,c=> MJCardData.parseCardType(c) == MJCardData.parseCardType(a) );
+                    let befor = new LackInfo();
+                    this.getLackValue(vA, this.isCardMustKezi(a) , befor );
+    
+                    let after = new LackInfo();
+                    vA.splice(vA.indexOf(a),1) ;
+                    this.getLackValue(vA, this.isCardMustKezi(a) , after );
+                    if ( after.getFinalLackCnt() <= befor.getFinalLackCnt() )
+                    {
+                        return { act : eMJActType.eMJAct_BuGang_Declare, card : a };
+                    }
+                }
+            }
+
+        }
+
+        return { act : eMJActType.eMJAct_Pass, card : 0 };
+    }
+
+    getChiOpts( card : number , vHold :number[] ) : number[]
+    {
+        let type = MJCardData.parseCardType( card ) ;
+        let value = MJCardData.parseCardValue( card ) ;
+        if ( type != eMJCardType.eCT_Wan && type != eMJCardType.eCT_Tiao && type != eMJCardType.eCT_Tong )
+        {
+            return null ;
+        }
+
+        // AxB;
+        let vOpts = [] ;
+        if ( value > 1 && value < 9 )
+        {
+            let A = card -1 ;
+            let B = card + 1 ;
+            if ( vHold.indexOf(A) != -1  && vHold.indexOf(B) != -1 )
+            {
+                vOpts.push(A,B) ;
+            }
+        }
+
+        // xAB ;
+        if ( value <= 7 )
+        {
+            let A = card + 1 ;
+            let B = card + 2 ;
+            if ( vHold.indexOf(A) != -1  && vHold.indexOf(B) != -1 )
+            {
+                vOpts.push(A,B) ;
+            }
+        }
+
+        // ABx
+        if ( value >= 3 )
+        {
+            let A = card - 1 ;
+            let B = card - 2 ;
+            if ( vHold.indexOf(A) != -1  && vHold.indexOf(B) != -1 )
+            {
+                vOpts.push(A,B) ;
+            }
+        }
+
+        return vOpts ;
+    }
+
+    isCardMustKezi( card : number )
+    {
+        let t = MJCardData.parseCardType(card) ;
+        return t == eMJCardType.eCT_Feng ;
     }
 
     getLackValue( vCards : number[] , isMustKeZi : boolean , lackInfo : LackInfo )
@@ -134,7 +364,7 @@ export class PingHuStrategy implements IStrategy
             vlocalKe2.shift();
             let pke2 = new LackInfo();
             pke2.lackCnt = 1 ;
-            pke2.supplyCnt = 1 ;
+            pke2.supplyCnt = 1.5 ; // better than ka zhang ;
             pke2.groupCards.push(card,card) ;
             this.getLackValue(vlocalKe2, isMustKeZi, pke2 ) ;
 
@@ -270,7 +500,7 @@ export class PingHuStrategy implements IStrategy
         return ;
     }
 
-    getBestChu( vCards : number[] , isMustKeZi : boolean  , lackInfo : LackInfo ) : number
+    getBestChu( vCards : number[] , isMustKeZi : boolean  , lackInfo : LackInfo, limitCards : number[] ) : number
     {
         if ( vCards.length == 0 )
         {
@@ -278,9 +508,17 @@ export class PingHuStrategy implements IStrategy
         }
 
         let card = 0 ;
+        let bestChuLackInfo = new LackInfo();
+        this.getLackValue( vCards, isMustKeZi, bestChuLackInfo ) ;
+
         for ( let idx = 0 ; idx < vCards.length ; ++idx )
         {
             if ( idx != 0 && vCards[idx] == vCards[idx-1] )
+            {
+                continue ;
+            }
+
+            if ( null != limitCards && limitCards.indexOf(vCards[idx]) != -1 )
             {
                 continue ;
             }
@@ -289,29 +527,44 @@ export class PingHuStrategy implements IStrategy
             tmp.splice(idx,1) ;
             let ltmp = new LackInfo();
             this.getLackValue(tmp, isMustKeZi, ltmp ) ;
-            if ( card == 0 )
+
+            if ( ltmp.getFinalLackCnt() < bestChuLackInfo.getFinalLackCnt() )
             {
                 card = vCards[idx] ;
-                lackInfo.next = ltmp;
+                bestChuLackInfo = ltmp;
             }
-            else 
+            else if ( ltmp.getFinalLackCnt() == bestChuLackInfo.getFinalLackCnt() )
             {
-                if ( ltmp.getFinalLackCnt() < lackInfo.next.getFinalLackCnt() )
+                if ( ltmp.getFinalSupplyCnt() > bestChuLackInfo.getFinalSupplyCnt() )
                 {
                     card = vCards[idx] ;
-                    lackInfo.next = ltmp;
-                }
-                else if ( ltmp.getFinalLackCnt() == lackInfo.next.getFinalLackCnt() )
-                {
-                    if ( ltmp.getFinalSupplyCnt() > lackInfo.next.getFinalSupplyCnt() )
-                    {
-                        card = vCards[idx] ;
-                        lackInfo.next = ltmp;
-                    }
+                    bestChuLackInfo = ltmp;
                 }
             }
         } 
 
+        lackInfo.next = bestChuLackInfo ;
         return card ;
+    }
+
+    getGroupLackValue( vG : Array<number[]> ) : LackInfo
+    {
+        let p = new LackInfo();
+        for ( let v of vG )
+        {
+            if ( v.length == 0 )
+            {
+                continue ;
+            }
+
+            let c = p ;
+            while ( c.next != null )
+            {
+                c = c.next ;
+                XLogger.debug( "node not null , go on find next " ) ;
+            }
+            this.getLackValue(v, this.isCardMustKezi(v[0]), c ) ;
+        }
+        return p ;
     }
 }

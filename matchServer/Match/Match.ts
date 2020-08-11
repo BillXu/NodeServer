@@ -6,11 +6,11 @@ import { eRpcFuncID } from './../../common/Rpc/RpcFuncID';
 import { key } from './../../shared/KeyDefine';
 import { IMatchLaw, IMatchLawDelegate } from './IMatchLaw';
 import  HashMap  from 'hashmap';
-import { MatchPlayer, eMathPlayerState } from './MatchPlayer';
-import { merge, random } from 'lodash';
+import { MatchPlayer } from './MatchPlayer';
+import { merge } from 'lodash';
 import { MatchMgr } from './../MatchMgr';
 import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
-import { eMatchType, eMatchState } from './../../shared/SharedDefine';
+import { eMatchType, eMatchState, eMathPlayerState } from './../../shared/SharedDefine';
 import { IMatch } from './IMatch';
 import { MatchData } from './../../shared/MatchData';
 export class Match extends MatchData implements IMatch , IMatchLawDelegate
@@ -55,7 +55,7 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
             {
                 XLogger.debug( "match player cnt is full uid = " + uid + " matchID = " + this.matchID ) ;
                 this.sendMsgToClient(orgID, msgID, { ret : 6 , matchID : this.getMatchID(), type : this.mType  } ) ;
-                return true ;
+                return true ;   
             }
 
             if ( this.mEnrollPlayers.has(uid) )
@@ -77,7 +77,7 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
                     return ;
                 }
 
-                let matchIDs : number[] = result[key.matchID] || 0 ;
+                let matchIDs : number[] = result[key.matchID] || [] ;
                 if ( matchIDs.indexOf(self.matchID) != -1 )
                 {
                     XLogger.debug( "already in this match uid = " + uid + " matchID = " + self.matchID ) ;

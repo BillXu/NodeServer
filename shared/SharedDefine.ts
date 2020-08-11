@@ -50,6 +50,17 @@ export enum eMatchState
     eMatch_Max,
 }
 
+export enum eMathPlayerState
+{
+    eState_SignUp,
+    eState_Matching,
+    eState_Playing,
+    eState_Promoted,
+    eState_Relived,
+    eState_Lose,
+    eState_Max,
+}
+
 export enum eMJDeskState
 {
     eState_WaitStart,

@@ -1,8 +1,8 @@
 import { eRpcFuncID } from './../../common/Rpc/RpcFuncID';
 import { eMsgPort } from './../../shared/MessageIdentifer';
 import { key } from './../../shared/KeyDefine';
-import { G_ARG } from './../../shared/SharedDefine';
-import { MatchPlayer, eMathPlayerState } from './MatchPlayer';
+import { G_ARG, eMathPlayerState } from './../../shared/SharedDefine';
+import { MatchPlayer } from './MatchPlayer';
 import { XLogger } from './../../common/Logger';
 import { Match } from "./Match";
 import { eMatchState } from "../../shared/SharedDefine";
@@ -14,7 +14,7 @@ export class MatchQuick extends Match
     onPlayerSignedUp( uid : number , sessionID : number )
     {
         super.onPlayerSignedUp(uid, sessionID ) ;
-        
+        this.mEnrollPlayers.get(uid).state = eMathPlayerState.eState_Matching ;
         if ( null == this.mTimerForWaitRobot )
         {
             let self = this ;
@@ -23,7 +23,7 @@ export class MatchQuick extends Match
                 self.mTimerForWaitRobot = null ;
             }, G_ARG.TIME_QUICK_MATCH_WAIT * 1000 );
         }
-
+        XLogger.debug( "on player signed uid = " + uid + " cnt = " + this.mEnrollPlayers.count() + " limit = " + this.mCfg.getLowLimit() );
         if ( this.mEnrollPlayers.count() >= this.mCfg.getLowLimit() )
         {
             this.doEneterMatchBattle();

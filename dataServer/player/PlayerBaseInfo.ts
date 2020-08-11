@@ -310,7 +310,11 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     {
                         XLogger.debug( "enroll successed , uid = " + this.uid + " matchID = " + arg[key.matchID] ) ;
                     }
-                    XLogger.debug( "player deduction money uid = " + this.uid + " result = " + ( arg[key.ret] == 0  ? " success " : " failed "  ) + " detail : " + JSON.stringify(arg) );
+                    else
+                    {
+                        XLogger.debug( "player deduction money uid = " + this.uid + " result = " + ( arg[key.ret] == 0  ? " success " : " failed "  ) + " detail : " + JSON.stringify(arg) );
+                    }
+                    
                     return arg ;
                 }
                 break ;

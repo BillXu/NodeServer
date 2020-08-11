@@ -16,6 +16,7 @@ export class MJDeskStateWaitActSH extends MJDeskStateWaitAct
         if ( 0 != buHuaTime )
         {
             this.mWaitTimeSecons += buHuaTime ;
+            ++this.mData.mGangCnt;  // hua as gang when hu in one round;
             this.mDesk.informSelfAct(this.mData.mActIdx, this.mData.mEnterAct, this.mData.mGangCnt > 0 ) ;
             this.startWait();
         } 

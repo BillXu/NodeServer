@@ -1,15 +1,5 @@
 import { key } from './../../shared/KeyDefine';
-import { eItemType } from './../../shared/SharedDefine';
-export enum eMathPlayerState
-{
-    eState_SignUp,
-    eState_Playing,
-    eState_Promoted,
-    eState_Relived,
-    eState_Lose,
-    eState_Max,
-};
-
+import { eMathPlayerState } from './../../shared/SharedDefine';
 export class MatchPlayer
 {
     uid : number = 0;

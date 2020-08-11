@@ -1,4 +1,4 @@
-import { G_ARG } from './../../shared/SharedDefine';
+import { G_ARG, eMathPlayerState } from './../../shared/SharedDefine';
 import { MatchCfg, LawRound } from './../../shared/MatchConfigData';
 import { RpcModule } from './../../common/Rpc/RpcModule';
 import { XLogger } from './../../common/Logger';
@@ -7,7 +7,7 @@ import { eRpcFuncID } from './../../common/Rpc/RpcFuncID';
 import { random, shuffle,remove, countBy } from 'lodash';
 import  HashMap  from 'hashmap';
 import { eMsgPort, eMsgType } from './../../shared/MessageIdentifer';
-import { MatchPlayer, eMathPlayerState } from './MatchPlayer';
+import { MatchPlayer } from './MatchPlayer';
 import { ePlayerNetState } from './../../common/commonDefine';
 import { IMatchLaw, IMatchLawDelegate } from './IMatchLaw';
 import { Match } from './Match';
@@ -280,7 +280,7 @@ export class MatchLaw implements IMatchLaw
     matchingPlayers()
     {
         this.mState = eLawState.eMatching;
-        if ( this.mFinishedPlayers.length = 0 )
+        if ( this.mFinishedPlayers.length == 0 )
         {
             this.mFinishedPlayers = this.mAllPlayers.values().concat([]) ;
             XLogger.error( "start law should set finished players , matchID = " + this.matchID ) ;

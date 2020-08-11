@@ -1,3 +1,8 @@
+import { MJCardData } from './../../shared/mjData/MJCardData';
+import { countBy } from 'lodash';
+import { HuChecker } from './../../shared/mjData/HuChecker';
+import { PingHuStrategy } from './PingHuStrategy';
+import { IStrategy } from './IStrategy';
 import { BaseDataModule } from './../BaseDataModule';
 import { RobotClient } from './../RobotClient';
 import { eMJActType } from './../../shared/mjData/MJDefine';
@@ -17,11 +22,13 @@ export class MJDeskModuleSH extends IClientModule
     protected mPlayers : MJPlayerData[] = [] ;
     protected mSelfPlayer : MJPlayerData = null ;
     protected mDeskInfo : MJDeskData = null ;
-
+    protected mStrategy : IStrategy = null ;
+    protected mWaitActOtherTimer : NodeJS.Timeout = null ;
     init( pClient : RobotClient )
     {
         super.init(pClient) ;
         pClient.onWithTarget( BaseDataModule.EVENT_RECIVED_BASE_DATA , this.onRecivdBaseData, this ) ;
+        this.mStrategy = new PingHuStrategy();
     }
 
     onRecivdBaseData()
@@ -126,7 +133,7 @@ export class MJDeskModuleSH extends IClientModule
             case eMsgType.MSG_DEKS_MJ_INFORM_SELF_ACT:
                 {
                     // svr : { isOnlyChu : 0, canHu : 1 , buGang : [12,3] , anGang : [12,12], limitCards : [23,22] }
-                    this.onInformActWitSelf(msg["isOnlyChu"]||false, msg["canHu"] != null && msg["canHu"] == 1, msg["buGang"], msg["anGang"], msg["limitCards"] ) ;
+                    this.onInformActWitSelf(msg["isOnlyChu"]||false, msg["canHu"] != null && msg["canHu"] == 1, msg["buGang"], msg["anGang"], msg["limitCards"]||[] ) ;
                 }
                 break;
             default:
@@ -204,6 +211,12 @@ export class MJDeskModuleSH extends IClientModule
                     
                     let idx = msg[key.idx];
                     this.getPlayerByIdx(idx).onChi(msg[key.card],msg[key.eatWith],msg[key.invokerIdx] ) ;
+                    this.getPlayerByIdx(msg[key.invokerIdx]).beEatPengGang(msg[key.card]) ;
+                    if ( null != this.mWaitActOtherTimer )
+                    {
+                        clearTimeout(this.mWaitActOtherTimer) ;
+                        this.mWaitActOtherTimer = null ;
+                    }
                 }
                 break;
             case eMsgType.MSG_PLAYER_MJ_PENG:
@@ -216,6 +229,12 @@ export class MJDeskModuleSH extends IClientModule
                     
                     let idx = msg[key.idx];
                     this.getPlayerByIdx(idx).onPeng(msg[key.card], msg[key.invokerIdx] ) ;
+                    this.getPlayerByIdx(msg[key.invokerIdx]).beEatPengGang(msg[key.card]) ;
+                    if ( null != this.mWaitActOtherTimer )
+                    {
+                        clearTimeout(this.mWaitActOtherTimer) ;
+                        this.mWaitActOtherTimer = null ;
+                    }
                 }
                 break;
             case eMsgType.MSG_PLAYER_MJ_MING_GANG:
@@ -228,6 +247,13 @@ export class MJDeskModuleSH extends IClientModule
                     
                     let idx = msg[key.idx];
                     this.getPlayerByIdx(idx).onMingGang(msg[key.card], msg[key.invokerIdx] ) ;
+                    if ( null != this.mWaitActOtherTimer )
+                    {
+                        clearTimeout(this.mWaitActOtherTimer) ;
+                        this.mWaitActOtherTimer = null ;
+                    }
+
+                    this.getPlayerByIdx(msg[key.invokerIdx]).beEatPengGang(msg[key.card]) ;
                 }
                 break;
             case eMsgType.MSG_PLAYER_MJ_HU:
@@ -243,6 +269,12 @@ export class MJDeskModuleSH extends IClientModule
                     for ( let p of players )
                     {
                         this.getPlayerByIdx(p[key.idx]).score = p[key.final] ;
+                    }
+
+                    if ( null != this.mWaitActOtherTimer )
+                    {
+                        clearTimeout(this.mWaitActOtherTimer) ;
+                        this.mWaitActOtherTimer = null ;
                     }
                 }
                 break;
@@ -335,20 +367,237 @@ export class MJDeskModuleSH extends IClientModule
         let self = this ;
         setTimeout(() => {
             XLogger.debug( "chu card " ) ;
+            self.printHolds();
+            self.robotDoAct(isOnlyChu, canHu, vBuGang, vAnGang, limitCards) ;
+        }, 2000 );
+    }
+
+    robotDoAct( isOnlyChu : boolean , canHu : boolean , vBuGang : number[] , vAnGang : number[] , limitCards : number[] )
+    {
+        let vAct : eMJActType[] = [] ;
+        if ( canHu )
+        {
+            vAct.push( eMJActType.eMJAct_Hu );
+        }
+
+        if ( null != vBuGang && vBuGang.length != 0 )
+        {
+            vAct.push( eMJActType.eMJAct_BuGang_Declare );
+        }
+        
+        if ( null != vAnGang && vAnGang.length != 0 )
+        {
+            vAct.push( eMJActType.eMJAct_AnGang );
+        }
+
+        if ( isOnlyChu || vAct.length == 0 )
+        {
+            this.robotDecideChu( limitCards );
+        }
+        else
+        {
+            let v = this.mStrategy.onDecideActWithSelfCard(this.mSelfPlayer.cardData, vAct );
+            if ( v.act == eMJActType.eMJAct_Pass )
+            {
+                this.sendMsg( eMsgType.MSG_PLAYER_MJ_PASS , {}, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
+
+                this.robotDecideChu( limitCards );
+                return ;
+            }
+
             let msg = {} ;
-            msg[key.card] = self.mSelfPlayer.getAutoChuCard();
-            self.sendMsg( eMsgType.MSG_PLAYER_MJ_CHU , msg, self.mDeskInfo.gamePort, self.mDeskInfo.deskID ) ;
-        }, 6000 );
+            msg[key.card] = v.card ;
+            switch ( v.act )
+            {
+                case eMJActType.eMJAct_AnGang:
+                    {
+                        console.log( "AnGang : " + MJCardData.getCardStr(v.card) ) ;
+                        this.sendMsg( eMsgType.MSG_PLAYER_MJ_ANGANG , msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
+                    }
+                    break;
+                case eMJActType.eMJAct_BuGang_Declare:
+                    {
+                        console.log( "BuGang : " + MJCardData.getCardStr(v.card) ) ;
+                        this.sendMsg( eMsgType.MSG_PLAYER_MJ_BU_GANG , msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
+                    }
+                    break;
+                case eMJActType.eMJAct_Hu:
+                    {
+                        console.log( "HuGang : " + MJCardData.getCardStr(v.card) ) ;
+                        this.sendMsg( eMsgType.MSG_PLAYER_MJ_HU , msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
+                    }
+                    break;
+                default:
+                    console.error( "unknown act for self act = " + eMJActType[v.act] ) ;
+            }
+        }
     }
 
     protected onInformActWithOther(  card : number , vActs : eMJActType[] )
     {
         XLogger.debug( "recived onInformActWithOther " );
         let self = this ;
-        setTimeout(() => {
+        this.mWaitActOtherTimer = setTimeout(() => {
             XLogger.debug( "act pass " ) ;
+            self.mWaitActOtherTimer = null ;
+            self.printHolds();
+            self.robotDoActWithOtherCard(card, vActs) ;
+        }, 2000 );
+    }
+
+    robotDoActWithOtherCard( card : number , vActs : eMJActType[] )
+    {
+        let vEatWith = [] ;
+        let c = this.mStrategy.onDecideActWithOtherCard( this.mSelfPlayer.getHoldCards(), vActs, card, vEatWith ) ;
+        switch ( c )
+        {
+            case eMJActType.eMJAct_Hu:
+                {
+                    let msg = {} ;
+                    msg[key.card] = card ;
+                    this.sendMsg( eMsgType.MSG_PLAYER_MJ_HU , msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
+                    console.log( "hu : " + MJCardData.getCardStr(card) ) ;
+                }
+                break;
+            case eMJActType.eMJAct_Chi:
+                {
+                    let msg = {} ;
+                    msg[key.card] = card ;
+                    msg[key.eatWith] = vEatWith;
+                    this.sendMsg( eMsgType.MSG_PLAYER_MJ_EAT , msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
+                    console.log( "chi : " + MJCardData.getCardStr(card) + "with : " + MJCardData.getCardStr(vEatWith[0]) + " and " + MJCardData.getCardStr( vEatWith[1] ) ) ;
+                }
+                break;
+            case eMJActType.eMJAct_Peng:
+                {
+                    let msg = {} ;
+                    msg[key.card] = card ;
+                    this.sendMsg( eMsgType.MSG_PLAYER_MJ_PENG , msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
+                    console.log( "peng : " + MJCardData.getCardStr(card) ) ;
+                }
+                break;
+            case eMJActType.eMJAct_MingGang:
+                {
+                    let msg = {} ;
+                    msg[key.card] = card ;
+                    this.sendMsg( eMsgType.MSG_PLAYER_MJ_MING_GANG , msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
+                    console.log( "ming gang : " + MJCardData.getCardStr(card) ) ;
+                }
+                break;
+            default:
+                return ;
+        }
+    }
+
+    protected getLeftCardCnt( card : number ) : number
+    {
+        let cnt = 0 ;
+        for ( let p of this.mPlayers )
+        {
+            if ( p == null )
+            {
+                continue ;
+            }
+
+            let vOut = p.cardData.mOutCards;
+            let ret = countBy(vOut,c=>c==card ? card : 0 ) ;
+            cnt += ret[card] == null ? 0 : ret[card] ;
+            if ( cnt >= 4 )
+            {
+                break ;
+            }
+
+            for ( let acted of p.cardData.vActedCards )
+            {
+                if ( acted.act == eMJActType.eMJAct_Chi )
+                {
+                    if ( acted.card == card || acted.eatWith.indexOf(card) != -1 )
+                    {
+                        ++cnt ;
+                    }
+                    continue ;
+                }
+
+                if ( acted.card != card )
+                {
+                    continue ;
+                }
+
+                if ( acted.act == eMJActType.eMJAct_Peng )
+                {
+                    cnt += 3 ;
+                    continue ;
+                }
+
+                
+                if ( acted.act == eMJActType.eMJAct_MingGang || acted.act == eMJActType.eMJAct_AnGang || acted.act == eMJActType.eMJAct_BuGang_Done )
+                {
+                    cnt += 4 ;
+                    break ;
+                }
+
+            }
+
+            if ( cnt >= 4 )
+            {
+                break ;
+            }
+
+            if ( p.nIdx == this.mSelfPlayer.nIdx )
+            {
+                let ret = countBy(p.cardData.mHoldCards,c=>c==card ? card : 0 ) ;
+                cnt += ret[card] == null ? 0 : ret[card] ;
+            }
+        }
+
+        cnt = 4 - cnt ;
+        if ( cnt < 0 )
+        {
+            console.error( "why card left < 0 card = " + MJCardData.getCardStr(card) + " cnt = " + cnt ) ;
+            cnt = 0 ;
+        }
+        return cnt ;
+    }
+
+    protected robotDecideChu( limtCards : number[] ) 
+    {
+        let v = HuChecker.getInstance().checkTing( this.mSelfPlayer.getHoldCards() ) ;
+        if ( v == null || v.length == 0 )
+        {
+            
             let msg = {} ;
-            self.sendMsg( eMsgType.MSG_PLAYER_MJ_PASS , msg, self.mDeskInfo.gamePort, self.mDeskInfo.deskID ) ;
-        }, 6000 );
+            msg[key.card] = this.mStrategy.getChuCard(this.mSelfPlayer.getHoldCards(),limtCards,null) ;
+            this.sendMsg( eMsgType.MSG_PLAYER_MJ_CHU , msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
+            console.log( "chu pai : " + MJCardData.getCardStr(msg[key.card]) ) ;
+            return ;
+        }
+
+        let chu = 0 ;
+        let tingCnt = 0 ;
+        for ( let c of v )
+        {
+            let cnt = 0 ;
+            let vting = c.tingCards;
+            for ( let tc of vting )
+            {
+                cnt += this.getLeftCardCnt(tc) ;
+            }
+
+            if ( tingCnt < cnt )
+            {
+                tingCnt = cnt ;
+                chu = c.chu ;
+            }
+        }
+
+        let msg = {} ;
+        msg[key.card] = chu ;
+        this.sendMsg( eMsgType.MSG_PLAYER_MJ_TING , msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
+        console.log( "chu pai : " + MJCardData.getCardStr(chu) ) ;
+    }
+
+    protected printHolds()
+    {
+        MJCardData.printCards( "holds " , this.mSelfPlayer.cardData.mHoldCards ) ;
     }
 }
