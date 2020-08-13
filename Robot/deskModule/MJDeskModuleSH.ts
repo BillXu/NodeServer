@@ -13,7 +13,7 @@ import { MJDeskData } from './../../shared/mjData/MJDeskData';
 import { XLogger } from './../../common/Logger';
 import { MJPlayerDataSH } from './../../shared/mjshData/MJPlayerDataSH';
 import { MJPlayerData } from './../../shared/mjData/MJPlayerData';
-import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
+import { eMsgType,eMsgPort } from './../../shared/MessageIdentifer';
 import { IClientModule } from "../IClientModule";
 
 export class MJDeskModuleSH extends IClientModule
@@ -24,6 +24,7 @@ export class MJDeskModuleSH extends IClientModule
     protected mDeskInfo : MJDeskData = null ;
     protected mStrategy : IStrategy = null ;
     protected mWaitActOtherTimer : NodeJS.Timeout = null ;
+    protected mWaitActSelfTimer : NodeJS.Timeout = null ;
     init( pClient : RobotClient )
     {
         super.init(pClient) ;
@@ -364,9 +365,22 @@ export class MJDeskModuleSH extends IClientModule
     protected onInformActWitSelf( isOnlyChu : boolean , canHu : boolean , vBuGang : number[] , vAnGang : number[] , limitCards : number[] )
     {
         XLogger.debug( "recived onInformActWitSelf " );
+        if ( (this.mSelfPlayer as MJPlayerDataSH).isTing )
+        {
+            XLogger.debug( "already ting do nonthing" );
+            return ;
+        }
+
+        if ( this.mWaitActSelfTimer != null )
+        {
+            clearTimeout(this.mWaitActSelfTimer) ;
+            this.mWaitActSelfTimer = null ;
+        }
+
         let self = this ;
-        setTimeout(() => {
+        this.mWaitActSelfTimer = setTimeout(() => {
             XLogger.debug( "chu card " ) ;
+            self.mWaitActSelfTimer = null ;
             self.printHolds();
             self.robotDoAct(isOnlyChu, canHu, vBuGang, vAnGang, limitCards) ;
         }, 2000 );
@@ -484,7 +498,14 @@ export class MJDeskModuleSH extends IClientModule
                     console.log( "ming gang : " + MJCardData.getCardStr(card) ) ;
                 }
                 break;
+            case eMJActType.eMJAct_Pass:
+                {
+                    let msg = {} ;
+                    msg[key.card] = card ;
+                    this.sendMsg( eMsgType.MSG_PLAYER_MJ_PASS , msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
+                }
             default:
+                XLogger.warn( "unknown act = " + c ) ;
                 return ;
         }
     }

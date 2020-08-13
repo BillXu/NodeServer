@@ -121,6 +121,11 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                 break ;
             case eMsgType.MSG_R_TELL:
                 {
+                    if ( this.mIsRobot )
+                    {
+                        XLogger.debug( "already telled robot , not need tell again uid = " + this.uid ) ;
+                        return ;
+                    }
                     this.mIsRobot = true ;
                     let arg = {} ;
                     arg[key.uid] = this.uid;

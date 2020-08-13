@@ -1,7 +1,7 @@
-import { configure, getLogger, Logger } from "log4js";
+import { SVR_ARG } from './ServerDefine';
+import { getLogger, Logger } from "log4js";
 export class XLogger
 {
-    protected static s_use_console = true ;
     protected loger : Logger = null  ;
     protected static s_logger : XLogger = null ;
 
@@ -30,7 +30,12 @@ export class XLogger
 
     static debug( str : string )
     {
-        if ( XLogger.s_use_console )
+        if ( SVR_ARG.isDebug == false )
+        {
+            return ;
+        }
+
+        if ( SVR_ARG.useConsoleLog )
         {
             console.log( XLogger.timeStr() + str );
         }
@@ -42,7 +47,7 @@ export class XLogger
 
     static info( str : string )
     {
-        if ( XLogger.s_use_console )
+        if ( SVR_ARG.useConsoleLog )
         {
             console.info( XLogger.timeStr() + str  );
         }
@@ -54,7 +59,12 @@ export class XLogger
 
     static warn( str : string )
     {
-        if ( XLogger.s_use_console )
+        if ( SVR_ARG.isDebug == false )
+        {
+            return ;
+        }
+
+        if ( SVR_ARG.useConsoleLog )
         {
             console.info( XLogger.timeStr() + str );
         }
@@ -66,7 +76,7 @@ export class XLogger
 
     static error( str : string )
     {
-        if ( XLogger.s_use_console )
+        if ( SVR_ARG.useConsoleLog )
         {
             console.error( XLogger.timeStr() + str );
         }

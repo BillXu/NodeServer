@@ -87,8 +87,8 @@ export class MJCards extends MJCardData
 
     makeCard() : number[]
     {
-        return null ;
         let vHold = [] ;
+        return vHold;
         // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 1) ) ;
         // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 1) ) ;
         // vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Feng, 1) ) ;
@@ -118,9 +118,10 @@ export class MJCards extends MJCardData
         vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 9) ) ;
         vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 1) ) ;
         vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 2) ) ;
-        //vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 3) ) ;
-        //vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tiao, 3) ) ;
-        vHold.push(82,81) ;
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 2 ) );
+        vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 3) ) ;
+        //vHold.push(82,81) ;
+        return vHold ;
 
         vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 1) ) ;
         vHold.push( MJCardData.makeCardNum( eMJCardType.eCT_Tong, 2) ) ;

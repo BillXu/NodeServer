@@ -44,7 +44,7 @@ export class DBSvr extends IServerApp
                 js["ret"] = 1 + err.errno;
                 js["errMsg"] = err.sqlMessage ;
                 self.getRpc().pushDelayResult(reqSieralNum, js ) ;
-                XLogger.error( "failed sql : " + err.sql ) ;
+                XLogger.error( "failed sql : " + err.sql + " msg = " + err.sqlMessage ) ;
                 return ;
             }
 

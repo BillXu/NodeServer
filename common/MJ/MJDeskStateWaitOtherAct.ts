@@ -332,7 +332,7 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
                 {
                     this.mDesk.onPlayerHuOtherCard(this.mChosedAct.idxes, this.mData.mCard, this.mData.mInvokerIdx, this.mData.mGangCnt > 0, this.mData.mBuGangRetore != null ) ;
                     XLogger.debug( "player chose hu so go to gameEnd deskID = " + this.mDesk.deskID ) ;
-                    this.mDesk.transferState( eMJDeskState.eState_End, true ) ;
+                    //this.mDesk.transferState( eMJDeskState.eState_End, true ) ;
                 }
                 break;
             default:

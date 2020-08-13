@@ -1,4 +1,7 @@
-import { clone, cloneDeep } from 'lodash';
+import { PingHuStrategy } from './../Robot/deskModule/PingHuStrategy';
+import { eMJCardType } from './../shared/mjData/MJDefine';
+import { MJCardData } from './../shared/mjData/MJCardData';
+import { clone, cloneDeep, now } from 'lodash';
 // import { MatchCfg } from './../shared/MatchConfigData';
 // import { MailData, eMailState } from './../shared/playerData/PlayerMailData';
 // import { XLogger } from './../common/Logger';
@@ -270,3 +273,31 @@ console.log( "deep clone : " + JSON.stringify(cccd) ) ;
 let jsc = {} ;
 jsc["cc"] = cc;
 console.log( JSON.stringify(jsc) ) ;
+
+let vCard = [] ;
+ vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Wan, 3 ) );
+ vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Wan, 3 ) );
+ vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Wan, 3 ) );
+ vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Wan, 4 ) );
+ vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Wan, 5 ) );
+ vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Wan, 8 ) );
+ vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Wan, 9 ) );
+
+ //vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tong, 8 ) );
+ //vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tong, 9 ) );
+// vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tong, 2 ) );
+// vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tong, 8 ) );
+// vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tong, 8 ) );
+// vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tong, 9 ) );
+// vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tong, 9 ) );
+//vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tiao, 1 ) );
+//vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tiao, 2 ) );
+//vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tiao, 2 ) );
+//vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tiao, 4 ) );
+//vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tiao, 8 ) );
+
+let pingHu = new PingHuStrategy();
+let t = Date.now();
+let card = pingHu.getChuCard(vCard, []) ;
+MJCardData.printCard(card) ;
+console.log( "time offset = " + ( Date.now() - t ) ) ;

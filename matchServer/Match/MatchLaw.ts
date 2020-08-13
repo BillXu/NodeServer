@@ -422,6 +422,8 @@ export class MatchLaw implements IMatchLaw
                 return a.signUpTime - b.signUpTime ;
             } );
 
+            this.mFinishedPlayers.forEach( (sp , idx)=>sp.rankIdx = idx ) ;
+
             // inform players ;
             for ( let lp of vLosedPlayer )
             {
@@ -507,6 +509,7 @@ export class MatchLaw implements IMatchLaw
          }
 
          // send msg info client , if can relive , must not give prize ;
+         player.state = isLose ? eMathPlayerState.eState_Lose : eMathPlayerState.eState_Finished ;
          let msg = {} ;
          msg[key.matchID] = this.matchID ;
          msg[key.rankIdx] = player.rankIdx  ;

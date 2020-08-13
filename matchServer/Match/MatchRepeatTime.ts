@@ -37,7 +37,7 @@ export class MatchRepeatTime extends Match
     onVisitInfo( jsInfo : Object ) : void 
     {
         super.onVisitInfo(jsInfo) ;
-        jsInfo[key.leftTime] = this.mNextStartTime - Date.now();
+        jsInfo[key.leftTime] = Math.floor((this.mNextStartTime - Date.now())/1000 );
     }
 
     startEnterBattle()
@@ -59,7 +59,7 @@ export class MatchRepeatTime extends Match
                 arg[key.uid] = uid ;
                 rpc.invokeRpc( eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_InformNotice, arg ) ;
             }
-            this.mState = eMatchState.eMatch_Enroll ;
         }
+        this.mState = eMatchState.eMatch_Enroll ;
     }
 }

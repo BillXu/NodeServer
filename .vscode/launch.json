@@ -39,6 +39,21 @@
           "outFiles": ["${workspaceFolder}/build/**/*.js"]
       },
 
+      {
+
+        "type": "node",
+
+        "request": "launch",
+
+        "name": "RobotDispatch",
+
+        //"program": "${workspaceFolder}/build/gateServer/GateSvr.js",
+        "program": "${workspaceFolder}/RobotDispatchServer/index.ts",
+        "preLaunchTask": "tsc: build - RobotDispatchServer/tsconfig.json",
+        //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
+        "outFiles": ["${workspaceFolder}/build/**/*.js"]
+    },
+
         {
   
             "type": "node",

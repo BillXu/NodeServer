@@ -28,7 +28,7 @@ export class Network extends LocalEventEmitter{
     static EVENT_CLOSED : string = "close";
     static EVENT_RECONNECT_RESULT : string = "reconnect_result"; // arg , isok : bool
 
-    static TIME_HEAT_BEAT : number = 3 ; 
+    static TIME_HEAT_BEAT : number = 5 ; 
     static MSG_ID : string = "msgID" ;
     static MSG_DATA : string = "msgData" ;
 
@@ -94,7 +94,7 @@ export class Network extends LocalEventEmitter{
 
         if ( this.mWebSocket.readyState != WebSocket.OPEN )
         {
-            XLogger.error( "socket is not open , can not send msgid = " + msgID );
+            XLogger.debug( "socket is not open , can not send msgid = " + msgID );
             return false;
         }
 
@@ -356,7 +356,7 @@ export class Network extends LocalEventEmitter{
         // send heat bet ;
         if ( this.mWebSocket.readyState != WebSocket.OPEN )
         {
-            XLogger.error( "socket do not open , can not send heat bet " );
+            XLogger.debug( "socket do not open , can not send heat bet " );
             return ;
         }
 

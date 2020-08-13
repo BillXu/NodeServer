@@ -154,12 +154,7 @@ export class MJPlayerCardData implements IShareData
                 break ;
             }
         }
-
-        let acted = new ActedCards() ;
-        acted.act = eMJActType.eMJAct_BuGang_Done ;
-        acted.card = card ;
-        this.vActedCards.push(acted) ;
-        this.nBuGanging = 0 ;
+        this.nBuGanging = 0 ; 
     }
 
     beRobedGang()
@@ -432,7 +427,8 @@ export class MJPlayerCardData implements IShareData
             let idx = this.mHoldCards.indexOf(card) ;
             if ( idx == -1 )
             {
-                console.error( "do not have enough card to remove card = " + card ) ;
+                MJCardData.printCards("holdes", this.mHoldCards ) ;
+                console.error( "do not have enough card to remove card = " + MJCardData.getCardStr(card) ) ;
                 break ;
             }
             this.mHoldCards.splice(idx,1) ;

@@ -63,6 +63,7 @@ export class MatchModule extends IClientModule
         else if ( eMsgType.MSG_R_ORDER_JOIN == msgID )
         {
             XLogger.debug( "recived order to join matchID = " + msg[key.matchID] + " uid = " + this.getClient().uid + " lawIdx = " + msg[key.lawIdx] ) ;
+            msg[key.uid] = this.getClient().uid;
             this.sendMsg(eMsgType.MSG_R_JOIN_MATCH, msg, eMsgPort.ID_MSG_PORT_MATCH, msg[key.matchID] ) ;
         }
         else if ( eMsgType.MSG_R_JOIN_MATCH == msgID )

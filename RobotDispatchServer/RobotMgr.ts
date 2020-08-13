@@ -67,16 +67,26 @@ export class RobotMgr extends IModule
                     // if in idle , just remove ;
                     if ( p == null )
                     {
-                        XLogger.error( "why a robot is null ? uid = " + uid ) ;
+                        XLogger.warn( "why a robot is null ? uid = " + uid ) ;
                         break ;
                     }
 
-                    p.sessionID = sessionID ;
-                    if ( state != ePlayerNetState.eState_Online )
+                    if ( state == ePlayerNetState.eState_Online )
+                    {
+                        p.sessionID = sessionID ;
+                    }
+
+                    if ( state == ePlayerNetState.eState_WaitingReconnect )
                     {
                         p.sessionID = 0 ;
                     }
                     
+                    if ( p.sessionID != 0 && state == ePlayerNetState.eState_Disconnected )
+                    {
+                        XLogger.error( "state error , not wait reconnect , direct disconnected ? " ) ;
+                        break ;
+                    }
+
                     if ( state == ePlayerNetState.eState_Disconnected )
                     {
                         if ( p.state == eRobotState.eIdle )
@@ -98,7 +108,11 @@ export class RobotMgr extends IModule
                         this.mAllRobots.delete(uid) ;
                     }
 
-                    XLogger.debug( "robot net state changed uid = " + uid  +  " state = " + ePlayerNetState[state] ) ;
+                    XLogger.debug( "robot net state changed uid = " + uid  +  " state = " + ePlayerNetState[state] + "robot cnt = " + this.mAllRobots.count() ) ;
+                    if ( this.mAllRobots.count() % 100 == 0 )
+                    {
+                        XLogger.info( "1 current robotCnt = " + this.mAllRobots.count() );
+                    }
                 }
                 break ;
             case eRpcFuncID.Func_OnRobotLogin:
@@ -108,7 +122,14 @@ export class RobotMgr extends IModule
                     let p = this.mAllRobots.get(uid) ;
                     if ( p != null )
                     {
-                        XLogger.error( "robot already in the queue , why join again ? uid = " + uid ) ;
+                        if ( p.sessionID != 0 )
+                        {
+                            XLogger.error( "robot already in the queue , why join again ? uid = " + uid ) ;
+                        }
+                        else
+                        {
+                            XLogger.debug( "robot reconnected uid = " + uid ) ;
+                        }
                         p.sessionID = sessionID ;
                         break ;
                     }
@@ -120,6 +141,10 @@ export class RobotMgr extends IModule
                     this.mAllRobots.set(uid, R ) ;
                     this.mIdles.push(R) ;
                     XLogger.debug( "a robot joined uid = " + uid + " robotCnt = " + this.mAllRobots.count() ) ;
+                    if ( this.mAllRobots.count() % 100 == 0 )
+                    {
+                        XLogger.info( "current robotCnt = " + this.mAllRobots.count() );
+                    }
                 }
                 break ;
             case eRpcFuncID.Func_RobotWorkingState:
@@ -131,7 +156,7 @@ export class RobotMgr extends IModule
                         let onThe = this.mOnTheWays.get(uid) ;
                         if ( onThe == null )
                         {
-                            XLogger.warn( "why robot not in onther way ? uid = " + uid ) ;
+                            XLogger.error( "why robot not in onther way ? uid = " + uid ) ;
                             break ;
                         }
                         this.mOnTheWays.delete(uid) ;

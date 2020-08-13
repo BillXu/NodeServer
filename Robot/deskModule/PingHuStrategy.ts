@@ -3,7 +3,7 @@ import { MJPlayerCardData } from './../../shared/mjData/MJPlayerCardData';
 import { MJCardData } from './../../shared/mjData/MJCardData';
 import { eMJActType, eMJCardType } from './../../shared/mjData/MJDefine';
 import { IStrategy } from './IStrategy';
-import { remove, filter } from 'lodash';
+import { remove, filter, countBy } from 'lodash';
 export class LackInfo
 {
     lackCnt : number = 0 ;
@@ -15,20 +15,20 @@ export class LackInfo
     {
         if ( this.next == null )
         {
-            return this.supplyCnt ;
+            return this.lackCnt ;
         }
 
-        return this.supplyCnt + this.next.getFinalLackCnt();
+        return this.lackCnt + this.next.getFinalLackCnt();
     }
 
     getFinalSupplyCnt() : number
     {
         if ( this.next == null )
         {
-            return this.lackCnt ;
+            return this.supplyCnt ;
         }
 
-        return this.lackCnt + this.next.getFinalSupplyCnt();
+        return this.supplyCnt + this.next.getFinalSupplyCnt();
     }
 }
 
@@ -63,8 +63,8 @@ export class PingHuStrategy implements IStrategy
             let vG = v.concat([]) ;
             vG.splice(idx,1) ;
             let tl = this.getGroupLackValue(vG) ;
-            cur.lackCnt += tl.lackCnt;
-            cur.supplyCnt += tl.supplyCnt;
+            cur.lackCnt += tl.getFinalLackCnt();
+            cur.supplyCnt += tl.getFinalSupplyCnt();
             
             if ( card == 0 )
             {
@@ -219,11 +219,11 @@ export class PingHuStrategy implements IStrategy
                 {
                     let vA = filter(vHold,c=> MJCardData.parseCardType(c) == MJCardData.parseCardType(a) );
                     let befor = new LackInfo();
-                    this.getLackValue(vA, this.isCardMustKezi(a) , befor );
+                    this.getLackValue(vA,vA, this.isCardMustKezi(a) , befor );
     
                     let after = new LackInfo();
                     vA.splice(vA.indexOf(a),4) ;
-                    this.getLackValue(vA, this.isCardMustKezi(a) , after );
+                    this.getLackValue(vA,vA, this.isCardMustKezi(a) , after );
                     if ( after.getFinalLackCnt() <= befor.getFinalLackCnt() )
                     {
                         return { act : eMJActType.eMJAct_AnGang, card : a };
@@ -249,11 +249,11 @@ export class PingHuStrategy implements IStrategy
                 {
                     let vA = filter(vHold,c=> MJCardData.parseCardType(c) == MJCardData.parseCardType(a) );
                     let befor = new LackInfo();
-                    this.getLackValue(vA, this.isCardMustKezi(a) , befor );
+                    this.getLackValue(vA,vA, this.isCardMustKezi(a) , befor );
     
                     let after = new LackInfo();
                     vA.splice(vA.indexOf(a),1) ;
-                    this.getLackValue(vA, this.isCardMustKezi(a) , after );
+                    this.getLackValue(vA,vA, this.isCardMustKezi(a) , after );
                     if ( after.getFinalLackCnt() <= befor.getFinalLackCnt() )
                     {
                         return { act : eMJActType.eMJAct_BuGang_Declare, card : a };
@@ -318,13 +318,14 @@ export class PingHuStrategy implements IStrategy
         return t == eMJCardType.eCT_Feng ;
     }
 
-    getLackValue( vCards : number[] , isMustKeZi : boolean , lackInfo : LackInfo )
+    getLackValue( vOrgCards : number[] ,vCards : number[] , isMustKeZi : boolean , lackInfo : LackInfo )
     {
         if ( vCards.length == 0 )
         {
             return ;
         }
-
+        MJCardData.printCards("getLackValue cur cards = ", vCards ) ;
+        MJCardData.printCards("getLackValue orig cards = ", vOrgCards ) ;
         let vlocal = vCards.concat([]) ;
         // as ke zi ;
         // one single ;
@@ -333,21 +334,94 @@ export class PingHuStrategy implements IStrategy
         plOne.supplyCnt = 1 ;
         let card1 = vlocal.shift();
         let value = MJCardData.parseCardValue(card1) ;
-        if ( value == 1 || 9 == value )
+        if (  false == isMustKeZi && ( value == 1 || 9 == value ) )
         {
-            value += 2 ;
+            plOne.supplyCnt += 2 ;
+            if ( 1 == value && vCards.indexOf( card1 + 1 ) != -1  )
+            {
+                plOne.supplyCnt += 6 ;
+            }
+
+            if ( 1 == value && vCards.indexOf( card1 + 2 ) != -1  )
+            {
+                plOne.supplyCnt += 5 ;
+            }
+
+            if ( 9 == value && vOrgCards.indexOf( card1 - 1 ) != -1  )
+            {
+                plOne.supplyCnt += 6
+            }
+
+            if ( 9 == value && vOrgCards.indexOf( card1 - 2 ) != -1  )
+            {
+                plOne.supplyCnt += 5
+            }
         }
-        else if ( value == 2 || 8 == value )
+        else if ( false == isMustKeZi && ( value == 2 || 8 == value ) )
         {
-            value += 3 ;
+            plOne.supplyCnt += 3 ;
+            if ( 2 == value && vCards.indexOf( card1 + 1 ) != -1  )
+            {
+                plOne.supplyCnt += 6
+            }
+
+            if ( 2 == value && vCards.indexOf( card1 + 2 ) != -1  )
+            {
+                plOne.supplyCnt += 5
+            }
+
+            if ( 2 == value && vOrgCards.indexOf( card1 - 1 ) != -1  )
+            {
+                plOne.supplyCnt += 6
+            }
+
+            if ( 8 == value && vOrgCards.indexOf( card1 - 1 ) != -1  )
+            {
+                plOne.supplyCnt += 6
+            }
+
+            if ( 8 == value && vOrgCards.indexOf( card1 - 2 ) != -1  )
+            {
+                plOne.supplyCnt += 5
+            }
+
+            if ( 8 == value && vCards.indexOf( card1 + 1 ) != -1  )
+            {
+                plOne.supplyCnt += 6
+            }
         }
-        else
+        else if ( false == isMustKeZi )
         {
-            value += 4 ;
+            plOne.supplyCnt += 4 ;
+            if ( vCards.indexOf( card1 + 1 ) != -1  )
+            {
+                plOne.supplyCnt += 6
+            }
+
+            if ( vCards.indexOf( card1 + 2 ) != -1  )
+            {
+                plOne.supplyCnt += 5
+            }
+
+            if ( vCards.indexOf( card1 - 2 ) != -1  )
+            {
+                plOne.supplyCnt += 5
+            }
+
+            if ( vCards.indexOf( card1 - 1 ) != -1  )
+            {
+                plOne.supplyCnt += 6
+            }
+        }
+        let cntsame = countBy(vOrgCards,vt=>vt == card1 ? "s" : "n" ) ;
+        plOne.supplyCnt += ( cntsame["s"] - 1 ) * 7;
+        if ( isMustKeZi )
+        {
+            plOne.supplyCnt -= 1;
         }
 
         plOne.groupCards.push(card1) ;
-        this.getLackValue(vlocal, isMustKeZi, plOne ) ;
+        this.getLackValue(vOrgCards,vlocal, isMustKeZi, plOne ) ;
         // two
         if ( vCards.length < 2 )
         {
@@ -364,9 +438,12 @@ export class PingHuStrategy implements IStrategy
             vlocalKe2.shift();
             let pke2 = new LackInfo();
             pke2.lackCnt = 1 ;
-            pke2.supplyCnt = 1.5 ; // better than ka zhang ;
+            pke2.supplyCnt = 1.7 ; // better than ka zhang ;
             pke2.groupCards.push(card,card) ;
-            this.getLackValue(vlocalKe2, isMustKeZi, pke2 ) ;
+            let cntsame = countBy(vOrgCards,vt=>vt == card ? "s" : "n" ) ;
+            pke2.supplyCnt += ( cntsame["s"] - 2 ) * 2;
+
+            this.getLackValue(vOrgCards,vlocalKe2, isMustKeZi, pke2 ) ;
 
             if ( lbest.getFinalLackCnt() > pke2.getFinalLackCnt() )
             {
@@ -394,7 +471,13 @@ export class PingHuStrategy implements IStrategy
                 shun1.lackCnt = 1 ;
                 shun1.supplyCnt = 2 ;
                 shun1.groupCards.push(card,card + 1 ) ;
-                this.getLackValue(vShun1, isMustKeZi, shun1 ) ;
+
+                let cntsame = countBy(vOrgCards,vt=>vt == card ? "s" : "n" ) ;
+                shun1.supplyCnt += ( cntsame["s"] - 1 );
+                cntsame = countBy(vOrgCards,vt=>vt == (card+1) ? "s" : "n" ) ;
+                shun1.supplyCnt += ( cntsame["s"] - 1 );
+
+                this.getLackValue(vOrgCards,vShun1, isMustKeZi, shun1 ) ;
 
                 if ( lbest.getFinalLackCnt() > shun1.getFinalLackCnt() )
                 {
@@ -419,7 +502,13 @@ export class PingHuStrategy implements IStrategy
                 shun2.lackCnt = 1 ;
                 shun2.supplyCnt = 1 ;
                 shun2.groupCards.push(card,card + 2 ) ;
-                this.getLackValue( vShun2, isMustKeZi, shun2 ) ;
+
+                let cntsame = countBy(vOrgCards,vt=>vt == card ? "s" : "n" ) ;
+                shun2.supplyCnt += ( cntsame["s"] - 1 );
+                cntsame = countBy(vOrgCards,vt=>vt == (card+2) ? "s" : "n" ) ;
+                shun2.supplyCnt += ( cntsame["s"] - 1 );
+
+                this.getLackValue( vOrgCards,vShun2, isMustKeZi, shun2 ) ;
 
                 if ( lbest.getFinalLackCnt() > shun2.getFinalLackCnt() )
                 {
@@ -449,8 +538,8 @@ export class PingHuStrategy implements IStrategy
             lke3.splice(0,3) ;
             let ke = new LackInfo();
             ke.lackCnt = 0 ;
-            ke.supplyCnt = 0 ;
-            this.getLackValue( lke3, isMustKeZi, ke ) ;
+            ke.supplyCnt = 0.2 ;
+            this.getLackValue( vOrgCards,lke3, isMustKeZi, ke ) ;
 
             if ( lbest.getFinalLackCnt() > ke.getFinalLackCnt() )
             {
@@ -472,15 +561,16 @@ export class PingHuStrategy implements IStrategy
             card = shun3.shift();
             let idx1 = shun3.indexOf(card + 1 ) ;
             let idx2 = shun3.indexOf(card + 2 ) ;
-            shun3.splice(idx1,1) ;
-            shun3.splice(idx2,1) ;
             if ( idx1 != -1 && -1 != idx2 && MJCardData.parseCardValue(card) <= 7 )
             {
+                shun3.splice(shun3.indexOf(card + 1 ),1) ;
+                shun3.splice(shun3.indexOf(card + 2 ),1) ;
+
                 let k = new LackInfo();
                 k.lackCnt = 0 ;
                 k.supplyCnt = 0 ;
 
-                this.getLackValue( shun3, isMustKeZi, k ) ;
+                this.getLackValue( vOrgCards,shun3, isMustKeZi, k ) ;
 
                 if ( lbest.getFinalLackCnt() > k.getFinalLackCnt() )
                 {
@@ -509,7 +599,11 @@ export class PingHuStrategy implements IStrategy
 
         let card = 0 ;
         let bestChuLackInfo = new LackInfo();
-        this.getLackValue( vCards, isMustKeZi, bestChuLackInfo ) ;
+        this.getLackValue( vCards,vCards, isMustKeZi, bestChuLackInfo ) ;
+        if ( bestChuLackInfo.getFinalLackCnt() == 0 )
+        {
+            return 0 ;
+        }
 
         for ( let idx = 0 ; idx < vCards.length ; ++idx )
         {
@@ -526,9 +620,9 @@ export class PingHuStrategy implements IStrategy
             let tmp = vCards.concat([]);
             tmp.splice(idx,1) ;
             let ltmp = new LackInfo();
-            this.getLackValue(tmp, isMustKeZi, ltmp ) ;
+            this.getLackValue(vCards,tmp, isMustKeZi, ltmp ) ;
 
-            if ( ltmp.getFinalLackCnt() < bestChuLackInfo.getFinalLackCnt() )
+            if ( card == 0 || ltmp.getFinalLackCnt() < bestChuLackInfo.getFinalLackCnt() )
             {
                 card = vCards[idx] ;
                 bestChuLackInfo = ltmp;
@@ -563,7 +657,7 @@ export class PingHuStrategy implements IStrategy
                 c = c.next ;
                 XLogger.debug( "node not null , go on find next " ) ;
             }
-            this.getLackValue(v, this.isCardMustKezi(v[0]), c ) ;
+            this.getLackValue(v,v, this.isCardMustKezi(v[0]), c ) ;
         }
         return p ;
     }

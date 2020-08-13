@@ -164,6 +164,7 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
             {
                 if ( l.visitPlayerMatchState( msg, orgID ) )
                 {
+                    msg[key.cfgID] = this.mCfg.cfgID;
                     msg[key.ret] = 0 ;
                     this.sendMsgToClient(orgID, msgID, msg) ;
                     XLogger.debug( "replay to player playing match state = " + JSON.stringify(msg) + " matchID = " + this.matchID ) ;

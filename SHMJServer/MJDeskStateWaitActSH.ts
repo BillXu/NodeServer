@@ -9,38 +9,6 @@ import { eMsgType } from '../shared/MessageIdentifer';
 import { WaitOtherActStateData } from '../common/MJ/MJDeskStateWaitOtherAct';
 export class MJDeskStateWaitActSH extends MJDeskStateWaitAct
 {
-    onEnterState( jsData : WaitActStateData ) : void
-    {
-        super.onEnterState(jsData) ;
-        let buHuaTime = ( this.mDesk as MJDeskSHNew ).checkPlayerBuHua(this.mData.mActIdx) ;
-        if ( 0 != buHuaTime )
-        {
-            this.mWaitTimeSecons += buHuaTime ;
-            ++this.mData.mGangCnt;  // hua as gang when hu in one round;
-            this.mDesk.informSelfAct(this.mData.mActIdx, this.mData.mEnterAct, this.mData.mGangCnt > 0 ) ;
-            this.startWait();
-        } 
-
-        let p = this.mDesk.getPlayerByIdx( this.mData.mActIdx ) as MJPlayerDataSH;
-        let vh = p.getHoldHuaCards();
-        if ( vh != null && vh.length > 0 )
-        {
-            XLogger.debug( "no more card to bu hua , so game end" ) ;
-            this.mDesk.transferState( eMJDeskState.eState_End, false ) ;
-            return ;
-        }
-
-        if ( p.isTing ) // modify wait time 
-        {
-            this.mWaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN + buHuaTime;
-            if ( p.state != eMJPlayerState.eState_TuoGuan && p.getCanBuGangCards().length > 0  && this.mDesk.canPlayerHu( p.nIdx,p.getAutoChuCard(),true,this.mData.mGangCnt > 0 ,p.nIdx ) == false )
-            {
-                this.mWaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT + buHuaTime ;
-            }
-            this.startWait();
-        }
-    }
-
     onLogicMsg( msgID : eMsgType , msg : Object, nSessionID : number ) : boolean
     {
         if ( msgID != eMsgType.MSG_PLAYER_MJ_TING )
@@ -95,5 +63,37 @@ export class MJDeskStateWaitActSH extends MJDeskStateWaitAct
         {
             super.waitActTimeOut();
         }
+    }
+
+    startWait()
+    {
+        let buHuaTime = ( this.mDesk as MJDeskSHNew ).checkPlayerBuHua(this.mData.mActIdx) ;
+        if ( 0 != buHuaTime )
+        {
+            this.mWaitTimeSecons += buHuaTime ;
+            ++this.mData.mGangCnt;  // hua as gang when hu in one round;
+            this.mDesk.informSelfAct(this.mData.mActIdx, this.mData.mEnterAct, this.mData.mGangCnt > 0 ) ;
+            XLogger.debug( "player do bu hua , inform act idx = " + this.mData.mActIdx ) ;
+        } 
+
+        let p = this.mDesk.getPlayerByIdx( this.mData.mActIdx ) as MJPlayerDataSH;
+        let vh = p.getHoldHuaCards();
+        if ( vh != null && vh.length > 0 )
+        {
+            XLogger.debug( "no more card to bu hua , so game end" ) ;
+            this.mDesk.transferState( eMJDeskState.eState_End, false ) ;
+            return ;
+        }
+
+        if ( p.isTing ) // modify wait time 
+        {
+            this.mWaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN + buHuaTime;
+            if ( p.state != eMJPlayerState.eState_TuoGuan && p.getCanBuGangCards().length > 0  && this.mDesk.canPlayerHu( p.nIdx,p.getAutoChuCard(),true,this.mData.mGangCnt > 0 ,p.nIdx ) == false )
+            {
+                this.mWaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT + buHuaTime ;
+            }
+        }
+
+        super.startWait();
     }
 }

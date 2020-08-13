@@ -1,3 +1,4 @@
+import { SVR_ARG } from './../common/ServerDefine';
 import { MatchCfg } from './../shared/MatchConfigData';
 import { MatchRepeatTime } from './Match/MatchRepeatTime';
 import { MatchFixTime } from './Match/MatchFixTime';
@@ -70,7 +71,7 @@ export class MatchMgr extends IModule
         if ( null == this.mCfgLoader )
         {
             this.mCfgLoader = new MatchConfigLoader();
-            this.mCfgLoader.loadConfig( "http://192.168.6.168:8087/mobile/getMatchList", this.loadCfgResult.bind(this) ) ;
+            this.mCfgLoader.loadConfig( SVR_ARG.matchCfgUrl, this.loadCfgResult.bind(this) ) ;
         }
     }
 
@@ -106,7 +107,7 @@ export class MatchMgr extends IModule
                 XLogger.warn( "inform match result but match is null matchID = " + matchID + " reuslt = " + JSON.stringify(arg[key.result]) ) ;
                 return {} ;
             } 
-            m.onDeskFinished(arg[key.lawIdx],arg[key.deskID],arg[key.result]) ;
+            m.onDeskFinished(arg[key.lawIdx],arg[key.deskID],arg[key.players]) ;
             return {}
         } ) ;
     }

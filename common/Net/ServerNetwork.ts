@@ -14,7 +14,7 @@ interface IClientPeerDelegate
 
 class ClientPeer
 {
-    static TIME_HEAT_BEAT_ClIENT : number = 13 ;
+    static TIME_HEAT_BEAT_ClIENT : number = 6 ;
     protected mSocketPeer : WebSocket = null ;
     protected mIP : string = null ;
     protected mSessionID : number = 0 ;
@@ -63,12 +63,12 @@ class ClientPeer
             
             XLogger.debug( "wait verify time out close it sessionID = " + self.mSessionID ) ;
             self.close();
-        } ,1500) ;
+        } ,1000) ;
 
         this.mHeatBeatTimer = setInterval( ()=>{ 
             if ( self.mIsKeepLive == false )
             {
-                XLogger.debug( "head bet timeout close it sessionID = " + self.mSessionID ) ;
+                XLogger.debug( "----head bet timeout close it sessionID = " + self.mSessionID ) ;
                 self.close();
                 return ;
             }
@@ -93,6 +93,11 @@ class ClientPeer
 
     doWaitReconnect( nSeconds : number )
     {
+        if ( this.mSocketPeer.readyState != WebSocket.CLOSED )
+        {
+            XLogger.error( "not close peer , why do wait reconnect ? state = " + this.mSocketPeer.readyState ) ;
+        }
+        
         if ( null != this.mWaitReconnectTimer )
         {
             clearTimeout( this.mWaitReconnectTimer ) ;
@@ -124,6 +129,13 @@ class ClientPeer
         let self = this ;
         this.mIsKeepLive = true ;
         this.mSocketPeer.on("ping", ()=>{ self.mIsKeepLive = true }) ;
+
+        if ( this.mHeatBeatTimer != null )
+        {
+            clearInterval(this.mHeatBeatTimer) ;
+            this.mHeatBeatTimer = null ;
+            XLogger.error( "why headBeater Timer is not null ? " ) ;
+        }
 
         this.mHeatBeatTimer = setInterval( ()=>{ 
             if ( self.mIsKeepLive == false )

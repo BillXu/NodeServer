@@ -319,7 +319,7 @@ export abstract class MJDesk implements IDesk
             }
 
             let vActs = [] ;
-            if ( false == isBuGang && p.canChi(card) )
+            if ( false == isBuGang && ( ( invokeIdx + 1 ) % this.mDeskInfo.seatCnt ) == p.nIdx &&  p.canChi(card) )
             {
                 vActs.push(eMJActType.eMJAct_Chi) ;
             }

@@ -58,6 +58,7 @@ export enum eMathPlayerState
     eState_Promoted,
     eState_Relived,
     eState_Lose,
+    eState_Finished,
     eState_Max,
 }
 
@@ -81,8 +82,8 @@ export enum eMJPlayerState
 export class G_ARG
 {
     static TIME_MJ_BU_HUA : number = 0.8 ;
-    static TIME_MJ_WAIT_ACT : number = 1000 ;
-    static TIME_MJ_WAIT_ACT_TUOGUAN : number = 3 ; 
+    static TIME_MJ_WAIT_ACT : number = 5000000 ;
+    static TIME_MJ_WAIT_ACT_TUOGUAN : number = 1.6 ; 
     static TIME_MATCH_WAIT_RELIVE : number = 3 ;
-    static TIME_QUICK_MATCH_WAIT : number = 15 ;
+    static TIME_QUICK_MATCH_WAIT : number = 8 ;
 }

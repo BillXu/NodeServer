@@ -245,7 +245,7 @@ export class RpcModule extends IModule
             if ( this.getSvrApp().onRpcCall(funcID, msg["arg"] , sieralNum, svrRpcOutResult ) )
             {
                 this.responeRpcCall( svrRpcOutResult, sieralNum, orgPort, orgID ) ;
-                return ;
+                return true;
             }
 
             let func = this.mRPCFuncs.get( funcID ) ;

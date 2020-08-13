@@ -1,3 +1,4 @@
+import { SVR_ARG } from './ServerDefine';
 import { merge } from 'lodash';
 import { XLogger } from './Logger';
 import { eMsgPort } from './../shared/MessageIdentifer';
@@ -55,7 +56,7 @@ export class Application
     protected mSvr : IServer = null ;
     init( svr : IServer )
     {
-        XLogger.info( "start svr " ) ;
+        XLogger.info( "start svr PID = " + process.pid ) ;
         process.on('uncaughtException',( err : Error )=>{
             XLogger.error( "message : " + err.message ) ;
             XLogger.error( "exception : " + err.stack ) ;
@@ -63,9 +64,8 @@ export class Application
 
         this.mSvr = svr ;
         // request confg 
-        let cfgUrl = "http://cfg.com/cfg.php" ;
-        XLogger.info( "request confg url = " + cfgUrl ) ;
-        request.get( cfgUrl,{ timeout : 2000 },this.cfgResult.bind(this) ) ;
+        XLogger.info( "request confg url = " + SVR_ARG.svrCfgUrl ) ;
+        request.get( SVR_ARG.svrCfgUrl,{ timeout : 2000 },this.cfgResult.bind(this) ) ;
     }
 
     protected cfgResult( error: any, response: request.Response, body: any )
@@ -81,7 +81,7 @@ export class Application
             }
             if ( c != null )
             {
-                cfg = c ;
+                cfg = c["info"] ;
             }
         }
         else
