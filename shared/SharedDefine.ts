@@ -57,8 +57,9 @@ export enum eMathPlayerState
     eState_Playing,
     eState_Promoted,
     eState_Relived,
-    eState_Lose,
+    eState_WaitOtherFinish,
     eState_Finished,
+    eState_Lose,
     eState_Max,
 }
 

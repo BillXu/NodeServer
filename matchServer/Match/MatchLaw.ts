@@ -382,7 +382,7 @@ export class MatchLaw implements IMatchLaw
             let pp = v[0];
             pp.score = p.score ;
             pp.stayDeskID = 0 ;
-            pp.state = eMathPlayerState.eState_Promoted;
+            pp.state = eMathPlayerState.eState_WaitOtherFinish;
             vDeskP.push(pp) ;
             this.mFinishedPlayers.push(pp) ;
         }
@@ -390,86 +390,11 @@ export class MatchLaw implements IMatchLaw
         // process promoted
         if ( this.mRoundCfg.isByDesk )
         {
-            vDeskP.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
-                if ( a.score != b.score )
-                {
-                    return b.score - a.score ;
-                }
-                return a.signUpTime - b.signUpTime ;
-            } );
-
-            let vLosedPlayer : MatchPlayer[] = [] ;
-            for ( let idx = 0 ; idx < vDeskP.length ; ++idx )
-            {
-                if ( idx >= this.mRoundCfg.promoteCnt )
-                {
-                    vDeskP[idx].state = eMathPlayerState.eState_Lose;
-                    vLosedPlayer.push(vDeskP[idx]);
-                }
-            }
-
-            // sort idx ;
-            this.mFinishedPlayers.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
-                if ( a.state != b.state )
-                {
-                    return a.state - b.state ;
-                }
-
-                if ( a.score != b.score )
-                {
-                    return b.score - a.score ;
-                }
-                return a.signUpTime - b.signUpTime ;
-            } );
-
-            this.mFinishedPlayers.forEach( (sp , idx)=>{
-                if ( sp.state == eMathPlayerState.eState_Lose )
-                {
-                    sp.rankIdx = idx ;
-                }
-                 } ) ;
-
-            // inform players ;
-            for ( let lp of vLosedPlayer )
-            {
-                lp.rankIdx += this.mPlayeringPlayers.length ;
-                this.onPlayerMatchResult( lp, true );
-            }
+            this.processDeskRankPromote( vDeskP );
         }
         else
         {
-            this.mFinishedPlayers.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
-                if ( a.score != b.score )
-                {
-                    return b.score - a.score ;
-                }
-                return a.signUpTime - b.signUpTime ;
-            } );
-        }
-
-        // update ranker idx and inform client and process lose out ;
-        for ( let ridx = 0 ; ridx < this.mFinishedPlayers.length ; ++ ridx )
-        {
-            let p = this.mFinishedPlayers[ridx] ;
-            if ( p.rankIdx != ridx )
-            {
-                p.rankIdx = ridx ;
-                if ( this.mRoundCfg.isByDesk == false && p.rankIdx >= this.mRoundCfg.promoteCnt && p.state == eMathPlayerState.eState_Promoted )
-                {
-                    p.state = eMathPlayerState.eState_Lose ;
-                    this.onPlayerMatchResult(p, true );
-                }
-                else if ( p.state == eMathPlayerState.eState_Promoted || p.state == eMathPlayerState.eState_Relived )
-                {
-                    // inform rank idx changed ;
-                    let msg = {} ;
-                    msg[key.matchID] = this.matchID ;
-                    msg[key.rankIdx] = p.rankIdx  ;
-                    msg[key.state] = p.state;
-                    msg[key.canRelive] = this.mRoundCfg.canRelive ? 1 : 0 ;
-                    this.mMatch.sendMsgToClient(p.sessionID, eMsgType.MSG_PLAYER_MATCH_RESULT, msg ) ;
-                }
-            }
+            this.processAllRankPromote(vDeskP ) ;
         }
 
         // check if all desk finished ;
@@ -481,6 +406,106 @@ export class MatchLaw implements IMatchLaw
         else
         {
             XLogger.debug( "desk finished of matchID = " + this.matchID + " deskID = " + deskID + " left playercnt = " + this.mPlayeringPlayers.length ) ;
+        }
+    }
+
+    protected processDeskRankPromote( vDeskFinished : MatchPlayer[] )
+    {
+        // process promoted
+        vDeskFinished.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
+            if ( a.score != b.score )
+            {
+                return b.score - a.score ;
+            }
+            return a.signUpTime - b.signUpTime ;
+        } );
+
+        for ( let idx = 0 ; idx < vDeskFinished.length ; ++idx )
+        {
+            if ( idx >= this.mRoundCfg.promoteCnt )
+            {
+                vDeskFinished[idx].state = eMathPlayerState.eState_Lose;
+                XLogger.debug( "player lose uid = " + vDeskFinished[idx].uid  + " matchID = " + this.matchID ) ;
+            }
+            else
+            {
+                vDeskFinished[idx].state = eMathPlayerState.eState_Promoted;
+                XLogger.debug( "player promoted uid = " + vDeskFinished[idx].uid  + " matchID = " + this.matchID ) ;
+            }
+        }
+
+        // sort idx ;
+        this.mFinishedPlayers.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
+            if ( a.state != b.state )
+            {
+                return a.state - b.state ;
+            }
+
+            if ( a.score != b.score )
+            {
+                return b.score - a.score ;
+            }
+            return a.signUpTime - b.signUpTime ;
+        } );
+
+        for ( let ridx = 0 ; ridx < this.mFinishedPlayers.length ; ++ridx )
+        {
+            let p = this.mFinishedPlayers[ridx] ;
+            if ( p.rankIdx != ridx )
+            {
+                p.rankIdx = ridx ;
+                if ( p.state == eMathPlayerState.eState_WaitOtherFinish || p.state == eMathPlayerState.eState_Relived || eMathPlayerState.eState_Promoted == p.state )
+                {
+                    this.informRankIdxUpddated(p) ;
+                }
+            }
+        }
+
+        // inform players losed ;
+        for ( let lp of vDeskFinished )
+        {
+            if ( lp.state == eMathPlayerState.eState_Lose )
+            {
+                lp.rankIdx += this.mPlayeringPlayers.length / this.cfg.cntPerDesk  * this.mRoundCfg.promoteCnt ;
+                lp.rankIdx = Math.floor(lp.rankIdx) ;
+                this.onPlayerMatchResult( lp, true );
+            }
+        }
+    }
+
+    protected processAllRankPromote( vDeskFinished : MatchPlayer[] )
+    {
+        // process promoted
+        this.mFinishedPlayers.sort( ( a : MatchPlayer, b : MatchPlayer )=>{
+            if ( a.score != b.score )
+            {
+                return b.score - a.score ;
+            }
+            return a.signUpTime - b.signUpTime ;
+        } );
+        
+        // update ranker idx and inform client and process lose out ;
+        for ( let ridx = 0 ; ridx < this.mFinishedPlayers.length ; ++ ridx )
+        {
+            let p = this.mFinishedPlayers[ridx] ;
+            if ( p.rankIdx != ridx )
+            {
+                p.rankIdx = ridx ;
+                if ( p.rankIdx >= this.mRoundCfg.promoteCnt && p.state == eMathPlayerState.eState_WaitOtherFinish )
+                {
+                    p.state = eMathPlayerState.eState_Lose;
+                    XLogger.debug( `we known player lose uid = ${p.uid } + matchID = ${this.matchID} + rankIdx = ${p.rankIdx} ` ) ;
+                    this.onPlayerMatchResult(p, true ) ;
+                    continue ;
+                }
+                else if ( ( p.rankIdx + this.mPlayeringPlayers.length ) < this.mRoundCfg.promoteCnt )
+                {
+                    p.state = eMathPlayerState.eState_Promoted;
+                    XLogger.debug( `we known player promoted uid = ${p.uid} + matchID = ${this.matchID} + rankIdx = ${p.rankIdx}` ) ;
+                }
+
+                this.informRankIdxUpddated(p) ;
+            }
         }
     }
 
@@ -514,8 +539,8 @@ export class MatchLaw implements IMatchLaw
 
          }
 
+         XLogger.debug( `player match result uid = ${player.uid} rankIdx = ${player.rankIdx } state = ${ eMathPlayerState[player.state] }  matchID = ${this.matchID}  reward = ${JSON.stringify(rewards||{})} ` ) ;
          // send msg info client , if can relive , must not give prize ;
-         player.state = isLose ? eMathPlayerState.eState_Lose : eMathPlayerState.eState_Finished ;
          let msg = {} ;
          msg[key.matchID] = this.matchID ;
          msg[key.rankIdx] = player.rankIdx  ;
@@ -523,6 +548,18 @@ export class MatchLaw implements IMatchLaw
          msg[key.state] = player.state;
          msg[key.canRelive] = this.mRoundCfg.canRelive ? 1 : 0 ;
          this.mMatch.sendMsgToClient(player.sessionID, eMsgType.MSG_PLAYER_MATCH_RESULT, msg ) ;
+    }
+
+    protected informRankIdxUpddated( player : MatchPlayer )
+    {
+        XLogger.debug( `player rankIdx changed uid = ${ player.uid } rankIdx = ${ player.rankIdx} state = ${ eMathPlayerState[player.state]} ` );
+        // inform rank idx changed ;
+        let msg = {} ;
+        msg[key.matchID] = this.matchID ;
+        msg[key.rankIdx] = player.rankIdx  ;
+        msg[key.state] = player.state;
+        msg[key.canRelive] = 0;
+        this.mMatch.sendMsgToClient(player.sessionID, eMsgType.MSG_PLAYER_MATCH_RESULT, msg ) ;
     }
 
     waitRelive()
@@ -553,10 +590,8 @@ export class MatchLaw implements IMatchLaw
         XLogger.debug( "match do finished , matchID = " + this.matchID + " idx = " + this.mLawIdx ) ;
         for ( let player of this.mFinishedPlayers )
         {
-            if ( player.state == eMathPlayerState.eState_Promoted )
-            {
-                this.onPlayerMatchResult(player, false ) ;
-            }
+            player.state = eMathPlayerState.eState_Finished;
+            this.onPlayerMatchResult(player, false ) ;
         }  
         // save to db ;
         this.mDelegate.onLawFinished(this) ;
