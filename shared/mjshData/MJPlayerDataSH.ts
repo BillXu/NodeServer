@@ -150,6 +150,10 @@ export class MJPlayerDataSH extends MJPlayerData
             {
                 return [this.cardData.getAutoChuCard()];
             }
+            else
+            {
+                return [] ;
+            }
         }
 
         return super.getCanBuGangCards();

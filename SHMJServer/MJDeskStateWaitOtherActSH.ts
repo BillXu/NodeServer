@@ -11,10 +11,6 @@ export class MJDeskStateWaitOtherActSH extends MJDeskStateWaitOtherAct
         if ( pp.isTing )
         {
             time =  G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN ;
-            if ( pp.state != eMJPlayerState.eState_TuoGuan && this.mDesk.canPlayerHu(pp.nIdx, this.mData.mCard, false, this.mData.mGangCnt > 0 , this.mData.mInvokerIdx) == true )
-            {
-                time = G_ARG.TIME_MJ_WAIT_ACT;
-            }
         }
 
         super.startWaitPlayer(idx, time) ;

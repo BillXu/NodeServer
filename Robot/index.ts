@@ -1,4 +1,3 @@
-import { random } from 'lodash';
 import { RobotClient } from './RobotClient';
 let cnt = 4;
 //setInterval( ()=>{

@@ -5,18 +5,18 @@ module.exports = {
 		mysql: 'commonjs mysql'
 	},
   entry: { 
-         // center : './build/CenterServer/index.js',
+          center : './build/CenterServer/index.js',
 
-         // gate : "./build/gateServer/index.js",
+          gate : "./build/gateServer/index.js",
 
-          //data : './build/dataServer/index.js',
+          data : './build/dataServer/index.js',
 
           db : "./build/DBServer/index.js",
 
-         // match : './build/matchServer/index.js',
+          match : './build/matchServer/index.js',
 
-         // robotDispach : "./build/RobotDispatchServer/index.js",
-         // shMJ : "./build/SHMJServer/index.js"
+          robotDispach : "./build/RobotDispatchServer/index.js",
+          shMJ : "./build/SHMJServer/index.js"
 },
 
   target: 'node',

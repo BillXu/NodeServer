@@ -37,7 +37,7 @@ export class MatchRepeatTime extends Match
     onVisitInfo( jsInfo : Object ) : void 
     {
         super.onVisitInfo(jsInfo) ;
-        jsInfo[key.leftTime] = Math.floor((this.mNextStartTime - Date.now())/1000 );
+        jsInfo[key.leftTime] = Math.floor(   (  this.mNextStartTime - Date.now()   )   /  1000       );
     }
 
     startEnterBattle()

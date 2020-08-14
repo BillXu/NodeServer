@@ -67,12 +67,11 @@ export class FanxingCheckerSH
 
         hua += diFen ;
         let bei = this.getBeiShu(fanxing) ;
-        let score = hua * bei ;
         if ( isRobGang )
         {
-            score *= 3 ;
+            bei *= 3 ;
         }
-
+        let score = hua * bei ;
         return { fanxing : fanxing , beiShu : bei , score : score } ;
     }
 

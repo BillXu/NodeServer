@@ -21,7 +21,7 @@ export class MJDeskMgrSH extends DeskMgr
         this.mDesks.set(d.deskID, d ) ;
 
         let d2 = this.createDesk();
-        d2.init(300, 1, 1, this ,this ) ;
+        d2.init(300, 1, 1000, this ,this ) ;
         d2.setMatchInfo( 300, 0 ) ;
         this.mDesks.set(d2.deskID, d2 ) ;
     }

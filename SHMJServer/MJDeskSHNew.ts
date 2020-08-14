@@ -17,6 +17,7 @@ import { DeskMgr } from './../common/MJ/DeskMgr';
 import { MJDesk } from './../common/MJ/MJDesk';
 import { eMsgPort, eMsgType } from '../shared/MessageIdentifer';
 import { MJDeskDataSH } from '../shared/mjshData/MJDeskDataSH';
+import { MJCards } from '../common/MJ/MJCards';
 export class MJDeskSHNew extends MJDesk
 {
     init( deskID : number , diFen : number , roundCnt : number , delegate : IDeskDelegate , deskMgr : DeskMgr ) : void 
@@ -34,6 +35,14 @@ export class MJDeskSHNew extends MJDesk
     createDeskInfoData() : MJDeskData 
     {
         return new MJDeskDataSH() ;
+    }
+
+    protected createMJCards()
+    {
+        if ( this.mMJCards == null )
+        {
+            this.mMJCards = new MJCards() ;
+        }
     }
 
     protected enableChi() : boolean
@@ -110,7 +119,7 @@ export class MJDeskSHNew extends MJDesk
             }
 
             let vActs = [] ;
-            if ( false == isBuGang && p.canChi(card) )
+            if ( false == isBuGang && ( ( invokeIdx + 1 ) % this.mDeskInfo.seatCnt ) == p.nIdx &&  p.canChi(card) )
             {
                 vActs.push(eMJActType.eMJAct_Chi) ;
             }
@@ -152,7 +161,7 @@ export class MJDeskSHNew extends MJDesk
         let sore = 0 ;
         for ( let p of this.vPlayers )
         {
-            if ( p.nIdx != player.nIdx )
+            if ( p.nIdx == player.nIdx )
             {
                 continue ;
             }

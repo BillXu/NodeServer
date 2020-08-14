@@ -398,7 +398,7 @@ export class MatchLaw implements IMatchLaw
                 return a.signUpTime - b.signUpTime ;
             } );
 
-            let vLosedPlayer = [] ;
+            let vLosedPlayer : MatchPlayer[] = [] ;
             for ( let idx = 0 ; idx < vDeskP.length ; ++idx )
             {
                 if ( idx >= this.mRoundCfg.promoteCnt )
@@ -422,11 +422,17 @@ export class MatchLaw implements IMatchLaw
                 return a.signUpTime - b.signUpTime ;
             } );
 
-            this.mFinishedPlayers.forEach( (sp , idx)=>sp.rankIdx = idx ) ;
+            this.mFinishedPlayers.forEach( (sp , idx)=>{
+                if ( sp.state == eMathPlayerState.eState_Lose )
+                {
+                    sp.rankIdx = idx ;
+                }
+                 } ) ;
 
             // inform players ;
             for ( let lp of vLosedPlayer )
             {
+                lp.rankIdx += this.mPlayeringPlayers.length ;
                 this.onPlayerMatchResult( lp, true );
             }
         }

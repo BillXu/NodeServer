@@ -1,3 +1,4 @@
+import { remove } from 'lodash';
 import { XLogger } from './../../common/Logger';
 import { eMJCardType, eMJActType } from './../mjData/MJDefine';
 import { MJCardData } from './../mjData/MJCardData';
@@ -125,7 +126,13 @@ export class MJPlayerCardDataSH extends MJPlayerCardData
             {
                 let vew = [ opts[idx],opts[idx+1]] ;
                 let vl = this.produceLimitCard(card, vew) ;
-                let notInLimitRange = this.mHoldCards.findIndex( ( c : number )=>{ return vl.indexOf(c) == -1; } ) ;
+                //MJCardData.printCards( "this is hold : " , this.mHoldCards );
+                //MJCardData.printCards( "limits : " , vl );
+                let vH = this.mHoldCards.concat([]) ;
+                remove(vH,vc=>vew.indexOf(vc) != -1 ) ;
+                let notInLimitRange = vH.findIndex( ( c : number )=>{ 
+                    return vl.indexOf(c) == -1; 
+                } ) ;
                 if ( -1 != notInLimitRange )
                 {
                     return true ;

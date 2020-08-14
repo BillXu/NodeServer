@@ -165,7 +165,7 @@ export abstract class MJDesk implements IDesk
         let p = this.getPlayerBySessionID(orgID) ;
         if ( p == null )
         {
-            XLogger.error( "player not in this room , can not process msg sessionID = " + orgID + " deskID = " + this.deskID ) ;
+            XLogger.warn( "player not in this room , can not process msg sessionID = " + orgID + " deskID = " + this.deskID ) ;
             msg[key.ret] = 200 ;
             msg["err"] = "you are not in this room deskID " + this.deskID;
             this.sendMsgToPlayer(orgID, msgID, msg ) ;

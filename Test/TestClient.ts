@@ -1,3 +1,4 @@
+import { MJPlayerDataSH } from './../shared/mjshData/MJPlayerDataSH';
 import { PingHuStrategy } from './../Robot/deskModule/PingHuStrategy';
 import { eMJCardType } from './../shared/mjData/MJDefine';
 import { MJCardData } from './../shared/mjData/MJCardData';
@@ -281,7 +282,7 @@ let vCard = [] ;
  vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Wan, 4 ) );
  vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Wan, 5 ) );
  vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Wan, 8 ) );
- vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Wan, 9 ) );
+ //vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Wan, 9 ) );
 
  //vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tong, 8 ) );
  //vCard.push( MJCardData.makeCardNum(eMJCardType.eCT_Tong, 9 ) );
@@ -301,3 +302,17 @@ let t = Date.now();
 let card = pingHu.getChuCard(vCard, []) ;
 MJCardData.printCard(card) ;
 console.log( "time offset = " + ( Date.now() - t ) ) ;
+
+
+let c = 23 ;
+console.log( `this is a number ${c}`  ) ;
+
+let player = new MJPlayerDataSH();
+player.onDistributedCard(vCard) ;
+player.nIdx = 1 ;
+player.onPeng(MJCardData.makeCardNum(eMJCardType.eCT_Wan, 3 ), 0 ) ;
+player.onChu(MJCardData.makeCardNum(eMJCardType.eCT_Wan, 8 )) ;
+player.onTing(MJCardData.makeCardNum(eMJCardType.eCT_Wan, 8 )) ;
+player.onMoCard(MJCardData.makeCardNum(eMJCardType.eCT_Wan, 2 )) ;
+let bu = player.getCanBuGangCards();
+console.log(bu) ;

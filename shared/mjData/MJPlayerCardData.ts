@@ -290,7 +290,7 @@ export class MJPlayerCardData implements IShareData
             let B = card - 2 ;
             if ( this.getCardCnt(A) > 0 && this.getCardCnt(B) > 0 )
             {
-                vOpts.push(A,B) ;
+                vOpts.push(B,A) ;
             }
         }
 
