@@ -9,8 +9,8 @@ let cnt = 4;
         //p.init("acc975", "ws://localhost:3001" ) ;
         //p.init("acc899", "ws://localhost:3001" ) ;
         console.log("connect svr ") ;
-        //p.init("acc9411"+cnt, "ws://139.224.239.22:3001" ) ;
-        p.init("acc9411"+cnt, "ws://localhost:3001" ) ;
+        p.init("acc9411"+cnt, "ws://139.224.239.22:3001" ) ;
+        //p.init("acc9411"+cnt, "ws://localhost:3001" ) ;
     }
     console.log( "---------------");
 //},1900 ) ;

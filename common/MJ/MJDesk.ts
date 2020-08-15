@@ -307,6 +307,7 @@ export abstract class MJDesk implements IDesk
 
     informOtherPlayerAct( playerIdxes : number[], card : number , invokeIdx : number , isBuGang : boolean, haveGang : boolean  )
     {
+        XLogger.debug("inform other act idxs = " + JSON.stringify( playerIdxes )) ;
         let msg = {} ;
         msg[key.card] = card ;
         //msg[key.invokerIdx] = invokeIdx ;
@@ -347,6 +348,7 @@ export abstract class MJDesk implements IDesk
 
     informSelfAct( idx : number , enterAct : eMJActType , haveGang : boolean )
     {
+        XLogger.debug( "inform player self act Idx = " + idx ) ;
         let p = this.getPlayerByIdx(idx) ;
         if ( p != null && p.isOnline )
         {

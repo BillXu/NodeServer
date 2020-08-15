@@ -210,7 +210,7 @@ export class MJDeskStateWaitAct implements IMJDeskState
         let player = this.mDesk.getPlayerBySessionID( nSessionID );
         if ( player == null || player.nIdx != this.mData.mActIdx )
         {
-            XLogger.debug( "you are not current waiting act idx = " + this.mData.mActIdx + " your idx = " + ( player == null ? "null" : player.nIdx + " deskID = " + this.mDesk.deskID ) ) ;
+            XLogger.error( "you are not current waiting act idx = " + this.mData.mActIdx + " your idx = " + ( player == null ? "null" : player.nIdx + " deskID = " + this.mDesk.deskID ) ) ;
             msg[key.ret] = 1 ;
             this.mDesk.sendMsgToPlayer(nSessionID, msgID, msg ) ;
             return true ;

@@ -3,7 +3,7 @@ import { eMJActType } from './../../shared/mjData/MJDefine';
 import { LackInfo } from './PingHuStrategy';
 export interface IStrategy
 {
-    getChuCard( vHolds : number[] , limitCards : number[], out : LackInfo ) : number ;
-    onDecideActWithOtherCard( vHolds : number[], actOpts : eMJActType[], otherCard : number, vEatWith : number[] ) : eMJActType ;
-    onDecideActWithSelfCard( playerCard : MJPlayerCardData, actOpts : eMJActType[] ) : { act : eMJActType , card : number } 
+    getBestChuCard( vCards : number[] , pfcGetLeftCnt : ( card : number )=>number , limitCards : number[] ) : number
+    onDecideActWithOtherCardNew( vHolds : number[], actOpts : eMJActType[], otherCard : number, vEatWith : number[] ) : eMJActType ;
+    onDecideActWithSelfCardNew( playerCard : MJPlayerCardData, actOpts : eMJActType[] ) : { act : eMJActType , card : number } 
 }

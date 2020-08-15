@@ -63,6 +63,7 @@ export class MJDeskSHNew extends MJDesk
 
     informSelfAct( idx : number , enterAct : eMJActType , haveGang : boolean )
     {
+        XLogger.debug( "inform player self act Idx = " + idx ) ;
         let p = this.getPlayerByIdx(idx) ;
         if ( p != null && p.isOnline )
         {
@@ -109,6 +110,7 @@ export class MJDeskSHNew extends MJDesk
 
     informOtherPlayerAct( playerIdxes : number[], card : number , invokeIdx : number , isBuGang : boolean, haveGang : boolean  )
     {
+        XLogger.debug("inform other act idxs = " + JSON.stringify( playerIdxes )) ;
         let msg = {} ;
         msg[key.card] = card ;
         for ( let p of this.vPlayers )

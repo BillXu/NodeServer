@@ -1,4 +1,4 @@
-import { eMJCardType } from './MJDefine';
+import { eMJCardType, eMJActType } from './MJDefine';
 export class MJCardData
 {
     public static parseCardType( nCardNum : number  ) : eMJCardType
@@ -22,6 +22,12 @@ export class MJCardData
     public static makeCardNum( type : eMJCardType , val : number ) : number
     {
         return (type << 4) | val ;
+    }
+
+    public static isCardMustKeZi( card : number ) : boolean 
+    {
+        let t = MJCardData.parseCardType(card) ;
+        return t == eMJCardType.eCT_Feng || t == eMJCardType.eCT_Jian;
     }
 
     public static getCardStr( card : number ) : string 

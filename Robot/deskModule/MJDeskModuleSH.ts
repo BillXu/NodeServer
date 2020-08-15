@@ -1,5 +1,5 @@
 import { MJCardData } from './../../shared/mjData/MJCardData';
-import { countBy } from 'lodash';
+import { countBy, random } from 'lodash';
 import { HuChecker } from './../../shared/mjData/HuChecker';
 import { PingHuStrategy } from './PingHuStrategy';
 import { IStrategy } from './IStrategy';
@@ -162,7 +162,8 @@ export class MJDeskModuleSH extends IClientModule
                 {
                     if ( msg[key.ret] != null && msg[key.ret] != 0 )
                     {
-                        XLogger.error( "chu pai error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID + " uid = " + this.getClient().uid  ) ;
+                        XLogger.error( "chu pai error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID  + " selfIdx = " + this.mSelfPlayer.nIdx + " uid = " + this.getClient().uid ) ;
+                        XLogger.debug( "holds : " + JSON.stringify(this.mSelfPlayer.getHoldCards()) ) ;
                         return true ;
                     } 
 
@@ -174,7 +175,8 @@ export class MJDeskModuleSH extends IClientModule
                 {
                     if ( msg[key.ret] != null && msg[key.ret] != 0 )
                     {
-                        XLogger.error( "an gang error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID + " uid = " + this.getClient().uid  ) ;
+                        XLogger.error( "an gang error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID  + " selfIdx = " + this.mSelfPlayer.nIdx + " uid = " + this.getClient().uid  ) ;
+                        XLogger.debug( "holds : " + JSON.stringify(this.mSelfPlayer.getHoldCards()) ) ;
                         return true ;
                     } 
                     
@@ -186,7 +188,8 @@ export class MJDeskModuleSH extends IClientModule
                 {
                     if ( msg[key.ret] != null && msg[key.ret] != 0 )
                     {
-                        XLogger.error( "Bu gang error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID + " uid = " + this.getClient().uid  ) ;
+                        XLogger.error( "Bu gang error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID  + " selfIdx = " + this.mSelfPlayer.nIdx + " uid = " + this.getClient().uid  ) ;
+                        XLogger.debug( "holds : " + JSON.stringify(this.mSelfPlayer.getHoldCards()) ) ;
                         return true ;
                     } 
                     
@@ -206,7 +209,8 @@ export class MJDeskModuleSH extends IClientModule
                 {
                     if ( msg[key.ret] != null && msg[key.ret] != 0 )
                     {
-                        XLogger.error( "eat error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID + " uid = " + this.getClient().uid  ) ;
+                        XLogger.error( "eat error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID  + " selfIdx = " + this.mSelfPlayer.nIdx + " uid = " + this.getClient().uid  ) ;
+                        XLogger.debug( "holds : " + JSON.stringify(this.mSelfPlayer.getHoldCards()) ) ;
                         return true ;
                     } 
                     
@@ -224,7 +228,8 @@ export class MJDeskModuleSH extends IClientModule
                 {
                     if ( msg[key.ret] != null && msg[key.ret] != 0 )
                     {
-                        XLogger.error( "peng error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID + " uid = " + this.getClient().uid  ) ;
+                        XLogger.error( "peng error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID  + " selfIdx = " + this.mSelfPlayer.nIdx + " uid = " + this.getClient().uid  ) ;
+                        XLogger.debug( "holds : " + JSON.stringify(this.mSelfPlayer.getHoldCards()) ) ;
                         return true ;
                     } 
                     
@@ -242,7 +247,8 @@ export class MJDeskModuleSH extends IClientModule
                 {
                     if ( msg[key.ret] != null && msg[key.ret] != 0 )
                     {
-                        XLogger.error( "ming gang error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID + " uid = " + this.getClient().uid  ) ;
+                        XLogger.error( "ming gang error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID  + " selfIdx = " + this.mSelfPlayer.nIdx + " uid = " + this.getClient().uid  ) ;
+                        XLogger.debug( "holds : " + JSON.stringify(this.mSelfPlayer.getHoldCards()) ) ;
                         return true ;
                     } 
                     
@@ -262,7 +268,8 @@ export class MJDeskModuleSH extends IClientModule
                     // svr : { ret : 0 , huCard : number , invokerIdx : idx , maCard : 23 , maScore : 23  ,huInfo : [ idx : 23 , fanxing : number , bei : 2  ], players : [ { hold : number[], offset : 23 , final : 23 } , ... ] }
                     if ( msg[key.ret] != null && msg[key.ret] != 0 )
                     {
-                        XLogger.error( "MSG_PLAYER_MJ_HU error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID + " uid = " + this.getClient().uid  ) ;
+                        XLogger.error( "MSG_PLAYER_MJ_HU error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID  + " selfIdx = " + this.mSelfPlayer.nIdx + " uid = " + this.getClient().uid  ) ;
+                        XLogger.debug( "holds : " + JSON.stringify(this.mSelfPlayer.getHoldCards()) ) ;
                         return true ;
                     } 
 
@@ -289,7 +296,8 @@ export class MJDeskModuleSH extends IClientModule
                     // svr: { idx : number , vHua : [23,23] , vCard : [22,56] }
                     if ( msg[key.ret] != null && msg[key.ret] != 0 )
                     {
-                        XLogger.error( "bu hua error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID + " uid = " + this.getClient().uid  ) ;
+                        XLogger.error( "bu hua error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID  + " selfIdx = " + this.mSelfPlayer.nIdx + " uid = " + this.getClient().uid  ) ;
+                        XLogger.debug( "holds : " + JSON.stringify(this.mSelfPlayer.getHoldCards()) ) ;
                         return true ;
                     } 
                     let idx = msg[key.idx];
@@ -301,7 +309,8 @@ export class MJDeskModuleSH extends IClientModule
                     // svr: { idx : number , vHua : [23,23] , vCard : [22,56] }
                     if ( msg[key.ret] != null && msg[key.ret] != 0 )
                     {
-                        XLogger.error( "ting error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID + " uid = " + this.getClient().uid  ) ;
+                        XLogger.error( "ting error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID  + " selfIdx = " + this.mSelfPlayer.nIdx + " uid = " + this.getClient().uid  ) ;
+                        XLogger.debug( "holds : " + JSON.stringify(this.mSelfPlayer.getHoldCards()) ) ;
                         return true ;
                     } 
                     let idx = msg[key.idx];
@@ -314,6 +323,7 @@ export class MJDeskModuleSH extends IClientModule
                     if ( msg[key.ret] != null && msg[key.ret] != 0 )
                     {
                         XLogger.error( "ting error  ret = " + msg[key.ret] + " deskID " + this.mDeskInfo.deskID + " uid = " + this.getClient().uid  ) ;
+                        XLogger.debug( "holds : " + JSON.stringify(this.mSelfPlayer.getHoldCards()) ) ;
                         return true ;
                     } 
                     let idx = msg[key.idx];
@@ -383,7 +393,7 @@ export class MJDeskModuleSH extends IClientModule
             self.mWaitActSelfTimer = null ;
             self.printHolds();
             self.robotDoAct(isOnlyChu, canHu, vBuGang, vAnGang, limitCards) ;
-        }, 2000 );
+        }, 1000 + random(2000,false) );
     }
 
     robotDoAct( isOnlyChu : boolean , canHu : boolean , vBuGang : number[] , vAnGang : number[] , limitCards : number[] )
@@ -410,7 +420,7 @@ export class MJDeskModuleSH extends IClientModule
         }
         else
         {
-            let v = this.mStrategy.onDecideActWithSelfCard(this.mSelfPlayer.cardData, vAct );
+            let v = this.mStrategy.onDecideActWithSelfCardNew(this.mSelfPlayer.cardData, vAct );
             if ( v.act == eMJActType.eMJAct_Pass )
             {
                 this.sendMsg( eMsgType.MSG_PLAYER_MJ_PASS , {}, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
@@ -456,13 +466,13 @@ export class MJDeskModuleSH extends IClientModule
             self.mWaitActOtherTimer = null ;
             self.printHolds();
             self.robotDoActWithOtherCard(card, vActs) ;
-        }, 2000 );
+        }, 1000 + random(2000,false) );
     }
 
     robotDoActWithOtherCard( card : number , vActs : eMJActType[] )
     {
         let vEatWith = [] ;
-        let c = this.mStrategy.onDecideActWithOtherCard( this.mSelfPlayer.getHoldCards(), vActs, card, vEatWith ) ;
+        let c = this.mStrategy.onDecideActWithOtherCardNew( this.mSelfPlayer.getHoldCards(), vActs, card, vEatWith ) ;
         switch ( c )
         {
             case eMJActType.eMJAct_Hu:
@@ -504,6 +514,7 @@ export class MJDeskModuleSH extends IClientModule
                     msg[key.card] = card ;
                     this.sendMsg( eMsgType.MSG_PLAYER_MJ_PASS , msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
                 }
+                break;
             default:
                 XLogger.warn( "unknown act = " + c ) ;
                 return ;
@@ -587,7 +598,7 @@ export class MJDeskModuleSH extends IClientModule
         {
             
             let msg = {} ;
-            msg[key.card] = this.mStrategy.getChuCard(this.mSelfPlayer.getHoldCards(),limtCards,null) ;
+            msg[key.card] = this.mStrategy.getBestChuCard(this.mSelfPlayer.getHoldCards(),this.getLeftCardCnt.bind(this),limtCards ) ;
             this.sendMsg( eMsgType.MSG_PLAYER_MJ_CHU , msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID ) ;
             console.log( "chu pai : " + MJCardData.getCardStr(msg[key.card]) ) ;
             return ;
