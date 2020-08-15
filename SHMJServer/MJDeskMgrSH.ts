@@ -40,6 +40,6 @@ export class MJDeskMgrSH extends DeskMgr
             this.mDesks.get(targetID).onPlayerEnter( msg[key.uid], orgID, 100 ) ;
             return true ;
         }
-        super.onLogicMsg(msgID, msg, orgID, orgPort, targetID) ;
+        return super.onLogicMsg(msgID, msg, orgID, orgPort, targetID) ;
     }
 }

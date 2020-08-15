@@ -1,7 +1,7 @@
 import { RobotClient } from './RobotClient';
-let cnt = 4;
-//setInterval( ()=>{
-    let h = 50 ;
+let cnt = 34;
+setInterval( ()=>{
+    let h = 4 ;
     while ( h -- && cnt-- >0 )
     {
         let p = new RobotClient();
@@ -13,5 +13,5 @@ let cnt = 4;
         //p.init("acc9411"+cnt, "ws://localhost:3001" ) ;
     }
     console.log( "---------------");
-//},1900 ) ;
+},1900 ) ;
 
