@@ -959,7 +959,7 @@ export class PingHuStrategy implements IStrategy
             {
                 continue ;
             }
-            
+
             let p = this.pickOutSingle(g, MJCardData.isCardMustKeZi(g[0] ) ) ;
             if ( p != null )
             {
@@ -985,7 +985,7 @@ export class PingHuStrategy implements IStrategy
         {
             return false ;
         }
-        MJCardData.printCards( "try best grup : " , vCardsWithoutSingle );
+        //MJCardData.printCards( "try best grup : " , vCardsWithoutSingle );
         let bestG : CardGroup = null ;
         // try 3 zhang ;
         if ( vCardsWithoutSingle.length >=3  )

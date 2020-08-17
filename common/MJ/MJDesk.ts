@@ -260,6 +260,7 @@ export abstract class MJDesk implements IDesk
             {
                 pp.sessionID = sessionID ;
                 pp.score = score ;
+                pp.state = eMJPlayerState.eState_Normal;
                 XLogger.warn( "why player already double enter desk uid = " + uid + " deskID = " + this.deskID ) ;
                 this.sendDeskInfoToPlayer(pp.nIdx) ;
                 return true ;

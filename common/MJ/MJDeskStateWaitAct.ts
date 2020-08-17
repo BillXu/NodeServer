@@ -30,7 +30,6 @@ export class MJDeskStateWaitAct implements IMJDeskState
     protected waitTimer : NodeJS.Timeout = null ;
     protected mDesk : MJDesk = null ;
     protected mData : WaitActStateData = null ;
-    protected mWaitTimeSecons : number  = G_ARG.TIME_MJ_WAIT_ACT;
     init( desk : MJDesk ) : void 
     {
         this.mDesk = desk ;
@@ -56,16 +55,16 @@ export class MJDeskStateWaitAct implements IMJDeskState
             ++this.mData.mGangCnt;
         }
 
-        this.mDesk.informSelfAct(this.mData.mActIdx, this.mData.mEnterAct ,this.mData.mGangCnt > 0 ) ;
+        //this.mDesk.informSelfAct(this.mData.mActIdx, this.mData.mEnterAct ,this.mData.mGangCnt > 0 ) ;
         
 
-        this.mWaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT;
+        let WaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT;
         if ( this.mDesk.getPlayerByIdx(this.mData.mActIdx).state == eMJPlayerState.eState_TuoGuan )
         {
-            this.mWaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN ;
+            WaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN ;
         }
 
-        this.startWait();
+        this.startWait(WaitTimeSecons);
     }
 
     onLevelState() : void
@@ -270,9 +269,10 @@ export class MJDeskStateWaitAct implements IMJDeskState
     }
 
     // function 
-    startWait()
+    startWait( timeSeconds : number )
     {
-        XLogger.debug( "start wait actIdx = " + this.mData.mActIdx + " deskID = " + this.mDesk.deskID ) ;
+        this.mDesk.informSelfAct(this.mData.mActIdx, this.mData.mEnterAct , this.mData.mGangCnt > 0 ) ;
+        XLogger.debug( "start wait actIdx = " + this.mData.mActIdx + " deskID = " + this.mDesk.deskID + " time = " + timeSeconds ) ;
         if ( null != this.waitTimer )
         {
             clearTimeout( this.waitTimer ) ;
@@ -280,13 +280,13 @@ export class MJDeskStateWaitAct implements IMJDeskState
         }
 
         let self = this ;
-        this.waitTimer = setTimeout( ()=>{ self.waitTimer = null; self.mDesk.onPlayerEnterTuoGuanState(self.mData.mActIdx); self.waitActTimeOut(); } , this.mWaitTimeSecons * 1000 ) ;
+        this.waitTimer = setTimeout( ()=>{ self.waitTimer = null; self.mDesk.onPlayerEnterTuoGuanState(self.mData.mActIdx); self.waitActTimeOut(); } , timeSeconds * 1000 ) ;
     }
 
     onPlayerLeaveTuoGuanState( idx : number )
     {
-        this.mWaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT - G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN ;
-        this.startWait();
+        let WaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT - G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN ;
+        this.startWait( WaitTimeSecons );
     }
 
     // act 
@@ -359,7 +359,7 @@ export class MJDeskStateWaitAct implements IMJDeskState
             //this.mDesk.onPlayerDoActWitSelfCard( this.mData.mActIdx, eMJActType.eMJAct_BuGang_Done ,card ,this.mData.mGangCnt > 0 ,this.mData.mEnterActInvokerIdx ) ;
             this.mDesk.onPlayerBuGang(pPlayer, card, false , this.mData.mEnterActInvokerIdx ) ;
             ++this.mData.mGangCnt;
-            this.startWait();
+            this.startWait(G_ARG.TIME_MJ_WAIT_ACT);
         }
     }
 
@@ -371,7 +371,8 @@ export class MJDeskStateWaitAct implements IMJDeskState
         }
 
         this.mData.mCard = card ;
-        this.startWait();
+
+        this.startWait(G_ARG.TIME_MJ_WAIT_ACT);
     }
 
     onPlayerHu( pPlayer : MJPlayerData  )

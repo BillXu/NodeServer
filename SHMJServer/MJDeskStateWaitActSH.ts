@@ -65,14 +65,14 @@ export class MJDeskStateWaitActSH extends MJDeskStateWaitAct
         }
     }
 
-    startWait()
+    startWait(WaitTimeSecons : number )
     {
         let buHuaTime = ( this.mDesk as MJDeskSHNew ).checkPlayerBuHua(this.mData.mActIdx) ;
         if ( 0 != buHuaTime )
         {
-            this.mWaitTimeSecons += buHuaTime ;
+            WaitTimeSecons += buHuaTime ;
             ++this.mData.mGangCnt;  // hua as gang when hu in one round;
-            this.mDesk.informSelfAct(this.mData.mActIdx, this.mData.mEnterAct, this.mData.mGangCnt > 0 ) ;
+            //this.mDesk.informSelfAct(this.mData.mActIdx, this.mData.mEnterAct, this.mData.mGangCnt > 0 ) ;
             XLogger.debug( "player do bu hua , inform act idx = " + this.mData.mActIdx ) ;
         } 
 
@@ -87,13 +87,13 @@ export class MJDeskStateWaitActSH extends MJDeskStateWaitAct
 
         if ( p.isTing ) // modify wait time 
         {
-            this.mWaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN + buHuaTime;
+            WaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN + buHuaTime;
             if ( p.state != eMJPlayerState.eState_TuoGuan && p.getCanBuGangCards().length > 0  && this.mDesk.canPlayerHu( p.nIdx,p.getAutoChuCard(),true,this.mData.mGangCnt > 0 ,p.nIdx ) == false )
             {
-                this.mWaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT + buHuaTime ;
+                WaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT + buHuaTime ;
             }
         }
 
-        super.startWait();
+        super.startWait(WaitTimeSecons);
     }
 }

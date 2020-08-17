@@ -130,6 +130,11 @@ export enum eMsgType
 	MSG_RESULT_ERROR,
 	//svr : { code : eErrorCode , msgID : eMsgType , err? : "" }   
 
+	MSG_SYNC_TIME,
+	// client : null
+	// svr : { time : 2345234 }
+	// utc : by seconds ; 
+
 	MSG_PLAYER_REQ_MATCH_LIST = 200,
 	// client : { type : eMatchType }
 	// svr : { type : eMatchType, matchs : [ { matchData } , ...  ] }

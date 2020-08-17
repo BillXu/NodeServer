@@ -34,6 +34,8 @@ export class MatchLaw implements IMatchLaw
     protected mRoundCfg : LawRound = null ;
     protected mReliveTimer : NodeJS.Timeout = null ;
     protected mState : eLawState = eLawState.eMatching ;
+    protected mRoundFinishDelayTimer : NodeJS.Timeout = null ;
+    static TIME_WAIT_ROUND_FINISH : number = 10 ; // seconds ;
     init( match : Match ,lawIdx : number ) : void 
     {
         this.mMatch = match ;
@@ -400,8 +402,20 @@ export class MatchLaw implements IMatchLaw
         // check if all desk finished ;
         if ( this.mPlayeringPlayers.length == 0 )
         {
-            XLogger.debug( "all desk finished matchID = " + this.matchID ) ;
-            this.onAllDeskFinished();
+            XLogger.debug( "all desk finished delay  matchID = " + this.matchID ) ;
+            if ( this.mRoundFinishDelayTimer != null )
+            {
+                clearTimeout(this.mRoundFinishDelayTimer) ;
+                this.mRoundFinishDelayTimer = null ;
+            }
+
+            let self = this ;
+            this.mRoundFinishDelayTimer = setTimeout(() => {
+                self.mRoundFinishDelayTimer = null ;
+                XLogger.debug( "all desk do finished matchID = " + self.matchID ) ;
+                self.onAllDeskFinished();
+            }, MatchLaw.TIME_WAIT_ROUND_FINISH * 1000 );
+            
         }
         else
         {

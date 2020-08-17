@@ -374,7 +374,7 @@ export class MJDeskModuleSH extends IClientModule
 
     protected onInformActWitSelf( isOnlyChu : boolean , canHu : boolean , vBuGang : number[] , vAnGang : number[] , limitCards : number[] )
     {
-        XLogger.debug( "recived onInformActWitSelf " );
+        XLogger.debug( "recived onInformActWitSelf idx =  "  + this.mSelfPlayer.nIdx );
         if ( (this.mSelfPlayer as MJPlayerDataSH).isTing )
         {
             XLogger.debug( "already ting do nonthing" );
@@ -389,11 +389,11 @@ export class MJDeskModuleSH extends IClientModule
 
         let self = this ;
         this.mWaitActSelfTimer = setTimeout(() => {
-            XLogger.debug( "chu card " ) ;
+            XLogger.debug( "chu card idx = " + self.mSelfPlayer.nIdx ) ;
             self.mWaitActSelfTimer = null ;
             self.printHolds();
             self.robotDoAct(isOnlyChu, canHu, vBuGang, vAnGang, limitCards) ;
-        }, 1000 + random(2000,false) );
+        }, 800 + random(1000,false) );
     }
 
     robotDoAct( isOnlyChu : boolean , canHu : boolean , vBuGang : number[] , vAnGang : number[] , limitCards : number[] )
@@ -459,14 +459,14 @@ export class MJDeskModuleSH extends IClientModule
 
     protected onInformActWithOther(  card : number , vActs : eMJActType[] )
     {
-        XLogger.debug( "recived onInformActWithOther " );
+        XLogger.debug( "recived onInformActWithOther idx = "  + this.mSelfPlayer.nIdx  );
         let self = this ;
         this.mWaitActOtherTimer = setTimeout(() => {
-            XLogger.debug( "act pass " ) ;
+            XLogger.debug( "act pass idx = " + self.mSelfPlayer.nIdx ) ;
             self.mWaitActOtherTimer = null ;
             self.printHolds();
             self.robotDoActWithOtherCard(card, vActs) ;
-        }, 1000 + random(2000,false) );
+        }, 800 + random(1000,false) );
     }
 
     robotDoActWithOtherCard( card : number , vActs : eMJActType[] )

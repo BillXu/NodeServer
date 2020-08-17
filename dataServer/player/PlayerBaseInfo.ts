@@ -134,6 +134,12 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     XLogger.debug( "tell robot svr , robot login uid = " + this.uid ) ;
                 }
                 break ;
+            case eMsgType.MSG_SYNC_TIME:
+                {
+                    msg[key.time] = Math.floor( Date.now() / 1000 ) ;
+                    this.mPlayer.sendMsgToClient(msgID, msg) ;  
+                }
+                break ;
             default:
                 return false ;
         }
@@ -249,6 +255,10 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         let js = this.toJson();
         this.mPlayer.sendMsgToClient(eMsgType.MSG_PLAYER_BASE_DATA, js ) ;
         XLogger.debug( "send base data to client uid = " + this.mPlayer.uid + "sessionID = " +  this.mPlayer.sessionID ) ;
+
+        let msg = {} ;
+        msg[key.time] = Math.floor( Date.now() / 1000 ) ;
+        this.mPlayer.sendMsgToClient( eMsgType.MSG_SYNC_TIME, msg) ;  
     }
 
     onRPCCall( funcID : eRpcFuncID , arg : Object ) : Object
