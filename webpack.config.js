@@ -16,7 +16,8 @@ module.exports = {
           match : './build/matchServer/index.js',
 
           robotDispach : "./build/RobotDispatchServer/index.js",
-          shMJ : "./build/SHMJServer/index.js"
+          shMJ : "./build/SHMJServer/index.js",
+          robot : "./build/Robot/index.js",
 },
 
   target: 'node',

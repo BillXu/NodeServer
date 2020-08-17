@@ -35,7 +35,7 @@ export class MatchLaw implements IMatchLaw
     protected mReliveTimer : NodeJS.Timeout = null ;
     protected mState : eLawState = eLawState.eMatching ;
     protected mRoundFinishDelayTimer : NodeJS.Timeout = null ;
-    static TIME_WAIT_ROUND_FINISH : number = 10 ; // seconds ;
+    static TIME_WAIT_ROUND_FINISH : number = 8 ; // seconds ;
     init( match : Match ,lawIdx : number ) : void 
     {
         this.mMatch = match ;
@@ -462,10 +462,11 @@ export class MatchLaw implements IMatchLaw
             return a.signUpTime - b.signUpTime ;
         } );
 
+        let isLastRoundLastDesk = this.mPlayeringPlayers.length == 0 && this.cfg.isLastRound(this.mRoundCfg.idx);
         for ( let ridx = 0 ; ridx < this.mFinishedPlayers.length ; ++ridx )
         {
             let p = this.mFinishedPlayers[ridx] ;
-            if ( p.rankIdx != ridx )
+            if ( p.rankIdx != ridx && false == isLastRoundLastDesk )
             {
                 p.rankIdx = ridx ;
                 if ( p.state == eMathPlayerState.eState_WaitOtherFinish || p.state == eMathPlayerState.eState_Relived || eMathPlayerState.eState_Promoted == p.state )
@@ -499,6 +500,7 @@ export class MatchLaw implements IMatchLaw
         } );
         
         // update ranker idx and inform client and process lose out ;
+        let isLastRoundLastDesk = this.mPlayeringPlayers.length == 0 && this.cfg.isLastRound(this.mRoundCfg.idx);
         for ( let ridx = 0 ; ridx < this.mFinishedPlayers.length ; ++ ridx )
         {
             let p = this.mFinishedPlayers[ridx] ;
@@ -518,7 +520,10 @@ export class MatchLaw implements IMatchLaw
                     XLogger.debug( `we known player promoted uid = ${p.uid} + matchID = ${this.matchID} + rankIdx = ${p.rankIdx}` ) ;
                 }
 
-                this.informRankIdxUpddated(p) ;
+                if ( false == isLastRoundLastDesk )
+                {
+                    this.informRankIdxUpddated(p) ;
+                }
             }
         }
     }

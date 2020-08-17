@@ -127,11 +127,19 @@ export class MJPlayerData implements IShareData
 
     onBuGangDeclare( card : number ) : boolean
     {
+        if ( 0 == card )
+        {
+            XLogger.error( "why decalare bu gang card = 0 " ) ;
+        }
         return this.cardData.onBuGangDeclare(card) ;
     }
 
     onBuGangDone( card : number ) : void
     {
+        if ( 0 == card )
+        {
+            XLogger.error( "why decalare bu gang done card = 0 " ) ;
+        }
         this.cardData.onBuGangDone(card) ;
     }
 

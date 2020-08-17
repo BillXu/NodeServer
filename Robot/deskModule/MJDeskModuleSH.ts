@@ -34,10 +34,10 @@ export class MJDeskModuleSH extends IClientModule
 
     onRecivdBaseData()
     {
-        XLogger.debug( "recieved base data , just enter desk uid = " + this.getClient().uid ) ;
-        let msg = {} ;
-        msg[key.uid] = this.getClient().uid;
-        this.sendMsg( eMsgType.MSG_PLAYER_MJ_ETNTER, msg, eMsgPort.ID_MSG_PORT_MJSH, 300 ) ;
+        //XLogger.debug( "recieved base data , just enter desk uid = " + this.getClient().uid ) ;
+        //let msg = {} ;
+       // msg[key.uid] = this.getClient().uid;
+        //this.sendMsg( eMsgType.MSG_PLAYER_MJ_ETNTER, msg, eMsgPort.ID_MSG_PORT_MJSH, 300 ) ;
     }
 
     protected clear()
@@ -71,6 +71,7 @@ export class MJDeskModuleSH extends IClientModule
                 break ;
             case eMsgType.MSG_PLAYER_MJ_DESK_PLAYERS_INFO:
                 {
+                    this.mPlayers.length = 0 ;
                     let mPlayers : Object[] = msg[key.players] ;
                     for ( let vp of mPlayers )
                     {
