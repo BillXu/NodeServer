@@ -24,6 +24,9 @@ export abstract class DeskMgr extends IModule implements IDeskDelegate
             XLogger.warn( "send msg to desk , but desk is null deskID = " + targetID + " sessionID = " + orgID + " msgID = " + eMsgType[msgID] + " msg = " + JSON.stringify(msg||{}) ) ;
             msg[key.ret] = 200 ;
             msg["err"] = "can not find target with ID = " + targetID ;
+            XLogger.debug( "desk cnt = " + this.mDesks.count() ) ;
+            let vs = this.mDesks.values() ;
+            vs.forEach( v=> XLogger.debug( "desk runing id = " + v.deskID )) ;
             return false ;
         }
 
@@ -47,7 +50,13 @@ export abstract class DeskMgr extends IModule implements IDeskDelegate
                     while ( cnt-- )
                     {
                         let d = this.createDesk();
-                        d.init(this.generateUniqueID(), diFen, roundCnt, this ,this ) ;
+                        let did = this.generateUniqueID();
+                        while ( this.mDesks.has(did) )
+                        {
+                            XLogger.warn( "already have desk id = " + did + " try another" ) ;
+                            did = this.generateUniqueID();
+                        }
+                        d.init(did, diFen, roundCnt, this ,this ) ;
                         d.setMatchInfo( mid, lidx ) ;
                         this.mDesks.set(d.deskID, d ) ;
                         vIDs.push( d.deskID ) ;

@@ -19,6 +19,7 @@ export class MatchPlayer
         info[key.state] = this.state;
         info[key.deskID] = this.stayDeskID;
         info[key.rankIdx] = this.rankIdx;
+        info[key.curRoundIdx] = this.roundIdx;
     }
     //feeMoney : { moneyType : eItemType , cnt : number } ;
 }

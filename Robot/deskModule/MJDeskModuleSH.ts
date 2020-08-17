@@ -37,7 +37,7 @@ export class MJDeskModuleSH extends IClientModule
         XLogger.debug( "recieved base data , just enter desk uid = " + this.getClient().uid ) ;
         let msg = {} ;
         msg[key.uid] = this.getClient().uid;
-        this.sendMsg( eMsgType.MSG_PLAYER_MJ_ETNTER, msg, eMsgPort.ID_MSG_PORT_MJSH, 200 ) ;
+        this.sendMsg( eMsgType.MSG_PLAYER_MJ_ETNTER, msg, eMsgPort.ID_MSG_PORT_MJSH, 300 ) ;
     }
 
     protected clear()
@@ -615,7 +615,7 @@ export class MJDeskModuleSH extends IClientModule
                 cnt += this.getLeftCardCnt(tc) ;
             }
 
-            if ( tingCnt < cnt )
+            if ( tingCnt < cnt || 0 == chu )
             {
                 tingCnt = cnt ;
                 chu = c.chu ;

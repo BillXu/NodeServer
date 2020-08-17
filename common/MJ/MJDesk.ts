@@ -169,6 +169,7 @@ export abstract class MJDesk implements IDesk
             msg[key.ret] = 200 ;
             msg["err"] = "you are not in this room deskID " + this.deskID;
             this.sendMsgToPlayer(orgID, msgID, msg ) ;
+            this.vPlayers.forEach( v=>XLogger.debug( "idx = " + v.nIdx + " sessionID = " + v.sessionID + " uid = " + v.uid ) ) ;
             return false ;
         }
 
@@ -212,6 +213,7 @@ export abstract class MJDesk implements IDesk
                 this.onPlayerLeaveTuoGuanState(p.nIdx) ;
                 s.onPlayerLeaveTuoGuanState(p.nIdx) ;
             }
+            return true;
         }
         if ( s )
         {
@@ -219,7 +221,7 @@ export abstract class MJDesk implements IDesk
         }
         else
         {
-            XLogger.warn("why current state is null ? state = " + this.state + " deskID = " + this.deskID ) ;
+            XLogger.error("why current state is null ? state = " + this.state + " deskID = " + this.deskID ) ;
         }
         return false ;
     }

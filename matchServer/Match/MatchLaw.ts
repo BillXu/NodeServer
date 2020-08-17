@@ -560,6 +560,7 @@ export class MatchLaw implements IMatchLaw
          msg[key.rankIdx] = player.rankIdx  ;
          msg[key.moneyType ] = rewards != null ? rewards.getMoneyJs() : null ;
          msg[key.state] = player.state;
+         msg[key.curRoundIdx] = this.mRoundCfg.idx;
          msg[key.canRelive] = this.mRoundCfg.canRelive ? 1 : 0 ;
          this.mMatch.sendMsgToClient(player.sessionID, eMsgType.MSG_PLAYER_MATCH_RESULT, msg ) ;
     }
@@ -572,6 +573,7 @@ export class MatchLaw implements IMatchLaw
         msg[key.matchID] = this.matchID ;
         msg[key.rankIdx] = player.rankIdx  ;
         msg[key.state] = player.state;
+        msg[key.curRoundIdx] = this.mRoundCfg.idx;
         msg[key.canRelive] = 0;
         this.mMatch.sendMsgToClient(player.sessionID, eMsgType.MSG_PLAYER_MATCH_RESULT, msg ) ;
     }
