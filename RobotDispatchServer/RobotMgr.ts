@@ -113,6 +113,7 @@ export class RobotMgr extends IModule
                     {
                         XLogger.info( "1 current robotCnt = " + this.mAllRobots.count() );
                     }
+                    this.logState();
                 }
                 break ;
             case eRpcFuncID.Func_OnRobotLogin:
@@ -145,6 +146,7 @@ export class RobotMgr extends IModule
                     {
                         XLogger.info( "current robotCnt = " + this.mAllRobots.count() );
                     }
+                    this.logState();
                 }
                 break ;
             case eRpcFuncID.Func_RobotWorkingState:
@@ -177,6 +179,7 @@ export class RobotMgr extends IModule
                         pw.state = eRobotState.eIdle ;
                         XLogger.debug( "robot put to idle, uid = " + uid ) ;
                     }
+                    this.logState();
                 }
                 break;
             case eRpcFuncID.Func_ReqRobot:
@@ -208,11 +211,17 @@ export class RobotMgr extends IModule
 
                     outResult["lackCnt"] = cnt;
                     XLogger.debug( "respone robot req cnt ,lack cnt = " + cnt ) ;
+                    this.logState();
                 }
                 break;
             default:
                 return false ;
         }
         return true ;
+    }
+
+    logState()
+    {
+        XLogger.debug( "robot totalCnt = " + this.mAllRobots.count() + " working cnt = " + this.mWorkings.count() + " onTheWayCnt = " + this.mOnTheWays.count() + " idleCnt = " + this.mIdles.length ) ;
     }
 }

@@ -148,7 +148,7 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
             if ( gsvr == null )
             {
                 gsvr = new ServerGroup();
-                gsvr.init(port) ;
+                gsvr.init(port,1) ;
                 this.mSvrInfoGroups.set(port, gsvr);
             }
             let jsBack = {} ;

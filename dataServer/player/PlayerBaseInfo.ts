@@ -121,11 +121,11 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                 break ;
             case eMsgType.MSG_R_TELL:
                 {
-                    if ( this.mIsRobot )
-                    {
-                        XLogger.debug( "already telled robot , not need tell again uid = " + this.uid ) ;
-                        return ;
-                    }
+                    // if ( this.mIsRobot )
+                    // {
+                    //     XLogger.debug( "already telled robot , not need tell again uid = " + this.uid ) ;
+                    //     return ;
+                    // }
                     this.mIsRobot = true ;
                     let arg = {} ;
                     arg[key.uid] = this.uid;
@@ -214,11 +214,13 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
 
     protected informMatchNetState()
     {
-        if ( this.playingMatchIDs.length > 0 )
+        let vmids = (this.playingMatchIDs ||[] ).concat(this.signedMatches) ;
+        if ( vmids.length > 0 )
         {
             // arg : { matchID : 234 , uid : 23 , sessionID : 234 , state : ePlayerNetState }
-            for ( let pid of this.playingMatchIDs )
+            for ( let pid of vmids )
             {
+                XLogger.debug( "inform net state to matchID = " + pid +  "state = " + ePlayerNetState[this.mNetState] ) ;
                 let arg = {} ;
                 arg[key.matchID] = pid ;
                 arg[key.uid] = this.uid ;

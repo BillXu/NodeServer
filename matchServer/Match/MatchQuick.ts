@@ -44,6 +44,11 @@ export class MatchQuick extends Match
             return false ;
         }
 
+        if ( this.mEnrollPlayers.has(uid) )
+        {
+            XLogger.error( "why player come the same math twice uid = " + uid + " matchID = " + this.matchID ) ;
+        }
+        
         let p = new MatchPlayer() ;
         p.sessionID = sessionID ;
         p.uid = uid;
@@ -51,7 +56,7 @@ export class MatchQuick extends Match
         p.signUpTime = Date.now();
         p.state = eMathPlayerState.eState_SignUp;
         this.mEnrollPlayers.set(p.uid, p ) ;
-        XLogger.debug( " a robot join matchID = " + this.matchID + " uid = " + uid ) ;
+        XLogger.debug( " a robot join matchID = " + this.matchID + " uid = " + uid + " enrollcnt = " + this.mEnrollPlayers.count() + " limit cnt = " + this.mCfg.getLowLimit() ) ;
 
         if ( this.mEnrollPlayers.count() >= this.mCfg.getLowLimit() )
         {
@@ -61,9 +66,11 @@ export class MatchQuick extends Match
                 this.mTimerForWaitRobot = null ;
             }
 
+            XLogger.debug( "count is ok start battle matchID = " + this.matchID  ) ;
             this.doEneterMatchBattle();
+            this.mState = eMatchState.eMatch_Enroll ;
         }
-        this.mState = eMatchState.eMatch_Enroll ;
+        
         return true;
     }
 

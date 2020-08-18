@@ -247,7 +247,7 @@ export class MatchCfg
 
         for ( let v of this.vRewards )
         {
-            if ( v.startRankIdx <= rankIdx && rankIdx << v.endRankIdx )
+            if ( v.startRankIdx <= rankIdx && rankIdx <= v.endRankIdx )
             {
                 return v ;
             }

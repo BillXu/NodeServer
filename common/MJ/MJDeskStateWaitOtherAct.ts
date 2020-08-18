@@ -75,14 +75,15 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
         let self = this ;
         t = setTimeout(() => {
             self.mDesk.onPlayerEnterTuoGuanState(idx) ;
+            XLogger.debug( "player waitTimeOut idx = " + idx ) ;
             self.waitActTimeOut(idx) ;
             let tt = self.waitTimers.get(idx) ;
             if ( null != tt )
             {
+                XLogger.debug( "clear timeout for idx = " + idx ) ;
                 clearTimeout(tt) ;
-                this.waitTimers.delete(idx) ;
+                self.waitTimers.delete(idx) ;
             }
-
         }, time * 1000 );
 
         this.waitTimers.set(idx, t ) ;
@@ -196,58 +197,7 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
             this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
             return true ;
         }
-
-        if ( eMJActType.eMJAct_Pass == act && this.mDesk.canPlayerDoActWithOtherCard( p.nIdx, eMJActType.eMJAct_Peng ,card , this.mData.mInvokerIdx , this.mData.mGangCnt > 0 ,this.mChosedEatWith ) )
-        {
-            p.addLouPeng(card);
-        }
-
-        if ( eMJActType.eMJAct_Hu != act && this.mDesk.canPlayerDoActWithOtherCard( p.nIdx, eMJActType.eMJAct_Hu ,card , this.mData.mInvokerIdx , this.mData.mGangCnt > 0 ,this.mChosedEatWith ) )
-        {
-            p.addLouHu(card) ;
-        }
-
-        // msg[key.ret] = 0 ;
-        // this.mDesk.sendMsgToPlayer( sessionID, msgID, msg ) ;
-
-        XLogger.debug( "In waitOtherActState player choseAct = " + eMJActType[act] + " idx = " + p.nIdx + " deskID = " + this.mDesk.deskID ) ;
         this.onPlayerChosedDoAct(p.nIdx, act ) ;
-        if ( this.mData.mWaitIdxes.length != 0 ) // go on wait other ;
-        {
-            XLogger.debug( "still have player not chose act , go on wait deskID = " + this.mDesk.deskID ) ;
-            return true ;
-        }
-
-        if ( this.mChosedAct == null || this.mChosedAct.act == eMJActType.eMJAct_Pass )
-        {
-            XLogger.debug("all player chose pass or forgot deskID = " + this.mDesk.deskID) ;
-            if ( this.mData.mBuGangRetore == null )
-            {
-                let nextIdx = this.mDesk.getNextActIdx( this.mData.mInvokerIdx ) ;
-                let mocard = this.mDesk.onPlayerMo( nextIdx ) ;
-                if ( null == mocard || 0 == mocard )
-                {   XLogger.debug( "in waitOtherActState no more card to MO , so game end deskID = " + this.mDesk.deskID ) ;
-                    this.mDesk.transferState( eMJDeskState.eState_End ,false ) ;
-                    return true ;
-                }
-
-                XLogger.debug( "all player check pass , so next player moPai nextIdx = " + nextIdx + " deskID = " + this.mDesk.deskID ) ;
-                let wda = new WaitActStateData( nextIdx, mocard )  ; 
-                this.mDesk.transferState( eMJDeskState.eState_WaitAct ,wda ) ;
-            }
-            else
-            {
-                XLogger.debug( "all palyer chose check pass , so go on finish BuGang idx = " + this.mData.mBuGangRetore.mActIdx + " deskID = " + this.mDesk.deskID ) ;
-                this.mData.mBuGangRetore.mEnterAct = eMJActType.eMJAct_BuGang_Done ;
-                this.mDesk.transferState( eMJDeskState.eState_WaitAct ,this.mData.mBuGangRetore ) ;
-            }
-        }
-        else
-        {
-            XLogger.debug( "all player finished chose act and do their act deskID = " + this.mDesk.deskID ) ;
-            this.doChosedAct();
-        }
-
         return true ;
     }
 
@@ -272,6 +222,19 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
             this.waitTimers.delete(idx) ;
         }
 
+        let card : number = this.mData.mCard;
+        let p = this.mDesk.getPlayerByIdx(idx) ;
+        if ( eMJActType.eMJAct_Pass == act && this.mDesk.canPlayerDoActWithOtherCard( p.nIdx, eMJActType.eMJAct_Peng ,card , this.mData.mInvokerIdx , this.mData.mGangCnt > 0 ,this.mChosedEatWith ) )
+        {
+            p.addLouPeng(card);
+        }
+
+        if ( eMJActType.eMJAct_Hu != act && this.mDesk.canPlayerDoActWithOtherCard( p.nIdx, eMJActType.eMJAct_Hu ,card , this.mData.mInvokerIdx , this.mData.mGangCnt > 0 ,this.mChosedEatWith ) )
+        {
+            p.addLouHu(card) ;
+        }
+        XLogger.debug( "In waitOtherActState player choseAct = " + eMJActType[act] + " idx = " + p.nIdx + " deskID = " + this.mDesk.deskID ) ;
+
         if ( this.mChosedAct == null )
         {
             XLogger.debug( "first chosed act = " + eMJActType[act] + " curIdx = " + idx + " deskID = " + this.mDesk.deskID ) ;
@@ -285,10 +248,8 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
             {
                 XLogger.debug( "1 canncel wait max < act = " + eMJActType[act] + " idxes = " + v + " deskID = " + this.mDesk.deskID ) ;
             }
-            return ;
         }
-
-        if ( this.mChosedAct.act < act )
+        else if ( this.mChosedAct.act < act )
         {
             XLogger.debug( "cur chose act big than pre act = " + eMJActType[act] + " pre act = " + eMJActType[this.mChosedAct.act] + " curIdx = " + idx + " deskID = " + this.mDesk.deskID   ) ;
             this.mChosedAct.act = act ;
@@ -307,6 +268,15 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
             this.mChosedAct.idxes.push(idx) ;
             XLogger.debug( "chose the same act push it idx = " + idx + " deskID = " + this.mDesk.deskID ) ;
         }
+
+        if ( this.mData.mWaitIdxes.length != 0 ) // go on wait other ;
+        {
+            XLogger.debug( "still have player not chose act , go on wait deskID = " + this.mDesk.deskID ) ;
+            return ;
+        }
+
+        XLogger.debug( "all player finished chose act and do their act deskID = " + this.mDesk.deskID ) ;
+        this.doChosedAct();
     }
 
     protected doChosedAct()
@@ -335,6 +305,33 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
                     //this.mDesk.transferState( eMJDeskState.eState_End, true ) ;
                 }
                 break;
+            case eMJActType.eMJAct_Pass:
+                {
+                    XLogger.debug("all player chose pass or forgot deskID = " + this.mDesk.deskID) ;
+                    if ( this.mData.mBuGangRetore == null )
+                    {
+                        let nextIdx = this.mDesk.getNextActIdx( this.mData.mInvokerIdx ) ;
+                        let mocard = this.mDesk.onPlayerMo( nextIdx ) ;
+                        if ( null == mocard || 0 == mocard )
+                        {   XLogger.debug( "in waitOtherActState no more card to MO , so game end deskID = " + this.mDesk.deskID ) ;
+                            this.mDesk.transferState( eMJDeskState.eState_End ,false ) ;
+                            return ;
+                        }
+        
+                        XLogger.debug( "all player check pass , so next player moPai nextIdx = " + nextIdx + " deskID = " + this.mDesk.deskID ) ;
+                        let wda = new WaitActStateData( nextIdx, mocard )  ; 
+                        this.mDesk.transferState( eMJDeskState.eState_WaitAct ,wda ) ;
+                        return;
+                    }
+                    else
+                    {
+                        XLogger.debug( "all palyer chose check pass , so go on finish BuGang idx = " + this.mData.mBuGangRetore.mActIdx + " deskID = " + this.mDesk.deskID ) ;
+                        this.mData.mBuGangRetore.mEnterAct = eMJActType.eMJAct_BuGang_Done ;
+                        this.mDesk.transferState( eMJDeskState.eState_WaitAct ,this.mData.mBuGangRetore ) ;
+                        return ;
+                    }
+                }
+                break;
             default:
                 XLogger.error("this act should not in here act = " + eMJActType[this.mChosedAct.act] + " deskID = " + this.mDesk.deskID )  ;
                 return ;
@@ -344,6 +341,7 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
         {
             XLogger.debug( "player chose hu so go to gameEnd deskID = " + this.mDesk.deskID ) ;
             this.mDesk.transferState( eMJDeskState.eState_End, true ) ;
+            return ;
         }
         else
         {
@@ -351,6 +349,7 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
             let data = new WaitActStateData(this.mChosedAct.idxes[0],this.mData.mCard,this.mChosedAct.act );
             data.mEnterActInvokerIdx = this.mData.mInvokerIdx;
             this.mDesk.transferState( eMJDeskState.eState_WaitAct ,data ) ;
+            return ;
         }
     }
 

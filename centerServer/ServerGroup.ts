@@ -25,7 +25,7 @@ export class ServerGroup
     protected mSvrInfos : HashMap<number,ServerInfo> = new HashMap<number,ServerInfo>() ;
     mPortType : eMsgPort = eMsgPort.ID_MSG_PORT_MAX ;
     mMaxCnt : number = 1 ;
-    init( portType : eMsgPort, maxCnt : number = 200  )
+    init( portType : eMsgPort, maxCnt : number )
     {
         this.mPortType = portType ;
         this.mMaxCnt = maxCnt ;

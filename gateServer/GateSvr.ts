@@ -188,12 +188,26 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
                 // just as disconnect 
                 XLogger.debug("player logout , regart as disconnect . sessionID = " + nSessionID ) ;
                 let playerID = this.getUidBySessionID(nSessionID) ;
+                
+                
+                let msgTransfer = {} ;
+                msgTransfer[key.msgID] = eMsgType.MSG_TRANSER_DATA ;
+                msgTransfer["dstPort"] = eMsgPort.ID_MSG_PORT_CLIENT ;
+                msgTransfer["dstID"] = nSessionID ;
+                msgTransfer["orgPort"] = eMsgPort.ID_MSG_PORT_GATE ;
+                msgTransfer["orgID"] = this.mNet.getSessionID();
+                realMsg[key.ret] = 0 ;
                 if ( -1 == playerID )
                 {
+                    key.msgID
                     XLogger.debug( "player logout but target is null sessionID  = " + nSessionID ) ;
+                    realMsg[key.ret] = 0 ;
+                    msgTransfer["msg"] = realMsg;
+                    this.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_TRANSER_DATA, msgTransfer ) ;
                     return ;
                 }
-
+                msgTransfer["msg"] = realMsg;
+                this.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_TRANSER_DATA, msgTransfer ) ;
                 this.onPeerDisconnected(nSessionID);
             }
             else

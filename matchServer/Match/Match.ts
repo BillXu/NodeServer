@@ -235,7 +235,7 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
         {
             if ( l.onRefreshPlayerNetState(uid, sessionID, netState) )
             {
-                XLogger.debug( "match recived player net state matchiID = " + this.matchID + " uid = " + uid + " sessionID = " + sessionID + " state = " + netState ) ;
+                XLogger.debug( "match recived player net state matchiID = " + this.matchID + " uid = " + uid + " sessionID = " + sessionID + " state = " + ePlayerNetState[netState] ) ;
                 return true ;
             }
         }
@@ -249,6 +249,7 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
                 p.sessionID = 0 ;
                 XLogger.warn( "signed player not online , zero sessionID , uid = " + p.uid );
             }
+            XLogger.debug( "matchprocessed match recived player net state matchiID = " + this.matchID + " uid = " + uid + " sessionID = " + sessionID + " state = " + ePlayerNetState[netState] ) ;
             return true ;
         }
         XLogger.debug( "player state change not processed uid = " + uid + " matchID = " + this.matchID ) ;
@@ -275,6 +276,7 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
     {
         matchLaw.clear();
         this.mLaws.delete( matchLaw.getIdx() ) ;
+        XLogger.debug( "on law finished matchID = " + this.matchID + " lawIdx = " + matchLaw.getIdx() + " left lawCnt = " + this.mLaws.count() ) ;
     }
 
     // self function ;
@@ -285,6 +287,13 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
 
     protected onPlayerSignedUp( uid : number , sessionID : number )
     {
+        if ( this.mEnrollPlayers.has(uid) )
+        {
+            XLogger.warn( "already enrolled , why duplicate enroll ? uid = " + uid + " matchID = " + this.matchID ) ;
+            this.mEnrollPlayers.get(uid).sessionID = sessionID ;
+            return ;
+        }
+        XLogger.debug( "player signedup uid = " + uid + " sessionID = " + sessionID + " matchID = " + this.matchID ) ;
         let p = new MatchPlayer() ;
         p.sessionID = sessionID ;
         p.uid = uid;

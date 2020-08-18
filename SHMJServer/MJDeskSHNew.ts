@@ -217,6 +217,22 @@ export class MJDeskSHNew extends MJDesk
         }
     }
 
+    onGameOver( isHuOver : boolean ) : boolean
+    {
+        if ( isHuOver == false )
+        {
+            XLogger.debug( "send liuJu hua, deskID = " + this.deskID + " matchID = " + this.matchID ) ;
+            let msg = {} ;
+            msg[key.ret] = 0 ;
+            msg[key.huCard] = 0 ;
+            msg[key.invokerIdx] = -1;
+            msg[key.huInfo] = [] ;
+            msg[key.players] = this.makePlayersInfoForResult();
+            this.sendDeskMsg( eMsgType.MSG_PLAYER_MJ_HU, msg ) ;
+        }
+        return super.onGameOver(isHuOver) ;
+    }
+
     protected makePlayersInfoForResult() : Object
     {
         // players : [ { hold : number[], offset : 23 , final : 23 } , ... ] 

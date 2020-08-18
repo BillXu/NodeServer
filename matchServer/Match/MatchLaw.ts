@@ -300,20 +300,23 @@ export class MatchLaw implements IMatchLaw
         }
 
         // kickout robot first ;
-        let cntr = countBy(this.mFinishedPlayers,( p : MatchPlayer )=>p.isRobot ? 1 : 0 ) ;
-        if ( cntr["1"] >= notFullCnt ) // kick will be ok 
+        if ( this.mFinishedPlayers.length > this.cfg.cntPerDesk )
         {
-            let idx = this.mFinishedPlayers.findIndex(( p : MatchPlayer )=> p.isRobot ) ;
-            XLogger.debug( "kick robot to keep desk cnt ok not full = " + notFullCnt + " matchID = " + this.matchID + " robot cnt = " + cntr["1"] ) ;
-            while ( idx != -1 && notFullCnt-- > 0 )
+            let cntr = countBy(this.mFinishedPlayers,( p : MatchPlayer )=>p.isRobot ? 1 : 0 ) ;
+            if ( cntr["1"] >= notFullCnt ) // kick will be ok 
             {
-                let pd = this.mFinishedPlayers.splice(idx,1) ;
-                this.onPlayerMatchResult(pd[0],true ) ;
-                idx = this.mFinishedPlayers.findIndex(( p : MatchPlayer )=> p.isRobot ) ;
+                let idx = this.mFinishedPlayers.findIndex(( p : MatchPlayer )=> p.isRobot ) ;
+                XLogger.debug( "kick robot to keep desk cnt ok not full = " + notFullCnt + " matchID = " + this.matchID + " robot cnt = " + cntr["1"] ) ;
+                while ( idx != -1 && notFullCnt-- > 0 )
+                {
+                    let pd = this.mFinishedPlayers.splice(idx,1) ;
+                    this.onPlayerMatchResult(pd[0],true ) ;
+                    idx = this.mFinishedPlayers.findIndex(( p : MatchPlayer )=> p.isRobot ) ;
+                }
+                
+                this.onMatchedOk();
+                return ;
             }
-            
-            this.onMatchedOk();
-            return ;
         }
 
         // not enough robot kick out 
@@ -387,6 +390,12 @@ export class MatchLaw implements IMatchLaw
             pp.state = eMathPlayerState.eState_WaitOtherFinish;
             vDeskP.push(pp) ;
             this.mFinishedPlayers.push(pp) ;
+        }
+
+        if ( vDeskP.length == 0 )
+        {
+            XLogger.error( " player not in the law how to finish this law ? matchID = " + this.matchID + " lawIdx = " + this.getIdx() ) ;
+            return ;
         }
 
         // process promoted
@@ -466,12 +475,15 @@ export class MatchLaw implements IMatchLaw
         for ( let ridx = 0 ; ridx < this.mFinishedPlayers.length ; ++ridx )
         {
             let p = this.mFinishedPlayers[ridx] ;
-            if ( p.rankIdx != ridx && false == isLastRoundLastDesk )
+            if ( p.rankIdx != ridx )
             {
                 p.rankIdx = ridx ;
                 if ( p.state == eMathPlayerState.eState_WaitOtherFinish || p.state == eMathPlayerState.eState_Relived || eMathPlayerState.eState_Promoted == p.state )
                 {
-                    this.informRankIdxUpddated(p) ;
+                    if ( isLastRoundLastDesk == false )
+                    {
+                        this.informRankIdxUpddated(p) ;
+                    }
                 }
             }
         }
@@ -525,6 +537,22 @@ export class MatchLaw implements IMatchLaw
                     this.informRankIdxUpddated(p) ;
                 }
             }
+
+            if ( this.mPlayeringPlayers.length == 0 && eMathPlayerState.eState_WaitOtherFinish == p.state ) // last desk ;
+            {
+                p.state = ridx < this.mRoundCfg.promoteCnt ? eMathPlayerState.eState_Promoted : eMathPlayerState.eState_Lose ;
+                if ( eMathPlayerState.eState_Lose == p.state )
+                {
+                    this.onPlayerMatchResult(p, true ) ;
+                }
+                else
+                {
+                    if ( false == isLastRoundLastDesk )
+                    {
+                        this.informRankIdxUpddated(p) ;
+                    }
+                }
+            }
         }
     }
 
@@ -553,7 +581,7 @@ export class MatchLaw implements IMatchLaw
                 argR[key.cfgID] = this.cfg.cfgID ;
                 argR[key.matchName] = this.cfg.name ;
                 argR[key.isBoLeMode] = this.cfg.isBoLeMode ? 1 : 0 ;
-                this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, player.uid, eRpcFuncID.Func_MatchReward, arg ) ;
+                this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, player.uid, eRpcFuncID.Func_MatchReward, argR ) ;
              }
 
          }
