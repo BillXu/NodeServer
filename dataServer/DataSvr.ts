@@ -1,3 +1,4 @@
+import { PrizeWheel } from './PrizeWheel';
 import { MailModule } from './MailModule';
 import { XLogger } from './../common/Logger';
 import { PlayerSimpleInfoCacher } from './PlayerSimpleInfoCacher';
@@ -14,6 +15,7 @@ export class DataSvr extends IServerApp
         this.registerModule( new PlayerMgr() ) ;
         this.registerModule( new PlayerSimpleInfoCacher() ) ;
         this.registerModule( new MailModule() ) ;
+        this.registerModule( new PrizeWheel() ) ;
     }
 
     getLocalPortType() : eMsgPort

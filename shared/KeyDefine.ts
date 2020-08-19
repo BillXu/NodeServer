@@ -108,4 +108,5 @@ export class key
     static isRobot = "isRobot" ;
     static rewards = "rewards" ;
     static canRelive = "canRelive" ;
+    static freeWheelTime = "freeWheelTime";
 }

@@ -8,6 +8,7 @@ export class MJDeskData implements IShareData
     deskID : number = 0 ;
     matchID : number = 0 ;
     lawIdx : number = 0 ;
+    cfgID : number = 0 ;
     diFen : number = 0 ;
     roundCnt : number = 0 ;
     curRoundIdx : number = 0 ;
@@ -36,6 +37,7 @@ export class MJDeskData implements IShareData
         js[key.vDice] = this.vDice ;
         js[key.port] = this.gamePort ;
         js[key.lastChuIdx] = this.lastChuIdx ;
+        js[key.cfgID] = this.cfgID;
         return js ;
     }
 
@@ -55,5 +57,6 @@ export class MJDeskData implements IShareData
         this.vDice = js[key.vDice] ;
         this.gamePort = js[key.port] ;
         this.lastChuIdx = js[key.lastChuIdx] ;
+        this.cfgID = js[key.cfgID] ;
     }
 }

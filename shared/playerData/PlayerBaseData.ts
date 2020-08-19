@@ -12,6 +12,7 @@ export class PlayerBaseData extends PlayerSimpleInfo
     fertilizer : number = 0 ;
     playingMatchIDs : number[] = [] ;
     signedMatches : number[] = [] ;
+    freePrizeWheelTime : number = 0 ;
     // share Data func ;
     toJson() : Object 
     {
@@ -26,6 +27,7 @@ export class PlayerBaseData extends PlayerSimpleInfo
         js[key.redBag] = this.redBag;
         js[key.honour] = this.honour;
         js[key.signedMatches] = JSON.stringify( this.signedMatches ) ;
+        js[key.freeWheelTime] = this.freePrizeWheelTime ;
         return js ;
     }
 
@@ -40,6 +42,7 @@ export class PlayerBaseData extends PlayerSimpleInfo
         this.reliveTicket = js[key.reliveTicket] ;
         this.redBag = js[key.redBag] ;
         this.honour = js[key.honour] ;
+        this.freePrizeWheelTime = js[key.freeWheelTime] ;
         if ( js[key.playingMatchIDs] != null && (js[key.playingMatchIDs] as string).length > 2 )
         {
             this.playingMatchIDs = JSON.parse(js[key.playingMatchIDs]) ;

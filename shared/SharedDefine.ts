@@ -87,4 +87,6 @@ export class G_ARG
     static TIME_MJ_WAIT_ACT_TUOGUAN : number = 0.9 ; 
     static TIME_MATCH_WAIT_RELIVE : number = 3 ;
     static TIME_QUICK_MATCH_WAIT : number = 4 ;
+    static WHEEL_SPIN_DIAMOND : number = 20;
+    static WHEEL_FREE_TIME_INTERVAL : number = 60*60*5 ; // 5 hours ; 
 }

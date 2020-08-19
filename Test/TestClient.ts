@@ -314,3 +314,10 @@ card = 3 ;
 let ret = countBy(vCards);
 let cccc = ret[3] || 0 ;
 console.log( "add = " + cccc) ;
+
+
+let timer = new Date() ;
+console.log(" cur : " + timer.valueOf() + "  date  " + Date.now() ) ;
+timer.setHours(1,0);
+timer.setDate(13+timer.getDate()) ;
+console.log(timer.toLocaleString()) ;

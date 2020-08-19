@@ -17,12 +17,12 @@ export class MJDeskMgrSH extends DeskMgr
         // arg : { matchID : 234 , lawIdx : 2 , deskCnt : 4 , roundCnt : 2  ,diFen : 23 }
         let d = this.createDesk();
         d.init(200, 1, 10000, this ,this ) ;
-        d.setMatchInfo( 200, 0 ) ;
+        d.setMatchInfo( 200, 0 ,1) ;
         this.mDesks.set(d.deskID, d ) ;
 
         let d2 = this.createDesk();
         d2.init(300, 1, 1000, this ,this ) ;
-        d2.setMatchInfo( 300, 0 ) ;
+        d2.setMatchInfo( 300, 0,1 ) ;
         this.mDesks.set(d2.deskID, d2 ) ;
     }
 

@@ -154,10 +154,12 @@ export abstract class MJDesk implements IDesk
 
     abstract createDeskInfoData() : MJDeskData ;
   
-    setMatchInfo( matchID : number , lawIdx : number ) : void 
+    setMatchInfo( matchID : number , lawIdx : number , cfgID : number  ) : void 
     {
         this.mDeskInfo.matchID = matchID ;
         this.mDeskInfo.lawIdx = lawIdx ;
+        this.mDeskInfo.cfgID = cfgID ;
+
     }
 
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number ) : boolean 

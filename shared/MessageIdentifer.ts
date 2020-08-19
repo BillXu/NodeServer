@@ -275,7 +275,14 @@ export enum eMsgType
 	// client: { orgCard : number , dstCard : number }
 	// svr : { ret : 0 ,  orgCard : number , dstCard : number }
 
-
+	MSG_PRIZE_WHEEL_SPIN = 600,
+	// client : { type : 0 }
+	// svr : { ret : 0 , pos : 0 }
+	// type : 0 by diamond , 1 for free , 2 by video ;
+	
+	MSG_PRIZE_WHEEL_RANK,
+	//client : null
+	// svr : { rank : [ {name : "hello" , pos : 1} ] }
 
 
 

@@ -169,6 +169,12 @@ export class MJDeskModuleSH extends IClientModule
                     } 
 
                     let idx = msg[key.idx];
+                    if ( idx == null )
+                    {
+                        XLogger.error( "why do not have idx key ?" ) ;
+                        return true;
+                    }
+
                     this.getPlayerByIdx(idx).onChu(msg[key.card]||0) ;
                 }
                 break;

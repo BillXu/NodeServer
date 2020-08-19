@@ -666,6 +666,7 @@ export class MatchLaw implements IMatchLaw
         arg[key.deskCnt] = deskCnt ;
         arg[key.diFen] = this.mRoundCfg.diFen;
         arg[key.roundCnt] = this.mRoundCfg.gameRoundCnt;
+        arg[key.cfgID] = this.cfg.cfgID ;
         arg[key.matchRoundIdx] = this.mRoundCfg.idx;
         arg[key.matchRoundCnt] = this.cfg.getLawRoundCnt();
         let self = this ;

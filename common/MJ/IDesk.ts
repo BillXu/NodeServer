@@ -12,7 +12,7 @@ export interface IDesk
     matchID : number ;
     lawIdx : number ;
     init( deskID : number , diFen : number , roundCnt : number , delegate : IDeskDelegate , deskMgr : DeskMgr ) : void ;
-    setMatchInfo( matchID : number , lawIdx : number ) : void ;
+    setMatchInfo( matchID : number , lawIdx : number, cfgID : number ) : void ;
 
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number ) : boolean ;
     onRpcCall( funcID : eRpcFuncID , arg : Object , sieralNum : number ) : Object ;

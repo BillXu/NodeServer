@@ -46,6 +46,7 @@ export abstract class DeskMgr extends IModule implements IDeskDelegate
                     let diFen = arg[key.diFen] ;
                     let mid = arg[key.matchID] ;
                     let lidx = arg[key.lawIdx] ;
+                    let cfgID = arg[key.cfgID] ;
                     let vIDs = [] ;
                     while ( cnt-- )
                     {
@@ -57,7 +58,7 @@ export abstract class DeskMgr extends IModule implements IDeskDelegate
                             did = this.generateUniqueID();
                         }
                         d.init(did, diFen, roundCnt, this ,this ) ;
-                        d.setMatchInfo( mid, lidx ) ;
+                        d.setMatchInfo( mid, lidx , cfgID ) ;
                         this.mDesks.set(d.deskID, d ) ;
                         vIDs.push( d.deskID ) ;
                     }
