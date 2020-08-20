@@ -37,7 +37,7 @@ export class MJDeskMgrSH extends DeskMgr
                 XLogger.debug( "can not find desk id = " + targetID );
                 return true ;
             }
-            this.mDesks.get(targetID).onPlayerEnter( msg[key.uid], orgID, 100 ) ;
+            //this.mDesks.get(targetID).onPlayerEnter( msg[key.uid], orgID, 100 ) ;
             return true ;
         }
         return super.onLogicMsg(msgID, msg, orgID, orgPort, targetID) ;

@@ -54,7 +54,7 @@ export enum eRpcFuncID
     // arg : { matchID : 234 , lawIdx : 2 , deskCnt : 4 , roundCnt : 2  ,diFen : 23, matchRoundIdx : 0 , matchRoundCnt : 23 }
     // result : { deskIDs : number[] }
     Func_PushPlayersToDesk,
-    // arg : { deskID : 2 , players : { uid : 234 , sessionID : 234 , score : 234, isRobot : 0 }[] }
+    // arg : { deskID : 2 , players : { uid : 234 , token : 234 , score : 234, isRobot : 0 }[] }
     Func_InformDeskResult,
     // arg : { matchID : 234 , lawIdx : 23 , deksID : 2 , players : { uid : 23 , score : 23 }[] }
     Func_MatchUpdatePlayerNetState,
@@ -68,5 +68,9 @@ export enum eRpcFuncID
     Func_ReqRobot,
     // arg { matchID : 23 , lawIdx : 23 , cnt : 23 }
     // result { lackCnt : 23 } 
+    Func_UpdateCurDeskID,
+    // arg { uid : 23 , deskID : 234 , port : eMsgPort , isSet : 0 }
+    // arg { ret : 0 }
+    // ret : 0 success , 1 already in other deskID ;
     Func_Max,
 }

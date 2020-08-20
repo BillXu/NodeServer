@@ -16,5 +16,5 @@ export interface IDesk
 
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number ) : boolean ;
     onRpcCall( funcID : eRpcFuncID , arg : Object , sieralNum : number ) : Object ;
-    onPlayerEnter( uid : number , sessionID : number , score : number ) : boolean ; 
+    onPutPlayerToDesk( uid : number , token : number , score : number ) : boolean ; 
 }

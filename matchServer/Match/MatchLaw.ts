@@ -91,17 +91,6 @@ export class MatchLaw implements IMatchLaw
             XLogger.debug( "player do not online , zero sessionID uid = " + uid ) ;
             cp.sessionID = 0 ;
         }
-
-        if ( cp.stayDeskID != 0 )
-        {
-            XLogger.debug( "player stayin desk , infor state to deskID = " + cp.stayDeskID + " uid = " + cp.uid + " netState = " + ePlayerNetState[netState] ) ;
-            let arg = {} ;
-            arg[key.deskID] = cp.stayDeskID ;
-            arg[key.uid] = cp.uid ;
-            arg[key.sessionID] = cp.sessionID ;
-            arg[key.state] = netState ;
-            this.getRpc().invokeRpc(this.gamePort, cp.stayDeskID, eRpcFuncID.Func_DeskUpdatePlayerNetState, arg ) ;
-        }
         return true ;
     }
 
@@ -387,6 +376,7 @@ export class MatchLaw implements IMatchLaw
             let pp = v[0];
             pp.score = p.score ;
             pp.stayDeskID = 0 ;
+            pp.token = 0 ;
             pp.state = eMathPlayerState.eState_WaitOtherFinish;
             vDeskP.push(pp) ;
             this.mFinishedPlayers.push(pp) ;
@@ -692,10 +682,25 @@ export class MatchLaw implements IMatchLaw
                     p.stayDeskID = deskID;
                     let js = {} ;
                     js[key.uid] = p.uid ;
-                    js[key.sessionID] = p.sessionID ;
+                    js[key.token] = p.token ;
                     js[key.score] = p.score ;
                     js[key.isRobot ] = p.isRobot ? 1 : 0 ;
                     vPlayesTmp.push(js) ;
+
+                    // send msg to enter room 
+                    if ( p.sessionID != 0 )
+                    {
+                        XLogger.debug( "inform player enter match desk, uid = " + p.uid + " deskID = " + deskID ) ;
+                        let msg = {} ;
+                        msg[key.deskID] = deskID;
+                        msg[key.port] = self.cfg.gameType;
+                        msg[key.token] = p.token;
+                        self.mMatch.sendMsgToClient(p.sessionID, eMsgType.MSG_INFORM_PLAYER_ENTER_MATCH_DESK, msg ) ;
+                    }
+                    else
+                    {
+                        XLogger.debug( "player not online , do not inform enter room uid = " + p.uid ) ;
+                    }
                 }
 
                 if ( vPlayesTmp.length != cntPerDesk )

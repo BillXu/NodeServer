@@ -169,6 +169,14 @@ export enum eMsgType
 	// svr { ret : 0 }
 	// ret : 0 success , 1 money not enough , 2 not allow relive , 3 uid error ;
 
+	MSG_INFORM_PLAYER_ENTER_MATCH_DESK,
+	// svr : { deskID : 234 , port : eMsgPort , token : 2345 } 
+	
+	MSG_PLAYER_ENTER_MATCH_DESK,
+	// client : { token : 234 }
+	// svr : { ret : 0 }
+	// ret : 0 success , 1 you are not in target desk ;
+
 	MSG_R_BEGIN = 260,
 
 	MSG_R_TELL,

@@ -1,3 +1,4 @@
+import { eMsgPort } from './../MessageIdentifer';
 import { PlayerSimpleInfo } from './PlayerSimpleInfo';
 import { key } from './../KeyDefine';
 export class PlayerBaseData extends PlayerSimpleInfo
@@ -13,6 +14,8 @@ export class PlayerBaseData extends PlayerSimpleInfo
     playingMatchIDs : number[] = [] ;
     signedMatches : number[] = [] ;
     freePrizeWheelTime : number = 0 ;
+    stayDeskID : number = 0 ;
+    stayDeskPort : eMsgPort = eMsgPort.ID_MSG_PORT_MAX ;
     // share Data func ;
     toJson() : Object 
     {
@@ -28,6 +31,8 @@ export class PlayerBaseData extends PlayerSimpleInfo
         js[key.honour] = this.honour;
         js[key.signedMatches] = JSON.stringify( this.signedMatches ) ;
         js[key.freeWheelTime] = this.freePrizeWheelTime ;
+        js[key.stayDeskID] = this.stayDeskID;
+        js[key.stayDeskPort] = this.stayDeskPort;
         return js ;
     }
 
@@ -42,6 +47,8 @@ export class PlayerBaseData extends PlayerSimpleInfo
         this.reliveTicket = js[key.reliveTicket] ;
         this.redBag = js[key.redBag] ;
         this.honour = js[key.honour] ;
+        this.stayDeskPort = js[key.stayDeskPort] || 0  ;
+        this.stayDeskID = js[key.stayDeskID] || 0  ;
         this.freePrizeWheelTime = js[key.freeWheelTime] ;
         if ( js[key.playingMatchIDs] != null && (js[key.playingMatchIDs] as string).length > 2 )
         {

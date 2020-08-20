@@ -1,3 +1,4 @@
+import { random } from 'lodash';
 import { key } from './../../shared/KeyDefine';
 import { eMathPlayerState } from './../../shared/SharedDefine';
 export class MatchPlayer
@@ -12,12 +13,14 @@ export class MatchPlayer
     rankIdx : number = -1 ;
     roundIdx : number = 0 ;
     isRobot : boolean = false ;
+    token : number = random(10000,false ) + 1000;
     
     onVisitInfo( info : Object ) : void 
     {
         info[key.uid] = this.uid ;
         info[key.state] = this.state;
         info[key.deskID] = this.stayDeskID;
+        info[key.token] = this.token ;
         info[key.rankIdx] = this.rankIdx;
         info[key.curRoundIdx] = this.roundIdx;
     }

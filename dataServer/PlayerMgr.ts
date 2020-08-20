@@ -12,6 +12,7 @@ import { IServerApp } from '../common/IServerApp';
 import { Player } from './player/Player';
 import { eRpcFuncID } from '../common/Rpc/RpcFuncID';
 import { eMailType } from '../shared/SharedDefine';
+import { ESTALE } from 'constants';
 export class PlayerMgr extends IModule implements IPlayerMgr 
 {
     static MODUEL_NAME : string = "PlayerMgr" ;
@@ -129,6 +130,21 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 }
                 break;
             default:
+                let uid : number = arg[key.uid];
+                if ( uid != null )
+                {
+                    let p = this.getPlayerByUID(uid, true ) ;
+                    if ( p )
+                    {
+                        let js = p.onRPCCall(funcID, arg ) ;
+                        merge(outResult,js) ;
+                    }
+                    else
+                    {
+                        MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_SetPlayingMatch, arg : arg } ) ; 
+                    }
+                    break;
+                }
                 return false ;
         }
         return true ;

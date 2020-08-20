@@ -95,7 +95,7 @@ export abstract class DeskMgr extends IModule implements IDeskDelegate
                     XLogger.debug( "push player into desk matchID = " + pd.matchID + " deskID = " + deskID + " playes = " + JSON.stringify( vPlayer ) )
                     for ( let jsp of vPlayer )
                     {
-                        pd.onPlayerEnter( jsp[key.uid], jsp[key.sessionID], jsp[key.score] ) ;
+                        pd.onPutPlayerToDesk( jsp[key.uid], jsp[key.token], jsp[key.score] ) ;
                     }
                 }
                 break ;

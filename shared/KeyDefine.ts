@@ -7,6 +7,7 @@ export class key
     static diamond = "diamond" ;
     static type = "type" ;
     static sessionID = "sessionID" ;
+    static token = "token" ;
     static account = "account" ;
     static ip = "ip" ;
     static state = "state" ;
@@ -46,6 +47,7 @@ export class key
     static moneyType = "moneyType" ;
     static comment = "comment" ;
     static isAdd = "isAdd" ;
+    static isSet = "iseSet";
     static isStart = "isStart" ;
     static playingMatchIDs = "playingMatchIDs" ;
     static signedMatches = "signedMatches" ;
@@ -60,6 +62,8 @@ export class key
     static reward = "reward" ;
     static deskCnt = "deskCnt" ;
     static deskID = "deskID" ;
+    static stayDeskID = "stayDeskID";
+    static stayDeskPort = "stayDeskPort";
     static deskIDs = "deskIDs" ;
     static lawIdx = "lawIdx" ;
     static diFen = "diFen" ;

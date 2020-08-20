@@ -1,3 +1,4 @@
+import { HuChecker } from './../shared/mjData/HuChecker';
 import { MJPlayerDataSH } from './../shared/mjshData/MJPlayerDataSH';
 import { PingHuStrategy } from './../Robot/deskModule/PingHuStrategy';
 import { eMJCardType } from './../shared/mjData/MJDefine';
@@ -321,3 +322,9 @@ console.log(" cur : " + timer.valueOf() + "  date  " + Date.now() ) ;
 timer.setHours(1,0);
 timer.setDate(13+timer.getDate()) ;
 console.log(timer.toLocaleString()) ;
+
+let vany  = [ ] ;
+console.log( vany ) ;
+
+let p = HuChecker.getInstance().checkTing([20,21,22,35,37,52,52,53,54,55,57]) ;
+console.log( JSON.stringify(p) ) ;

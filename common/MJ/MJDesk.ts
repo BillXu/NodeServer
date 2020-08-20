@@ -164,6 +164,20 @@ export abstract class MJDesk implements IDesk
 
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number ) : boolean 
     {
+        if ( eMsgType.MSG_PLAYER_ENTER_MATCH_DESK == msgID )
+        {
+            if ( this.onPlayerEnter( msg[key.token], orgID ) == false )
+            {
+                XLogger.debug( "invalid token can not enter sessionID = " + orgID ) ;
+                msg[key.ret] = 1 ;
+                this.sendMsgToPlayer(orgID, msgID, msg ) ;
+                return true ;
+            }
+            msg[key.ret] = 0 ;
+            this.sendMsgToPlayer(orgID, msgID, msg ) ;
+            return true ;
+        }
+
         let p = this.getPlayerBySessionID(orgID) ;
         if ( p == null )
         {
@@ -255,31 +269,67 @@ export abstract class MJDesk implements IDesk
         return {} ;
     }
 
-    onPlayerEnter( uid : number , sessionID : number , score : number ) : boolean 
+    onPutPlayerToDesk( uid : number, token : number , score : number ) : boolean
     {
         // check if already in room ?
         for ( let pp of this.vPlayers )
         {
             if ( pp != null && pp.uid == uid )
             {
-                pp.sessionID = sessionID ;
+                pp.token = token ;
                 pp.score = score ;
                 pp.state = eMJPlayerState.eState_Normal;
-                XLogger.warn( "why player already double enter desk uid = " + uid + " deskID = " + this.deskID ) ;
-                this.sendDeskInfoToPlayer(pp.nIdx) ;
+                XLogger.warn( "why player already double put desk uid = " + uid + " deskID = " + this.deskID ) ;
+                //this.sendDeskInfoToPlayer(pp.nIdx) ;
                 return true ;
             }
         }
 
         let p = this.createMJPlayerData();
-        p.init(uid, sessionID, score) ;
+        p.init(uid, token, score) ;
         if ( false == this.addPlayer(p) )
         {
             return false ;
         }
-        this.sendDeskMsg(eMsgType.MSG_DEDK_MJ_PLAYER_ENTER, p.toJson(), p.nIdx ) ;
-        this.sendDeskInfoToPlayer( p.nIdx) ;
+        XLogger.debug( "do put palyer into deskID = " + this.deskID + " uid = " + uid ) ;
         return true ;
+    }
+
+    onPlayerEnter( token : number , sessionID : number ) : boolean 
+    {
+        // check if already in room ?
+        for ( let pp of this.vPlayers )
+        {
+            if ( pp != null && pp.token == token )
+            {
+                pp.sessionID = sessionID ;
+                pp.state = eMJPlayerState.eState_Normal;
+                pp.isOnline = true ;
+
+                // tell data svr ;
+                let rpc = this.mDeskMgr.getSvrApp().getRpc();
+                let arg = {} ;
+                arg[key.uid] = pp.uid;
+                arg[key.deskID] = this.deskID;
+                arg[key.port] = this.mDeskMgr.getSvrApp().getLocalPortType();
+                arg[key.isSet] = 1 ;
+                rpc.invokeRpc(eMsgPort.ID_MSG_PORT_DATA, pp.uid, eRpcFuncID.Func_UpdateCurDeskID, arg,( resut : Object )=>{
+                    if ( resut[key.ret] != 0 )
+                    {
+                        XLogger.debug( "player alredy in other roomID , why enter new , client error " ) ;
+                    }
+                }) ;
+
+                // tell player ;
+                this.sendDeskInfoToPlayer(pp.nIdx) ;
+                XLogger.debug( " player enter desk uid = " + pp.uid + " deskID = " + this.deskID ) ;
+                return true ;
+            }
+        }
+        XLogger.debug( " can not find your token = " + token + " enter room failed , sessionID = " + sessionID ) ;
+        XLogger.debug( "aready have token players , deskID = " + this.deskID ) ;
+        this.vPlayers.forEach( v=>XLogger.debug( "uid = " + v.uid + " token = " + v.token ) ) ;
+        return false ;
     }
 
     // self function 
@@ -524,10 +574,18 @@ export abstract class MJDesk implements IDesk
         ++this.mDeskInfo.curRoundIdx ;
         if ( this.mDeskInfo.curRoundIdx == this.mDeskInfo.roundCnt )
         {
+            let rpc = this.mDeskMgr.getSvrApp().getRpc();
+            let arg = {} ;
+            arg[key.deskID] = this.deskID;
+            arg[key.port] = this.mDeskMgr.getSvrApp().getLocalPortType();
+            arg[key.isSet ] = 0 ;
             let vr = [] ;
             for ( let p of this.vPlayers )
             {
                 vr.push( { uid : p.uid , score : p.score } ) ;
+                // clear current deskID ;
+                arg[key.uid] = p.uid;
+                rpc.invokeRpc(eMsgPort.ID_MSG_PORT_DATA, p.uid, eRpcFuncID.Func_UpdateCurDeskID, arg) ;
             }
             XLogger.debug( "desk finished deskID = " + this.deskID ) ;
             this.vStates[this.state].onLevelState();
@@ -672,7 +730,10 @@ export abstract class MJDesk implements IDesk
             this.sendDeskMsg(eMsgType.MSG_DESK_MJ_MO, msg, actIdx ) ;
 
             msg[key.card] = card ;
-            this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_DESK_MJ_MO, msg) ;
+            if ( p.isOnline )
+            {
+                this.sendMsgToPlayer(p.sessionID, eMsgType.MSG_DESK_MJ_MO, msg) ;
+            }
         }
         return card ;
     }

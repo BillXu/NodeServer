@@ -7,6 +7,7 @@ export class MJPlayerData implements IShareData
 {
     nIdx : number = 0 ;
     sessionID : number = 0 ;
+    token : number = 0 ;
     uid : number = 0 ;
     state : eMJPlayerState = eMJPlayerState.eState_Normal ;
     isOnline : boolean = true ;
@@ -17,14 +18,15 @@ export class MJPlayerData implements IShareData
     vLouHu : number[] = [] ;
     huCard : number = 0 ;
 
-    init( uid : number , sessionID : number , score : number ,idx? : number )
+    init( uid : number , token : number , score : number ,idx? : number )
     {
-        this.uid = uid ; this.sessionID = sessionID ;
+        this.uid = uid ; this.sessionID = 0 ;
         this.score = score ;
-        this.isOnline = sessionID != 0 ;
-        this.state = this.isOnline ? eMJPlayerState.eState_Normal : eMJPlayerState.eState_TuoGuan;
+        this.isOnline = false;
+        this.state = eMJPlayerState.eState_Normal;
         this.offset = 0 ;
         this.nIdx = idx ;
+        this.token = token ;
         this.cardData = this.createMJPlayerCardData();
     }
 

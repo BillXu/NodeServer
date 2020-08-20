@@ -86,6 +86,16 @@ export class MJDeskModuleSH extends IClientModule
                     XLogger.debug( "recived player infos cur cnt = " + this.mPlayers.length + " deskID = " + this.mDeskInfo.deskID + " uid = " + this.getClient().uid ) ;
                 }
                 break ;
+            case eMsgType.MSG_PLAYER_MJ_TUO_GUAN:
+                {
+                    if ( msg[key.idx] == this.mSelfPlayer.nIdx && msg[key.isSet] == 1 )
+                    {
+                        XLogger.error( "why robot enter tuoGuan" ) ;
+                        msg[key.isSet] = 0 ;
+                        this.sendMsg(msgID, msg, this.mDeskInfo.gamePort, this.mDeskInfo.deskID );
+                    }
+                }
+                break;
             case eMsgType.MSG_DEDK_MJ_PLAYER_ENTER:
                 {
                     let p = this.createMJPlayer();

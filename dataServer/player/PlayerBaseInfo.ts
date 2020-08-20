@@ -162,6 +162,17 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         XLogger.debug( "player update netState = " + state + "sessionID = " + this.mPlayer.sessionID ) ;
         this.informMatchNetState();
         this.informRobotSvrNetState();
+
+        if ( this.stayDeskID != 0 )
+        {
+            XLogger.debug( "player stayin desk , infor state to deskID = " + this.stayDeskID + " uid = " + this.uid + " netState = " + ePlayerNetState[state] ) ;
+            let arg = {} ;
+            arg[key.deskID] = this.stayDeskID ;
+            arg[key.uid] = this.uid ;
+            arg[key.sessionID] = this.mPlayer.sessionID ;
+            arg[key.state] = state ;
+            this.mPlayer.getRpc().invokeRpc(this.stayDeskPort, this.stayDeskID, eRpcFuncID.Func_DeskUpdatePlayerNetState, arg ) ;
+        }
     }
 
     onMoneyChanged( isRefreshToClient : boolean = false )
@@ -426,11 +437,74 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     return arg ;
                 }
                 break;
+            case eRpcFuncID.Func_UpdateCurDeskID:
+                {
+                    // arg { deskID : 234 , port : eMsgPort , isSet : 0 }
+                    // arg { ret : 0 }
+                    // ret : 0 success , 1 already in other deskID ;
+                    let deskID = arg[key.deskID] ;
+                    let port = arg[key.port] ;
+                    let isSet = arg[key.isSet] == 1 ;
+                    let result = { ret : 0 } ;
+                    if ( isSet )
+                    {
+                        if ( this.stayDeskID != 0 && (this.stayDeskID != deskID || this.stayDeskPort != port ) )
+                        {
+                            result[key.ret] = 1 ;
+                            XLogger.debug( "player alredy in other desk ,why enter to a new deskID uid = " + this.uid + " old deskPort = " + this.stayDeskPort + " deskID = " + this.stayDeskID );
+                        }
+
+                        this.stayDeskID = deskID;
+                        this.stayDeskPort = port;
+                        this.saveUpdateToDB([key.stayDeskPort,key.stayDeskID], [ this.stayDeskPort,this.stayDeskPort] ) ;
+                    }
+                    else
+                    {
+                        if ( this.stayDeskID != deskID || this.stayDeskPort != port )
+                        {
+                            XLogger.debug( "not current deskID , can not clear it" ) ;
+                            result[key.ret] = 1 ;
+                        }
+                        else
+                        {
+                            this.stayDeskPort = 0 ;
+                            this.stayDeskID = 0 ;
+                            this.saveUpdateToDB([key.stayDeskPort,key.stayDeskID], [ this.stayDeskPort,this.stayDeskPort] ) ;
+                        }
+                    }
+
+                    return result ;
+                }
+                break ;
             default:
                 XLogger.warn("unknown rpc call for player rpc funcID = " + eRpcFuncID[funcID] + " uid = " + this.uid + " arg = " + JSON.stringify(arg || {} )) ; 
                 return {} ;
         }
         return {} ;
+    }
+
+    saveUpdateToDB( keys : string[] , values : any [] )
+    {
+        if ( keys.length != values.length )
+        {
+            XLogger.error( "save update to db , key and vaue length do not equal" ) ;
+            return;
+        }
+
+        let sql = "update playerData set" ;
+        for ( let idx = 0 ; idx < keys.length ; ++idx )
+        {
+            if ( idx == 0 )
+            {
+                sql += " " + keys[idx] + " =  " + values[idx] ;
+            }
+            else
+            {
+                sql += " , " + keys[idx] + " =  " + values[idx] ;
+            }
+        }
+        sql += " where uid = " + this.uid + " limit 1 ;" ;
+        this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, { sql : sql } ) ;
     }
 
     recievedRealGoodReward( item : IItem , matchID : number , cfgID : number , matchName : string )

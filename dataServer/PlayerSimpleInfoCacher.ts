@@ -91,6 +91,7 @@ export class PlayerSimpleInfoCacher extends IModule
             } ) ;
             self.mRequestQueue.delete(reqID) ;
         } )  ;
+        return true ;
     }
 
     onPlayerLogin( uid : number )

@@ -241,27 +241,27 @@ export class RpcModule extends IModule
                 return true ;
             }
 
+            let func = this.mRPCFuncs.get( funcID ) ;
+            if ( func != null )
+            {
+                let result = func(sieralNum,msg["arg"] ) ;
+                this.responeRpcCall(result, sieralNum, orgPort, orgID ) ;
+                return true;
+            }
+
             let svrRpcOutResult = {} ;
             if ( this.getSvrApp().onRpcCall(funcID, msg["arg"] , sieralNum, svrRpcOutResult ) )
             {
                 this.responeRpcCall( svrRpcOutResult, sieralNum, orgPort, orgID ) ;
                 return true;
             }
-
-            let func = this.mRPCFuncs.get( funcID ) ;
-            if ( func == null )
-            {
-                XLogger.error( "svr do not have funcID = " + eRpcFuncID[funcID] + " request from port = " + eMsgPort[orgPort] + " id = " + orgID ) ;
-                let jsBack = {} ;
-                jsBack["sieralNum"] = sieralNum ;
-                jsBack["state"] = 2 ;
-                jsBack["errMsg"] = "do not have func id = " + eRpcFuncID[funcID];
-                this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, orgPort, orgID, this.getSvrApp().getCurSvrIdx() ) ;
-                return true;
-            }
-
-            let result = func(sieralNum,msg["arg"] ) ;
-            this.responeRpcCall(result, sieralNum, orgPort, orgID ) ;
+            
+            XLogger.error( "svr do not have funcID = " + eRpcFuncID[funcID] + " request from port = " + eMsgPort[orgPort] + " id = " + orgID ) ;
+            let jsBack = {} ;
+            jsBack["sieralNum"] = sieralNum ;
+            jsBack["state"] = 2 ;
+            jsBack["errMsg"] = "do not have func id = " + eRpcFuncID[funcID];
+            this.sendMsg(eMsgType.MSG_RPC_RESULT, jsBack, orgPort, orgID, this.getSvrApp().getCurSvrIdx() ) ;
             return true ;
         }
         else if ( eMsgType.MSG_RPC_RESULT == msgID )
