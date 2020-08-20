@@ -12,6 +12,7 @@ import { IPlayerCompent } from './IPlayerCompent';
 import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
 import { IPlayerMgr } from './../IPlayerMgr';
 import { merge } from 'lodash';
+import { eNotifyPlatformCmd } from '../../common/MgrPlatformCmd';
 export class Player
 {
     protected mMgr : IPlayerMgr = null ;
@@ -47,10 +48,13 @@ export class Player
         this.installCompents();
         let self = this ;
         this.mCompents.forEach( ( cp : IPlayerCompent )=>{ cp.init(self,ip )} ) ;
+        this.mMgr.sendHttpRequest( eNotifyPlatformCmd.eLogin , {uid : this.uid, ip : ip } ) ;
     }
 
     onReactive( sessionID : number , ip : string )
     {
+        this.mMgr.sendHttpRequest( eNotifyPlatformCmd.eLogin , {uid : this.uid, ip : ip } ) ;
+
         this.mSessionID = sessionID ;
         this.mCompents.forEach( ( cp : IPlayerCompent )=>{ cp.onReactive(sessionID,ip );} ) ;
     }
@@ -90,6 +94,15 @@ export class Player
 
     onUpdateNetState( state : ePlayerNetState , ip? : string )
     {
+        if ( ePlayerNetState.eState_Online == state )
+        {
+            this.mMgr.sendHttpRequest( eNotifyPlatformCmd.eLogin , {uid : this.uid, ip : ip } ) ;
+        }
+        else
+        {
+            this.mMgr.sendHttpRequest( eNotifyPlatformCmd.eLogout , {uid : this.uid } ) ;
+        }
+
         this.mCompents.forEach( ( cp : IPlayerCompent )=>{ cp.onUpdateNetState( state,ip );} ) ;
     }
 

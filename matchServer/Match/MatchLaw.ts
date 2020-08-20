@@ -580,7 +580,10 @@ export class MatchLaw implements IMatchLaw
          let msg = {} ;
          msg[key.matchID] = this.matchID ;
          msg[key.rankIdx] = player.rankIdx  ;
-         msg[key.moneyType ] = rewards != null ? rewards.getMoneyJs() : null ;
+         if ( rewards != null )
+         {
+            msg[key.rewards ] = rewards.rewards ;
+         } 
          msg[key.state] = player.state;
          msg[key.curRoundIdx] = this.mRoundCfg.idx;
          msg[key.canRelive] = this.mRoundCfg.canRelive ? 1 : 0 ;

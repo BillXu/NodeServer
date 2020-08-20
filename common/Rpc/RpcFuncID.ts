@@ -72,5 +72,53 @@ export enum eRpcFuncID
     // arg { uid : 23 , deskID : 234 , port : eMsgPort , isSet : 0 }
     // arg { ret : 0 }
     // ret : 0 success , 1 already in other deskID ;
+    HttpBegin = 100,
+
+    Http_ReqPlayerInfo,  // port : data
+    // arg : { uid : 23 }
+    // result : { ... }
+    Http_ReqPlayerSimple,  // port : data ;
+    // arg : { uid : 23 }
+    // result : { ... }
+    Http_SetAccountState,    // port : data 
+    // arg: { uid : 23 , state : 0 } 
+    // result: { ret : 0 }
+    Http_BrocastNotice, // port : Gate 
+    // arg: { notice : "this is a string" , endTime : 234 , type : 0 }
+    // result : { ret : 0 }
+    Http_SendMail,   // port : data svr ;
+    // arg : { uid : 23 , notice : "232" , items: Item[] }
+    // ret : { ret : 0 }
+    Http_ReloadPrizeWheelCfg,
+    // arg: { null }
+    // result: { ret : 0 }
+    Http_ModifyItem, // port : data , can be diamond , redbag , honour,
+    // arg : { uid : 23 , offset : Item }  // cnt < 0 , means decrease ,
+    // result : { ret : 0 , final : Item }
+    Http_ReqMatchList, // port : match 
+    // arg: { null }
+    // result { list : { matchID : 23 , cfgID : 23 }[] }
+    Http_ReloadMatchCfg,  // port : match
+    // arg { null }
+    // ret : { ret : 0 }
+    Http_SetMatchState,
+    // arg : { matchID : 23 , state : eMatchState }
+    // result : { ret : 0 } 
+    Http_ReqMatchInfo, // port : match Svr ;
+    // arg : { matchID : 234 }
+    // result: { openTime : string , signed : { cnt : 243 , players : { uid:23, enrollTime : number }[] } , laws : number[] }
+    Http_ReqMatchLawInfo,
+    // arg : { matchID : 234 , lawIdx : 2 }
+    // result: { roundIdx : 23 , players : { uid : 23 , isRobot : 0  , state : eMatchPlayerState , deskID : 23 , token : 23 , rankIdx : 23 , lastRankIdx : -1 , enrollTime : number, score : 23 }[] }
+    Http_ReqDeskInfo,
+    // arg : { deskID : 32 }
+    // result: { deskInfo : {} , players: {}[] }
+    Http_ReqDeskFinish,
+    // arg: { deskID : 23 , setScore : { uid : 23 , socre : 23 }[] }
+    // result : { ret : 0 }
+    Http_PutCardToDealFront,
+    // arg : { card : number }
+    // resut : { ret : 0 }
+    HttpEnd = 500,
     Func_Max,
 }

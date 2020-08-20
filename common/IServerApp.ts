@@ -1,3 +1,5 @@
+import { eNotifyPlatformCmd } from './MgrPlatformCmd';
+import { SVR_ARG } from './ServerDefine';
 import { eRpcFuncID } from './Rpc/RpcFuncID';
 import { IModule } from './IModule';
 import  HashMap  from 'hashmap';
@@ -6,6 +8,7 @@ import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { Network, INetworkDelegate } from './Net/Network';
 import { RpcModule } from './Rpc/RpcModule';
 import { IServer } from './Application';
+import request, { RequestCallback } from 'request';
 
 export interface IFuncMsgCallBack
 {
@@ -261,5 +264,10 @@ export abstract class IServerApp implements INetworkDelegate , IServer
         }
 
         return null ;
+    }
+
+    sendHttpRequest( cmd : eNotifyPlatformCmd , arg : Object ,callBack? : RequestCallback , url : string = SVR_ARG.notifyUrl )
+    {
+        request.post(SVR_ARG.notifyUrl,{ json : { cmd : cmd , data : arg , timeout : 2000 }}, callBack) ;
     }
 }

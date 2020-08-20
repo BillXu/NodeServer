@@ -119,6 +119,20 @@
     
           "request": "launch",
     
+          "name": "PlatformGate",
+    
+          "program": "${workspaceFolder}/PlatformGate/index.ts",
+          "preLaunchTask": "tsc: build - PlatformGate/tsconfig.json",
+          //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
+          "outFiles": ["${workspaceFolder}/build/**/*.js"]
+        },
+
+        {
+  
+          "type": "node",
+    
+          "request": "launch",
+    
           "name": "DataSvr",
     
           "program": "${workspaceFolder}/dataServer/index.ts",

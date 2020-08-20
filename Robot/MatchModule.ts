@@ -56,7 +56,7 @@ export class MatchModule extends IClientModule
             }
             else
             {
-                XLogger.warn( "finish mathch is not playing one now , uid = " + data.uid + " matchID = " + data.playingMatchIDs + " finishID = " + msg[key.matchID] ) ;
+                XLogger.debug( "finish mathch is not playing one now , uid = " + data.uid + " matchID = " + data.playingMatchIDs + " finishID = " + msg[key.matchID] ) ;
             }
             return  true ;
         }
@@ -64,6 +64,7 @@ export class MatchModule extends IClientModule
         {
             XLogger.debug( "recived order to join matchID = " + msg[key.matchID] + " uid = " + this.getClient().uid + " lawIdx = " + msg[key.lawIdx] ) ;
             msg[key.uid] = this.getClient().uid;
+            this.getClient().getBaseData().playingMatchIDs.push(msg[key.matchID]) ;
             this.sendMsg(eMsgType.MSG_R_JOIN_MATCH, msg, eMsgPort.ID_MSG_PORT_MATCH, msg[key.matchID] ) ;
         }
         else if ( eMsgType.MSG_R_JOIN_MATCH == msgID )
@@ -71,6 +72,11 @@ export class MatchModule extends IClientModule
             let ret = msg[key.ret] ;
             if ( ret != 0 )
             {
+                let v = this.getClient().getBaseData().playingMatchIDs;
+                if ( v != null && v.length > 0 )
+                {
+                    v.splice(v.length-1,1) ;
+                }
                 this.sendMsg(eMsgType.MSG_R_ORDER_JOIN, msg, eMsgPort.ID_MSG_PORT_R, 0 ) ;
             }
 

@@ -11,6 +11,7 @@ export enum eMsgPort
 	ID_MSG_PORT_MJXY, // xiang yang ka wu xing ;
 	ID_MSG_PORT_MJSH, // shang hai ma jiang ;
 	ID_MSG_PORT_R,
+	ID_MSG_PORT_PLATFORM,
 	ID_MSG_PORT_ALL_SERVER,
 	ID_MSG_PORT_MAX,
 };

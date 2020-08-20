@@ -1,6 +1,9 @@
+import { SVR_ARG } from './ServerDefine';
+import { eNotifyPlatformCmd } from './MgrPlatformCmd';
 import { eRpcFuncID } from './Rpc/RpcFuncID';
 import { IServerApp, IFuncMsgCallBack } from './IServerApp';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
+import { RequestCallback } from 'request';
 export abstract class IModule
 {
     protected mSvrApp : IServerApp = null ;
@@ -30,6 +33,11 @@ export abstract class IModule
     sendMsg( msgID : number , msg : Object , dstPort : eMsgPort, dstID : number , orgID : number, lpfCallBack? : IFuncMsgCallBack  ) : void 
     {
         this.getSvrApp().sendMsg(msgID, msg, dstPort, dstID, orgID,lpfCallBack ) ;
+    }
+
+    sendHttpRequest( cmd : eNotifyPlatformCmd , arg : Object ,callBack? : RequestCallback , url : string = SVR_ARG.notifyUrl )
+    {
+        this.getSvrApp().sendHttpRequest(cmd, arg,callBack,url) ;
     }
 
     generateUniqueID() : number 
