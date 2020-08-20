@@ -376,7 +376,6 @@ export class MatchLaw implements IMatchLaw
             let pp = v[0];
             pp.score = p.score ;
             pp.stayDeskID = 0 ;
-            pp.token = 0 ;
             pp.state = eMathPlayerState.eState_WaitOtherFinish;
             vDeskP.push(pp) ;
             this.mFinishedPlayers.push(pp) ;

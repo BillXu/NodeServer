@@ -79,7 +79,8 @@ export class MatchModule extends IClientModule
         else if ( eMsgType.MSG_INFORM_PLAYER_ENTER_MATCH_DESK == msgID )
         {
             // svr : { deskID : 234 , port : eMsgPort , token : 2345 } 
-            this.sendMsg(msgID, { token : msg[key.token] }, msg[key.port], msg[key.deskID] ) ;
+            this.sendMsg( eMsgType.MSG_PLAYER_ENTER_MATCH_DESK , { token : msg[key.token] }, msg[key.port], msg[key.deskID] ) ;
+            return true ;
         }
         return false ;
     }
