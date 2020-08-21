@@ -38,6 +38,12 @@ export class MatchQuick extends Match
 
     onRobotReached( uid : number, sessionID : number , lawIdx : number ) : boolean
     {
+        if ( super.onRobotReached(uid, sessionID, lawIdx) )
+        {
+            XLogger.debug( "robot direct into law uid = " + uid + " lawIdx = " + lawIdx ) ;
+            return true ;
+        }
+
         if ( this.mEnrollPlayers.count() >= this.mCfg.getLowLimit() )
         {
             XLogger.debug( "quick match count is enough , do not robot uid = " + uid + " matchID = " + this.matchID ) ;

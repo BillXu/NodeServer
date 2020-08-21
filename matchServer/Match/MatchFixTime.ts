@@ -58,4 +58,10 @@ export class MatchFixTime extends Match
             this.mMatchMgr.deleteMatch( this.matchID ) ;
         }
     }
+
+    onHttpVisitInfo( info : Object ) : void
+    {
+        info["openTime"] = Math.floor(  (new Date(this.mCfg.startTime) ).valueOf() / 1000 ) ;
+        super.onHttpVisitInfo(info) ;
+    }
 }

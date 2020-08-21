@@ -7,7 +7,7 @@ import { Match } from './Match/Match';
 import { MatchConfigLoader } from './MatchConfigLoader';
 import { XLogger } from './../common/Logger';
 import { key } from './../shared/KeyDefine';
-import { eMatchType } from './../shared/SharedDefine';
+import { eMatchType, eMatchState } from './../shared/SharedDefine';
 import HashMap  from 'hashmap';
 import { IMatch } from './Match/IMatch';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
@@ -110,6 +110,90 @@ export class MatchMgr extends IModule
             m.onDeskFinished(arg[key.lawIdx],arg[key.deskID],arg[key.players]) ;
             return {}
         } ) ;
+    }
+
+    onRpcCall(funcID : eRpcFuncID, arg : Object, sieral : number , outResult : Object ) : boolean
+    {
+        switch ( funcID )
+        {
+            case eRpcFuncID.Http_ReqMatchList:
+                {
+                    // result { list : { matchID : 23 , cfgID : 23 }[] }
+                    outResult["ret"] = 0 ;
+                    XLogger.debug( "http cmd Http_ReqMatchList ") ;
+                    let vList : Object[] = [] ;
+                    let vs = this.mMatchs.values();
+                    for ( let m of vs )
+                    {
+                        vList.push( { matchID : m.getMatchID(), cfgID : m.getCfgID() } ) ;
+                    }
+                    outResult["list"] = vList;
+                }
+                break;
+            case eRpcFuncID.Http_ReloadMatchCfg:
+                {
+                    XLogger.debug( "http cmd Http_ReloadMatchCfg ") ;
+                    let self = this ;
+                    this.mCfgLoader.loadConfig( SVR_ARG.matchCfgUrl, ( cfgs : MatchCfg[], loader : MatchConfigLoader )=>{ 
+                        XLogger.debug( "reload matchCfg Ok " ) ; 
+                        let ms = self.mMatchs.values();
+                        ms.forEach(m=>m.onRefreshCfg(loader.getConfigByID(m.getCfgID()))) ;
+                    } ) ;
+                }
+                break;
+            case eRpcFuncID.Http_SetMatchState:
+                {
+                    // arg : { matchID : 23 , state : eMatchState }
+                    XLogger.debug( "http set match state = " + JSON.stringify(arg) ) ;
+                    let matchID = arg[key.matchID] ;
+                    let match = this.mMatchs.get(matchID) ;
+                    if ( match == null )
+                    {
+                        outResult["ret"] = 1 ;
+                        outResult["error"] = "match do not exsit" ;
+                        break ;
+                    }
+
+                    if ( arg[key.state] == eMatchState.eMatch_Delete )
+                    {
+                        this.deleteMatch(matchID) ;
+                        outResult[key.ret] = 0 ;
+                        break ;
+                    }
+
+                    (match as Match).mState = arg[key.state] ;
+                }
+                break;
+            case eRpcFuncID.Http_ReqMatchInfo:
+                {
+                    let m = this.mMatchs.get(arg[key.matchID] ) ;
+                    if ( m == null )
+                    {
+                        outResult[key.ret] = 1 ;
+                        outResult["error"] = "match do not exist" ;
+                        break ;
+                    }
+                    m.onHttpVisitInfo(outResult) ;
+                    outResult[key.ret] = 0 ;
+                }
+                break;
+            case eRpcFuncID.Http_ReqMatchLawInfo:
+                {
+                    let m = this.mMatchs.get(arg[key.matchID] ) ;
+                    if ( m == null )
+                    {
+                        outResult[key.ret] = 1 ;
+                        outResult["error"] = "match do not exist" ;
+                        break ;
+                    }
+                    m.onHttpVisitLawInfo( arg[key.lawIdx] ,outResult) ;
+                    outResult[key.ret] = 0 ;
+                }
+                break;
+            default:
+                return super.onRpcCall(funcID, arg, sieral, outResult) ;
+        }
+        return true ;
     }
     // self function 
     deleteMatch( matchID : number )

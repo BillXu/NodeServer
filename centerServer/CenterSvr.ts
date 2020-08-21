@@ -10,10 +10,12 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
 {
     mSvr = new ServerNetwork();
     mSvrInfoGroups : HashMap<eMsgPort,ServerGroup> = new HashMap<eMsgPort,ServerGroup>() ;
+    mCfg : Object = null ;
     init( cfg : Object )
     {
         XLogger.info( "server setup port = " + cfg["port"] ) ;
         this.mSvr.setup( cfg["port"] , this ) ;
+        this.mCfg = cfg ;
     }
 
     getLocalPortType() : eMsgPort 
@@ -48,7 +50,7 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
         let vg = this.mSvrInfoGroups.values();
         for ( let v of vg )
         {
-            if ( v.onSvrWaittingReconnectState(nSessionID, false )  )
+            if ( v.onSvrWaittingReconnectState(nSessionID, false, ip )  )
             {
                 return ;
             }
@@ -62,7 +64,7 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
         let vg = this.mSvrInfoGroups.values();
         for ( let v of vg )
         {
-            if ( v.onSvrWaittingReconnectState(nSessionID, true )  )
+            if ( v.onSvrWaittingReconnectState(nSessionID, true , null )  )
             {
                 return ;
             }
@@ -148,11 +150,11 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
             if ( gsvr == null )
             {
                 gsvr = new ServerGroup();
-                gsvr.init(port,1) ;
+                gsvr.init(port,this.getGroupMaxItemCnt(port)) ;
                 this.mSvrInfoGroups.set(port, gsvr);
             }
             let jsBack = {} ;
-            jsBack["idx"] = gsvr.addSvr(nSessionID, suggestIdx ) ;
+            jsBack["idx"] = gsvr.addSvr(nSessionID, suggestIdx , this.mSvr.getSessionIP(nSessionID) ) ;
             jsBack["maxCnt"] = gsvr.mMaxCnt ;
             this.mSvr.sendMsg(nSessionID, msgID, jsBack ) ;
             if ( -1 != jsBack["idx"] )
@@ -162,6 +164,21 @@ export class CenterSvr implements IServerNetworkDelegate , IServer
             this.state();
             return ;
         }
+        else if ( eMsgType.MSG_REQ_SVR_GROUP_INFO == msgID )
+        {
+            let vList : Object[] = [] ;
+            this.mSvrInfoGroups.forEach( ( v : ServerGroup )=>{ let gs = {} ; v.toJson(gs); vList.push( gs) ; } ) ;
+            let jsBack = {} ;
+            jsBack["svrGroups"] = vList ;
+            this.mSvr.sendMsg(nSessionID, msgID, jsBack ) ;
+            return ;
+        }
+    }
+
+    protected getGroupMaxItemCnt( port : eMsgPort ) : number
+    {
+        XLogger.warn( "default set group svr cnt = 1 , port = " + eMsgPort[port] ) ; 
+        return 1 ;
     }
 
     // protected brocastAllServer( msgID : eMsgType , msg : Object, exceptSesionID : number  )

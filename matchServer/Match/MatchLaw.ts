@@ -57,6 +57,25 @@ export class MatchLaw implements IMatchLaw
         return this.mMatch.matchID ;
     }
 
+    onRefreshCfg() : void
+    {
+        let curRound = this.cfg.getLawRound(this.mRoundCfg == null ? 0 : this.mRoundCfg.idx ) ;
+        if ( curRound != null )
+        {
+            this.mRoundCfg = curRound ;
+        }
+        else
+        {
+            XLogger.error( "after refresh cfg , current round is null, roundIdx =  " + this.mRoundCfg.idx + " cfgID = " + this.cfg.cfgID ) ;
+            curRound = this.cfg.getLawRound( this.cfg.getLawRoundCnt() - 1 ) ;
+            if ( null == curRound )
+            {
+                XLogger.error( "why this matchCfg round is null ? cfgID = " + this.cfg.cfgID ) ;
+                return ;
+            }
+            this.mRoundCfg = curRound ;
+        }
+    }
     getIdx() : number 
     {
         return this.mLawIdx ;
@@ -310,7 +329,7 @@ export class MatchLaw implements IMatchLaw
 
         // not enough robot kick out 
         let needRobotCnt = this.cfg.cntPerDesk - notFullCnt ;
-        XLogger.warn( "not enough robot kick out , need more robot to join matchID = " + this.matchID + " need robot cnt = " + needRobotCnt ) ;
+        XLogger.debug( "not enough robot kick out , need more robot to join matchID = " + this.matchID + " need robot cnt = " + needRobotCnt ) ;
         let arg = {} ;
         // arg { matchID : 23 , lawIdx : 23 , cnt : 23 }
         arg[key.matchID] = this.matchID;
@@ -766,5 +785,22 @@ export class MatchLaw implements IMatchLaw
     protected getRpc() : RpcModule
     {
         return this.mMatch.mMatchMgr.getSvrApp().getRpc();
+    }
+
+    onHttpVisitInfo( info : Object ) : void 
+    {
+       // result: { roundIdx : 23 , players : { uid : 23 , isRobot : 0  , state : eMatchPlayerState , deskID : 23 , token : 23 , rankIdx : 23 , lastRankIdx : -1 , enrollTime : number, score : 23 }[] }
+        let vPlayers : Object[] = [] ;
+        this.mAllPlayers.forEach( (v )=>{
+            let js : Object = {} ;
+            v.onVisitInfo(js) ;
+            js["score"] = v.score;
+            js["isRobot"] = v.isRobot ? 1 : 0 ;
+            js["enrollTime"] = v.signUpTime ;
+            js["lastRankIdx"] = v.lastRankIdx;
+            vPlayers.push(js) ;
+        } ) ;
+        info["roundIdx"] = this.mRoundCfg == null ? 0 : this.mRoundCfg.idx ;
+        info[key.players] = vPlayers;
     }
 }

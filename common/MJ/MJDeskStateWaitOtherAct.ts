@@ -337,10 +337,10 @@ export class MJDeskStateWaitOtherAct implements IMJDeskState
                 return ;
         }
 
-        if ( this.mChosedAct.act == eMJActType.eMJAct_Hu )
+        if ( this.mChosedAct.act == eMJActType.eMJAct_Hu || this.mDesk.isGameOver() )
         {
-            XLogger.debug( "player chose hu so go to gameEnd deskID = " + this.mDesk.deskID ) ;
-            this.mDesk.transferState( eMJDeskState.eState_End, true ) ;
+            XLogger.debug( "player chose hu so go to gameEnd deskID = " + this.mDesk.deskID + " is gameOver = " + ( this.mDesk.isGameOver() ? 1 : 0 ) ) ;
+            this.mDesk.transferState( eMJDeskState.eState_End, this.mChosedAct.act == eMJActType.eMJAct_Hu ) ;
             return ;
         }
         else

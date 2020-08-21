@@ -6,12 +6,21 @@ class ServerInfo
 {
     sessionID : number = 0 ;
     svrIdx : number = 0 ;
+    ip : string = "" ;
     isWaitingReconnect : boolean = false ;
-    constructor( sessionid : number , idx : number )
+    constructor( sessionid : number , idx : number , ip : string )
     {
         this.sessionID = sessionid ;
         this.svrIdx = idx ;
+        this.ip = ip ;
         this.isWaitingReconnect = false ;
+    }
+
+    toJson( info : Object )
+    {
+        info["idx"] = this.svrIdx ;
+        info["ip"] = this.ip ;
+        info["isConnected"] = this.isWaitingReconnect ? 0 : 1 ;
     }
 
     state()
@@ -29,6 +38,15 @@ export class ServerGroup
     {
         this.mPortType = portType ;
         this.mMaxCnt = maxCnt ;
+    }
+
+    toJson( info : Object )
+    {
+        info["port"] = this.mPortType ;
+        info["maxCnt"] = this.mMaxCnt;
+        let vObjInfo : Object[] = [] ;
+        this.mSvrInfos.forEach( ( v )=>{ let js = {} ; v.toJson(js) ; vObjInfo.push(js) ; } ) ;
+        info["vSvr"] = vObjInfo ;
     }
 
     getTargetSvrs( targetID : number ) : number[]
@@ -88,12 +106,12 @@ export class ServerGroup
         return -1 ;
     }
 
-    addSvr( sessionID : number , sugustIdx : number ) : number 
+    addSvr( sessionID : number , sugustIdx : number, ip : string ) : number 
     {
         let pAlready = this.mSvrInfos.get(sugustIdx) ;
         if ( null == pAlready )
         {
-            this.mSvrInfos.set( sugustIdx, new ServerInfo(sessionID,sugustIdx) )
+            this.mSvrInfos.set( sugustIdx, new ServerInfo(sessionID,sugustIdx,ip ) )
             return sugustIdx ;
         }
 
@@ -101,7 +119,7 @@ export class ServerGroup
         {
             if ( this.mSvrInfos.has(idx) == false )
             {
-                this.mSvrInfos.set( idx, new ServerInfo(sessionID,idx) )
+                this.mSvrInfos.set( idx, new ServerInfo(sessionID,idx,ip ) )
                 return idx ;
             }
         }
@@ -126,7 +144,7 @@ export class ServerGroup
         return false ;
     }
 
-    onSvrWaittingReconnectState( sessionID : number , isWaiting : boolean ) : boolean
+    onSvrWaittingReconnectState( sessionID : number , isWaiting : boolean, ip : string  ) : boolean
     {
         let vk = this.mSvrInfos.values() ;
         for ( let v of vk )
@@ -134,6 +152,10 @@ export class ServerGroup
             if ( v.sessionID == sessionID )
             {
                 v.isWaitingReconnect = isWaiting ;
+                if ( ip != null )
+                {
+                    v.ip = ip ;
+                }
                 XLogger.debug( "refresh reconnect state svr session id = " + sessionID + " portType = " + this.mPortType ) ;
                 return true;
             }

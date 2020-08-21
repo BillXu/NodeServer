@@ -19,4 +19,6 @@ export interface IMatchLaw
     visitPlayerMatchState( jsInfo : Object , sessionID : number ) : boolean ;
     onPlayerWantRelive( sessionID : number , uid : number ) : boolean ;
     onRobotReached( uid : number , sessionID : number ) : boolean ;
+    onRefreshCfg() : void;
+    onHttpVisitInfo( info : Object ) : void ;
 }

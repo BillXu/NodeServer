@@ -62,4 +62,10 @@ export class MatchRepeatTime extends Match
         }
         this.mState = eMatchState.eMatch_Enroll ;
     }
+
+    onHttpVisitInfo( info : Object ) : void
+    {
+        info["openTime"] = Math.floor( this.mNextStartTime / 1000 ) ;
+        super.onHttpVisitInfo(info) ;
+    }
 }

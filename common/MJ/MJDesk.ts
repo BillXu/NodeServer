@@ -244,6 +244,63 @@ export abstract class MJDesk implements IDesk
 
     onRpcCall( funcID : eRpcFuncID , arg : Object , sieralNum : number ) : Object 
     {
+        if ( eRpcFuncID.Http_ReqDeskInfo == funcID )
+        {
+            XLogger.debug( "Http_ReqDeskInfo deskID= "  + this.deskID ) ;
+            this.mDeskInfo.leftCardCnt = this.mMJCards.getLeftCnt();
+            if ( this.vStates[this.state] )
+            {
+                this.vStates[this.state].visitInfo(this.mDeskInfo.stateInfo) ;
+            }
+ 
+            let jsDeskInfo = this.mDeskInfo.toJson();
+ 
+    
+            let jsPlayers = [] ;
+            for ( let pp of this.vPlayers )
+            {
+                jsPlayers.push( pp.visitInfoForDeskInfo( pp.nIdx ) ) ;
+            }
+             // result: { deskInfo : {} , players: {}[] }
+            return { deskInfo : jsDeskInfo , players : jsPlayers , ret : 0 };
+        }
+
+        if ( eRpcFuncID.Http_ReqDeskFinish == funcID )
+        {
+            XLogger.debug( "Http_ReqDeskFinish" ) ;
+            // arg: { deskID : 23 , setScore : { uid : 23 , score : 23 }[] }
+            let vp : Object[] = arg["setScore"];
+            for ( let p of vp )
+            {
+                let uid = p["uid"] ;
+                let pp = this.vPlayers.find(v=>v.uid == uid ) ;
+                if ( pp == null )
+                {
+                    XLogger.warn( "Http_ReqDeskFinish player is null uid = " + uid + " deskID = " + this.deskID ) ;
+                    continue ;
+                }
+                pp.score = p["score"] || pp.score ;
+                if ( null == p["score"] )
+                {
+                    XLogger.error( "Http_ReqDeskFinish score key is null" ) ;
+                }
+            }
+
+            // make game quick finish , try to make card left 1 card , be sure buGang not pause game ;
+            while ( this.mMJCards.getLeftCnt() > 1 )
+            {
+                this.mMJCards.getCard() ;
+            }
+            return { ret : 0 } ;
+        }
+
+        if ( eRpcFuncID.Http_PutCardToDealFront == funcID )
+        {
+            // arg : { card : number }
+            this.mMJCards.pushCardToFront( arg[key.card] ) ;
+            return { ret : 0 } ;
+        }
+
         if ( eRpcFuncID.Func_DeskUpdatePlayerNetState == funcID )
         {
             let uid = arg[key.uid] ;
@@ -713,6 +770,16 @@ export abstract class MJDesk implements IDesk
         p.state = eMJPlayerState.eState_Normal ;
         this.sendDeskMsg(eMsgType.MSG_PLAYER_MJ_TUO_GUAN, { isSet : 0 , idx : idx  } ) ;
         XLogger.debug( "player leave TuoguanState uid = " + p.uid + " deskID = " + this.deskID ) ;
+    }
+
+    isGameOver() : boolean
+    {
+        if ( this.mMJCards.getLeftCnt() <= 0 )
+        {
+            return true ;
+        }
+
+        return false ;
     }
 
     // act 

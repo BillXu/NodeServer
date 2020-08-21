@@ -1,10 +1,11 @@
 import { XLogger } from './../common/Logger';
 import { eRpcFuncID } from './../common/Rpc/RpcFuncID';
-import { eMsgPort } from './../shared/MessageIdentifer';
+import { eMsgPort, eMsgType } from './../shared/MessageIdentifer';
 import { IServerApp } from './../common/IServerApp';
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 export class PlatformGate extends IServerApp
 {
+    protected mQuerySvrInfoRep : ServerResponse = null ;
     init( jsCfg : Object )
     {
         super.init(jsCfg) ;     
@@ -65,7 +66,40 @@ export class PlatformGate extends IServerApp
             return ;
         }
 
+        XLogger.debug( "recieved http cmd = " + eRpcFuncID[cmd] + " port = " + eMsgPort[port] + " detail = " + JSON.stringify(arg) ) ;
+        if ( eRpcFuncID.Http_ReqCenterSvrInfo == cmd )
+        {
+            if ( this.mQuerySvrInfoRep != null )
+            {
+                res.write( JSON.stringify({ ret : 1 , error : "already have a a request , please try later "} )) ; 
+                res.end() ;
+                XLogger.debug( "already have a a request , please try later  Http_ReqCenterSvrInfo " ) ;
+                return ;
+            }
+            this.mNet.sendMsg( eMsgType.MSG_REQ_SVR_GROUP_INFO, {} ) ;
+            return ;
+        }
+
         // must invoker res.end();
-        this.getRpc().invokeRpc(port, targetID, cmd, arg, ( result : Object )=>{ res.write( JSON.stringify(result||{})) ; res.end() ; } );
+        this.getRpc().invokeRpc(port, targetID, cmd, arg, ( result : Object )=>{ 
+            let str = JSON.stringify(result||{}) ;
+            res.write( JSON.stringify(str)) ; 
+            res.end() ; 
+            XLogger.debug( `respone cmd = ${ eRpcFuncID[cmd] } , detail = ${str} ` ) ;
+        } );
+    }
+
+    onMsg( msgID : eMsgType , msg : Object ) : void 
+    {
+        if ( eMsgType.MSG_REQ_SVR_GROUP_INFO == msgID )
+        {
+            let str = JSON.stringify(msg||{}) ;
+            this.mQuerySvrInfoRep.write( str ) ; 
+            this.mQuerySvrInfoRep.end() ; 
+            this.mQuerySvrInfoRep = null ;
+            XLogger.debug( "respone query svrInfo : " + str ) ;
+            return ;
+        }
+        super.onMsg(msgID, msg) ;
     }
 }

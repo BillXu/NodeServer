@@ -32,6 +32,11 @@ export class MJDeskStateWaitActSH extends MJDeskStateWaitAct
             let vps = this.mDesk.getPlayersNeedTheCard( card, this.mData.mActIdx,this.mData.mGangCnt > 0 ,false ) ;
             if ( vps == null || vps.length == 0 )
             {
+                if ( this.mDesk.isGameOver() )
+                {
+                    this.mDesk.transferState( eMJDeskState.eState_End,false ) ;
+                    return true;
+                }
                 let nextIdx = this.mDesk.getNextActIdx( this.mData.mActIdx ) ;
                 this.onPlayerMo(nextIdx) ;
             }
@@ -58,6 +63,11 @@ export class MJDeskStateWaitActSH extends MJDeskStateWaitAct
         {
             XLogger.debug( "player ting pai ,so auto hu uid = " + p.uid + " deskID = " + this.mDesk.deskID ) ;
             super.onPlayerHu(p) ;
+        }
+        else if ( p.isTing && p.state != eMJPlayerState.eState_TuoGuan && p.getCanBuGangCards().length > 0 )
+        {
+            XLogger.debug( "player ting pai , so auto buGang uid = " + p.uid + " deskID = " + this.mDesk.deskID ) ;
+            super.onPlayerBuGang(p, p.getCanBuGangCards()[0] ) ;
         }
         else
         {
@@ -88,9 +98,9 @@ export class MJDeskStateWaitActSH extends MJDeskStateWaitAct
         if ( p.isTing ) // modify wait time 
         {
             WaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT_TUOGUAN + buHuaTime;
-            if ( p.state != eMJPlayerState.eState_TuoGuan && p.getCanBuGangCards().length > 0  && this.mDesk.canPlayerHu( p.nIdx,p.getAutoChuCard(),true,this.mData.mGangCnt > 0 ,p.nIdx ) == false )
+            //if ( p.state != eMJPlayerState.eState_TuoGuan && p.getCanBuGangCards().length > 0  && this.mDesk.canPlayerHu( p.nIdx,p.getAutoChuCard(),true,this.mData.mGangCnt > 0 ,p.nIdx ) == false )
             {
-                WaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT + buHuaTime ;
+              //  WaitTimeSecons = G_ARG.TIME_MJ_WAIT_ACT + buHuaTime ;
             }
         }
 

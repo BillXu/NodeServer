@@ -361,5 +361,31 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
             }
         } ) ;
     }
+
+    // iserver app
+    onRpcCall( funcID : eRpcFuncID, arg : Object, sieral : number , outResult : Object ) : boolean
+    {
+        switch ( funcID )
+        {
+            case eRpcFuncID.Http_BrocastNotice:
+                {
+                    // arg: { notice : "this is a string" , endTime : 234 , type : 0 }
+                    let msgTransfer = {} ;
+                    msgTransfer[key.msgID] = eMsgType.MSG_TRANSER_DATA ;
+                    msgTransfer["dstPort"] = eMsgPort.ID_MSG_PORT_CLIENT ;
+                    msgTransfer["dstID"] = 0 ;
+                    msgTransfer["orgPort"] = eMsgPort.ID_MSG_PORT_GATE ;
+                    msgTransfer["orgID"] = 0;
+                    arg[key.msgID] = eMsgType.MSG_BROCAST_NOTICE;
+                    msgTransfer["msg"] = arg;
+                    this.mNetForClients.brocastMsg(eMsgType.MSG_TRANSER_DATA, msgTransfer) ;
+                    outResult["ret"] = 0 ;
+                }
+                break;
+            default:
+                return super.onRpcCall(funcID, arg, sieral, outResult) ;
+        }
+        return true ;
+    }
 }
 

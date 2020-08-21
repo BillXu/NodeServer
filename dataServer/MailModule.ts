@@ -1,4 +1,4 @@
-import { IItem } from './../shared/IMoney';
+import { IItem, Item } from './../shared/IMoney';
 import { eItemType, eMailType } from './../shared/SharedDefine';
 import { DataSvr } from './DataSvr';
 import { XLogger } from './../common/Logger';
@@ -101,6 +101,36 @@ export class MailModule extends IModule
 
         this.mMaxMailID += cnt ;
         return this.mMaxMailID ;
+    }
+
+    onRpcCall(funcID : eRpcFuncID, arg : Object, sieral : number , outResult : Object ) : boolean
+    {
+        switch ( funcID )
+        {
+            case eRpcFuncID.Http_SendMail:
+                {
+                    outResult[key.ret] = 0 ;
+                    // arg : { uid : 23 , notice : "232" , items: Item[] }
+                    XLogger.debug( "http send mail = " + JSON.stringify(arg) ) ;
+                    let vItems = null ;
+                    if ( arg["items"] != null )
+                    {
+                        vItems = [] ;
+                        let vI : Object[] = arg["items"];
+                        for ( let v of vI )
+                        {
+                            let p = new Item();
+                            p.parse(v) ;
+                            vItems.push(p);
+                        }
+                    }
+                    MailModule.sendNormalMail(arg[key.uid], "", arg[key.notice] , vItems );
+                }
+                break ;
+            default:
+                return super.onRpcCall(funcID, arg, sieral, outResult) ;
+        }
+        return true ;
     }
 
     protected loadMails()

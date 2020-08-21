@@ -300,6 +300,11 @@ export class MJDeskStateWaitAct implements IMJDeskState
         let vps = this.mDesk.getPlayersNeedTheCard( card, this.mData.mActIdx,this.mData.mGangCnt > 0 ,false ) ;
         if ( vps == null || vps.length == 0 )
         {
+            if ( this.mDesk.isGameOver() )
+            {
+                this.mDesk.transferState( eMJDeskState.eState_End,false ) ;
+                return ;
+            }
             let nextIdx = this.mDesk.getNextActIdx( this.mData.mActIdx ) ;
             this.onPlayerMo(nextIdx) ;
         }

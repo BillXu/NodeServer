@@ -167,10 +167,15 @@ export class MatchCfg
             this.vRewards.push(ri) ;
         }
 
-        if ( js["mGuaFenReward"] != null )
+        if ( js["mGuaFenReward"] != null && vR.length == 0  )
         {
             this.mGuaFenReward = new GuaFenReward();
             this.mGuaFenReward.parse(js["mGuaFenReward"]) ;
+        }
+
+        if ( vR.length != 0 && js["mGuaFenReward"] != null )
+        {
+            XLogger.error( "two type of rewards can not be exsit at the same time" ) ;
         }
 
         let vl : Object[] = js["vLawRounds"] ;

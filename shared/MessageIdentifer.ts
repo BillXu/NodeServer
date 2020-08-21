@@ -23,6 +23,10 @@ export enum eMsgType
 	// the msg title used between servers 
 	MSG_SERVERS_USE,
 
+	MSG_REQ_SVR_GROUP_INFO = MSG_SERVERS_USE,
+	// Platform: { null }
+	// center : { svrGroups : {port : eMsgPort , maxCnt : number, vSvr : { idx : 23 , ip : "192.168.1.1", isConnected : 1 }[] }[] } 
+
 	MSG_PING,
 	// client : { any }
 	// svr : { any }
@@ -136,6 +140,9 @@ export enum eMsgType
 	// svr : { time : 2345234 }
 	// utc : by seconds ; 
 
+	MSG_BROCAST_NOTICE,
+	// svr : { notice : "this is a string" , endTime : 234 , type : 0 }
+	
 	MSG_PLAYER_REQ_MATCH_LIST = 200,
 	// client : { type : eMatchType }
 	// svr : { type : eMatchType, matchs : [ { matchData } , ...  ] }

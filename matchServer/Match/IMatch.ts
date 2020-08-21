@@ -1,3 +1,4 @@
+import { eRpcFuncID } from './../../common/Rpc/RpcFuncID';
 import { MatchCfg } from './../../shared/MatchConfigData';
 import { ePlayerNetState } from './../../common/commonDefine';
 import { eMatchType, eItemType } from './../../shared/SharedDefine';
@@ -40,6 +41,10 @@ export interface IMatch
     onRefreshPlayerNetState( uid : number , sessionID : number ,netState : ePlayerNetState ) : boolean ;
     getType() : eMatchType ; 
     getMatchID() : number ;
+    getCfgID() : number ;
     isClosed() : boolean ;
     clear() : void ;
+    onRefreshCfg( cfg : MatchCfg ) : void ;
+    onHttpVisitInfo( info : Object ) : void ;
+    onHttpVisitLawInfo( lawIdx : number, info : Object ) : void ;
 }

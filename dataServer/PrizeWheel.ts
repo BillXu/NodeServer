@@ -287,4 +287,21 @@ export class PrizeWheel extends IModule
             pli.cnt = pm.maxCnt ;
         }
     }
+
+    onRpcCall(funcID : eRpcFuncID, arg : Object, sieral : number , outResult : Object ) : boolean
+    {
+        switch ( funcID )
+        {
+            case eRpcFuncID.Http_ReloadPrizeWheelCfg:
+                {
+                    outResult["ret"] = 0 ;
+                    XLogger.debug( "http cmd reload prizeWheel config ")
+                    this.loadConfig();
+                }
+                break;
+            default:
+                return super.onRpcCall(funcID, arg, sieral, outResult) ;
+        }
+        return true ;
+    }
 }

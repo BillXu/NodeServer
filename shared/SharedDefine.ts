@@ -47,6 +47,8 @@ export enum eMatchState
     eMatch_Enroll,
     eMatch_Playing,
     eMatch_Finished,
+    eMatch_Pause,
+    eMatch_Delete,
     eMatch_Max,
 }
 

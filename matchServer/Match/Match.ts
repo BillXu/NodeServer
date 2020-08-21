@@ -39,6 +39,21 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
         }
     } 
 
+    onRefreshCfg( cfg : MatchCfg )
+    {
+        if ( cfg == null )
+        {
+            XLogger.error( "why refresh match cfg is null ? cfgID = " + this.mCfgID ) ;
+            return ;
+        }
+        this.mCfg = cfg;
+        let vl = this.mLaws.values();
+        for ( let l of vl )
+        {
+            l.onRefreshCfg();
+        }
+    }
+
     onLogicMsg( msgID : eMsgType , msg : Object, orgID : number ) : boolean 
     {
         if ( eMsgType.MSG_PLAYER_MATCH_SIGN_UP == msgID )
@@ -266,9 +281,45 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
         return this.matchID ;
     }
 
+    getCfgID() : number
+    {
+        return this.mCfgID ;
+    }
+
     isClosed() : boolean 
     {
         return this.mState == eMatchState.eMatch_Finished ;
+    }
+
+    onHttpVisitInfo( info : Object ) : void 
+    {
+       // result: { openTime : string , signed : { cnt : 243 , players : { uid:23, enrollTime : number }[] } , laws : number[] }
+        let vPlayers : Object[] = [] ;
+        let ps = this.mEnrollPlayers.values();
+        for ( let p of ps )
+        {
+            if ( p.isRobot )
+            {
+                continue;
+            }
+            vPlayers.push( { uid : p.uid, enrollTime : p.signUpTime } ) ;
+        }
+
+        info["signed"] = { cnt : this.mEnrollPlayers.count() , players : vPlayers } ;        
+        info["laws"] = this.mLaws.keys();
+    }
+
+    onHttpVisitLawInfo( lawIdx : number, info : Object ) : void 
+    {
+        let law = this.mLaws.get(lawIdx) ;
+        if ( law == null )
+        {
+            info["ret"] = 1;
+            info["error"] = "can not find law" ;
+            return ;
+        }
+        law.onHttpVisitInfo(info) ;
+        info["ret"] = 0 ;
     }
 
     // imatchLaw delegate

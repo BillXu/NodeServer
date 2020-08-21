@@ -1,5 +1,5 @@
 import { MailModule } from './../MailModule';
-import { IItem } from './../../shared/IMoney';
+import { IItem, Item } from './../../shared/IMoney';
 import { eItemType } from './../../shared/SharedDefine';
 import { key } from './../../shared/KeyDefine';
 import { XLogger } from './../../common/Logger';
@@ -476,6 +476,50 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     return result ;
                 }
                 break ;
+            case eRpcFuncID.Http_ModifyItem:
+                {
+                    // arg : { uid : 23 , offset : Item }  // cnt < 0 , means decrease ,
+                    // result : { ret : 0 , final : Item }
+                    XLogger.debug( "http modify money item " + JSON.stringify( arg ) ) ;
+                    let item = new Item();
+                    item.parse(arg["offset"]) ;
+                    if ( item.type >= eItemType.eItem_Money )
+                    {
+                        return { ret : 1 , error : "only support money modify" } ;
+                    }
+
+                    this.onModifyMoney(item) ;
+                    switch ( item.type )
+                    {
+                        case eItemType.eItem_Diamond:
+                            {
+                                item.cnt = this.diamond;
+                            }
+                            break;
+                        case eItemType.eItem_Honour:
+                            {
+                                item.cnt = this.honour;
+                            }
+                            break;
+                        case eItemType.eItem_RedBag:
+                            {
+                                item.cnt = this.redBag;
+                            }
+                            break;
+                        case eItemType.eItem_ReliveTicket:
+                            {
+                                item.cnt = this.reliveTicket ;
+                            }
+                            break;
+                        default:
+                            {
+                                XLogger.debug( "http modify unsupport type = " + item.type ) ;
+                            }
+                    }
+
+                    return { ret : 0 , final : item.toJs() } ;
+                }
+                break;
             default:
                 XLogger.warn("unknown rpc call for player rpc funcID = " + eRpcFuncID[funcID] + " uid = " + this.uid + " arg = " + JSON.stringify(arg || {} )) ; 
                 return {} ;

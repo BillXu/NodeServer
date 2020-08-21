@@ -114,11 +114,14 @@ export enum eRpcFuncID
     // arg : { deskID : 32 }
     // result: { deskInfo : {} , players: {}[] }
     Http_ReqDeskFinish,
-    // arg: { deskID : 23 , setScore : { uid : 23 , socre : 23 }[] }
+    // arg: { deskID : 23 , setScore : { uid : 23 , score : 23 }[] }
     // result : { ret : 0 }
     Http_PutCardToDealFront,
-    // arg : { card : number }
+    // arg : { deskID : 23 , card : number }
     // resut : { ret : 0 }
+    Http_ReqCenterSvrInfo,
+    // arg : { null }
+    // result : { svrGroups : {port : eMsgPort , maxCnt : number, vSvr : { idx : 23 , ip : "192.168.1.1", isConnected : 1 }[] }[] } 
     HttpEnd = 500,
     Func_Max,
 }
