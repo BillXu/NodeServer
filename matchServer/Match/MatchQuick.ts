@@ -10,7 +10,7 @@ import { eMatchState } from "../../shared/SharedDefine";
 export class MatchQuick extends Match
 {
     mTimerForWaitRobot : NodeJS.Timeout = null;
-
+    mIsNeedRobot : boolean = false ;
     onPlayerSignedUp( uid : number , sessionID : number )
     {
         super.onPlayerSignedUp(uid, sessionID ) ;
@@ -19,7 +19,7 @@ export class MatchQuick extends Match
         {
             let self = this ;
             this.mTimerForWaitRobot = setTimeout(() => {
-                self.onFirstPlayerMaxWait();
+                self.onFirstPlayerWaitTimeOut();
                 self.mTimerForWaitRobot = null ;
             }, G_ARG.TIME_QUICK_MATCH_WAIT * 1000 );
         }
@@ -32,8 +32,34 @@ export class MatchQuick extends Match
                 clearTimeout(this.mTimerForWaitRobot) ;
                 this.mTimerForWaitRobot = null ;
             }
+            this.mState = eMatchState.eMatch_Enroll ;
+            this.mIsNeedRobot = false ;
+        }        
+    }
+
+    onPlayerCanncelEnroll( uid : number,isSystem : boolean )
+    {
+        // check still have real player ?
+        let ps = this.mEnrollPlayers.values() ;
+        for ( let p of ps )
+        {
+            if ( p.isRobot == false && uid != p.uid )
+            {
+                // still have real player ;
+                XLogger.debug( "player cannnecl enroll still have other real player uid = " + p.uid + " enroll uid = " + uid ) ;
+                return ;
+            }
         }
-        this.mState = eMatchState.eMatch_Enroll ;
+
+        XLogger.debug( "player cannnecl enroll do not have real player , cannecl waitTimeout , enroll uid = " + uid ) ;
+        // no real player ;
+        if ( this.mTimerForWaitRobot != null )
+        {
+            clearTimeout(this.mTimerForWaitRobot);
+            this.mTimerForWaitRobot = null ;
+        }
+
+        this.mIsNeedRobot = false ;
     }
 
     onRobotReached( uid : number, sessionID : number , lawIdx : number ) : boolean
@@ -42,6 +68,12 @@ export class MatchQuick extends Match
         {
             XLogger.debug( "robot direct into law uid = " + uid + " lawIdx = " + lawIdx ) ;
             return true ;
+        }
+
+        if ( this.mIsNeedRobot == false )
+        {
+            XLogger.debug( "do not need robot , no real player " ) ;
+            return false ;
         }
 
         if ( this.mEnrollPlayers.count() >= this.mCfg.getLowLimit() )
@@ -75,6 +107,7 @@ export class MatchQuick extends Match
             XLogger.debug( "count is ok start battle matchID = " + this.matchID  ) ;
             this.doEneterMatchBattle();
             this.mState = eMatchState.eMatch_Enroll ;
+            this.mIsNeedRobot = false ;
         }
         
         return true;
@@ -90,7 +123,7 @@ export class MatchQuick extends Match
         }
     }
 
-    protected onFirstPlayerMaxWait()
+    protected onFirstPlayerWaitTimeOut()
     {
         let needCnt = this.mCfg.getLowLimit() - this.mEnrollPlayers.count();
         if ( needCnt <= 0 )
@@ -98,7 +131,7 @@ export class MatchQuick extends Match
             XLogger.debug( "wait time out , quick match do not need robot MatchID = " + this.matchID ) ;
             return ;
         }
-
+        this.mIsNeedRobot = true ;
         XLogger.debug( "matchID need robot Cnt = " + needCnt + " matchID = " + this.matchID ) ;
         let arg = {} ;
         // arg { matchID : 23 , lawIdx : 23 , cnt : 23 }

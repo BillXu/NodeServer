@@ -1,8 +1,8 @@
 import { SVR_ARG } from './../common/ServerDefine';
 import { RobotClient } from './RobotClient';
-let cnt = 20;
+let cnt = 200;
 ////setInterval( ()=>{
-    let h = 15 ;
+    let h = 40 ;
     while ( h -- && cnt-- >0 )
     {
         let p = new RobotClient();

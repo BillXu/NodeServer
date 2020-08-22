@@ -1,5 +1,6 @@
+import { SVR_ARG } from './../common/ServerDefine';
 import { IItem, Item } from './../shared/IMoney';
-import { eItemType, eMailType } from './../shared/SharedDefine';
+import { eMailType } from './../shared/SharedDefine';
 import { DataSvr } from './DataSvr';
 import { XLogger } from './../common/Logger';
 import HashMap  from 'hashmap';
@@ -73,7 +74,12 @@ export class MailModule extends IModule
     checkNewMails( ncurMaxMailID : number ) : MailData[]
     {
         let out = [] ;
-        this.mails.forEach( ( v : MailData, key : number )=>{ if ( key > ncurMaxMailID ){ out.push(v) ; } } ) ;
+        this.mails.forEach( ( v : MailData, key : number )=>{ 
+            if ( key > ncurMaxMailID )
+            { 
+                out.push(v) ;
+            } 
+        } ) ;
         return out ;
     }
 
@@ -136,7 +142,7 @@ export class MailModule extends IModule
     protected loadMails()
     {
         XLogger.debug( "load mails for mailModule" ) ;
-        let t = Date.now() - 1000 * 60 * 60 * 24 * 7 ;
+        let t = Date.now() - SVR_ARG.mailKeepTime ;
         let arg = { sql : "select * from playerMail where uid = 0 and " + key.time + " > " + t + " limit " + this.mails.count() + " , "+ PlayerMail.PAGE_CNT + ";" } ;
         let self = this ;
         this.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false), eRpcFuncID.Func_ExcuteSql, arg ,( result : Object )=>{
@@ -222,6 +228,25 @@ export class MailModule extends IModule
         if ( 0 == targetID )
         {
             this.s_Mail.mails.set(mail.id, mail ) ;
+            if ( this.s_Mail.mails.count() > 20 )
+            {
+                let t = Date.now() - SVR_ARG.mailKeepTime; 
+                let vs = this.s_Mail.mails.values();
+                let rk : number[] = [] ;
+                for ( let m of vs )
+                {
+                    if ( m.recivedTime < t )
+                    {
+                        rk.push(m.id) ;
+                    }
+                }
+
+                for ( let r of rk )
+                {
+                    this.s_Mail.mails.delete(r) ;
+                }
+                XLogger.debug( "remove old global mail cnt = " + rk.length ) ;
+            }
             XLogger.debug( "recieved glob mail id = " + mail.id ) ;
             return ;
         }

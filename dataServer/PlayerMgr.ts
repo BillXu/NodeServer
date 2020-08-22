@@ -1,4 +1,5 @@
-import { merge } from 'lodash';
+import { SVR_ARG } from './../common/ServerDefine';
+import { merge, remove } from 'lodash';
 import { MailModule } from './MailModule';
 import { key } from './../shared/KeyDefine';
 import { DataSvr } from './DataSvr';
@@ -12,12 +13,12 @@ import { IServerApp } from '../common/IServerApp';
 import { Player } from './player/Player';
 import { eRpcFuncID } from '../common/Rpc/RpcFuncID';
 import { eMailType } from '../shared/SharedDefine';
-import { ESTALE } from 'constants';
 export class PlayerMgr extends IModule implements IPlayerMgr 
 {
     static MODUEL_NAME : string = "PlayerMgr" ;
     protected mPlayers : HashMap<number,Player> = new HashMap<number,Player>(); 
     protected mReservedPlayers : HashMap<number,Player> = new HashMap<number,Player>(); 
+    protected mReservedUIDs : number[] = [] ;
     // module
     onRegisterToSvrApp( svrApp : IServerApp )
     {
@@ -117,7 +118,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 {
                     // arg : { uid : 2345, matchID : 323 , fee : IItem , cfgID : 234  }
                     let uid = arg[key.uid] ;
-                    let p = this.getPlayerByUID(uid, false ) ;
+                    let p = this.getPlayerByUID(uid, true ) ;
                     if ( !p )
                     {
                         XLogger.warn( "player should online , why offline uid = " + uid + " Func_ReturnBackMatchReliveFee " ) ;
@@ -187,6 +188,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                     XLogger.debug( "player reactive sessionID = " + sessionID ) ;
                     player.onReactive(sessionID, ip ) ;
                     self.mReservedPlayers.delete(uid) ;
+                    remove(self.mReservedUIDs,v=>v==uid ) ;
                 }
                 else
                 {
@@ -269,7 +271,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
 
         rpc.registerRPC(eRpcFuncID.Func_SetPlayingMatch,( sierNum : number, arg : Object )=>{
             let uid = arg[key.uid] ;
-            let p = self.getPlayerByUID(uid, false ) ;
+            let p = self.getPlayerByUID(uid, true ) ;
             if ( !p )
             {
                 MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_SetPlayingMatch, arg : arg } ) ; 
@@ -329,7 +331,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
 
         rpc.registerRPC(eRpcFuncID.Func_ModifySignedMatch,( sierNum : number, arg : Object )=>{
             let uid = arg[key.uid] ;
-            let p = self.getPlayerByUID(uid, false ) ;
+            let p = self.getPlayerByUID(uid, true ) ;
             if ( !p )
             {
                 MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_ModifySignedMatch, arg : arg } ) ; 
@@ -357,7 +359,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
         rpc.registerRPC(eRpcFuncID.Func_MatchReward, ( sierNum : number, arg : Object )=>{
             // arg : { uid : 235 , rankIdx : 2 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , matchName : "adkfja" }
             let uid = arg[key.uid] ;
-            let p = self.getPlayerByUID(uid, false ) ;
+            let p = self.getPlayerByUID(uid, true ) ;
             if ( !p )
             {
                 MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_MatchReward, arg : arg } ) ; 
@@ -397,13 +399,39 @@ export class PlayerMgr extends IModule implements IPlayerMgr
         }
         this.mPlayers.delete(uid) ;
 
-        if ( this.mPlayers.count() + this.mReservedPlayers.count() < 10000 )
+        if ( this.mReservedPlayers.has(uid) )
         {
-            if ( this.mReservedPlayers.has(uid) )
+            XLogger.error( "why already reserve player uid = " + uid ) ;
+            remove(this.mReservedUIDs,v=>v==uid ) ;
+        }
+
+        if ( SVR_ARG.isDebug )
+        {
+            let ridx = this.mReservedUIDs.findIndex( v=>v==uid) ;
+            if ( ridx != -1 )
             {
-                XLogger.error( "why already reserve player uid = " + uid ) ;
+                XLogger.error( "why reaseved  uid already have uid = " + uid );
+                this.mReservedUIDs.splice(ridx,1) ;
             }
-            this.mReservedPlayers.set(uid, player) ;
+        }
+        this.mReservedUIDs.push(uid);
+        this.mReservedPlayers.set(uid, player) ;
+
+        let keepCnt = 50000;
+        if ( SVR_ARG.isDebug )
+        {
+            keepCnt = 3 ;
+        }
+
+        if ( this.mPlayers.count() + this.mReservedPlayers.count() > keepCnt )
+        {
+            let duid = this.mReservedUIDs.shift();
+            if ( this.mReservedPlayers.has(duid) == false )
+            {
+                XLogger.debug( "why reserved player do not have duid = " + duid ) ;
+            }
+            this.mReservedPlayers.delete(duid) ;
+            XLogger.debug( "delete old reserved player uid = " + duid ) ;
         }
 
         this.state();

@@ -263,6 +263,7 @@ export class PrizeWheel extends IModule
         let msg = {} ;
         msg[key.ret] = 0 ;
         msg["pos"] = witem.pos;
+        msg[key.freeWheelTime] = player.getBaseInfo().freePrizeWheelTime;
         this.sendMsg(eMsgType.MSG_PRIZE_WHEEL_SPIN, msg, eMsgPort.ID_MSG_PORT_CLIENT, player.sessionID, this.getSvrApp().getCurSvrIdx() ) ;
     }
 

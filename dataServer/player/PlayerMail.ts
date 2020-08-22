@@ -1,3 +1,4 @@
+import { SVR_ARG } from './../../common/ServerDefine';
 import { IItem } from './../../shared/IMoney';
 import { eItemType } from './../../shared/SharedDefine';
 import { key } from './../../shared/KeyDefine';
@@ -130,13 +131,6 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
                     break ;
                 }
 
-                if ( state == mls.state )
-                {
-                    XLogger.debug( "req do set same state for mailID = " + mls.id ) ;
-                    ret = 2 ;
-                    break ;
-                }
-
                 switch ( state )
                 {
                     case eMailState.eState_Delete:
@@ -147,6 +141,13 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
                         break ;
                     case eMailState.eState_GotItems :
                         {
+                            if ( mls.state == eMailState.eState_GotItems )
+                            {
+                                XLogger.debug( "alredy got this mail items" );
+                                ret = 2 ;
+                                break ;
+                            }
+
                             mls.state = state ;
                             this.setMailStateToDB(mls.id, state ) ;
                             let items = mls.items ;
@@ -173,6 +174,12 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
                         break ;
                     case eMailState.eState_Read:
                         {
+                            if ( mls.state != eMailState.eState_Unread )
+                            {
+                                XLogger.debug( " mail already read " ) ;
+                                ret = 2 ;
+                                break ;
+                            }
                             mls.state = state ;
                             this.setMailStateToDB(mls.id, state ) ;
                         }
@@ -227,23 +234,20 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
     // self function 
     protected gotItemsInMail( mails : IItem [] )
     {
+        if ( null == mails )
+        {
+            return ;
+        }
+        
         for ( let m of mails )
         {
-            switch ( m.type )
+            if ( eItemType.eItem_Money > m.type )
             {
-                case eItemType.eItem_Diamond:
-                    {
-                        if ( m.cnt <= 0 )
-                        {
-                            m.cnt = 0 ;
-                            XLogger.warn( "why give a item diamon cnt = " + m.cnt ) ;
-                        }
-
-                        this.mPlayer.getBaseInfo().diamond += m.cnt ;
-                        this.mPlayer.getBaseInfo().onMoneyChanged(true);
-                        XLogger.debug( "player a item from mail diamon cnt = " + m.cnt + " uid = " + this.mPlayer.uid ) ;
-                    }
-                    break ;
+                this.mPlayer.getBaseInfo().onModifyMoney(m) ;
+            }
+            else
+            {
+                XLogger.warn( "a not money item type from mail type = " + m.type + " cnt = " + m.cnt + " uid = " + this.mPlayer.uid );
             }
         }
         
@@ -296,7 +300,7 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
         XLogger.debug( "load mail data for uid = " + this.mPlayer.uid + " offset = " + this.mails.length ) ;
         // let d = new Date();
         // d.setDate(d.getDate() - 7 ) ; // only read 7 day mails ;
-        let t = Date.now() - 1000 * 60 * 60 * 24 * 7 ;
+        let t = Date.now() - SVR_ARG.mailKeepTime ;
         let arg = { sql : "select * from playerMail where uid = " + this.mPlayer.uid + " and " + key.time + " > " + t + " and isDelete = 0 " +  " limit " + this.mails.length + " , "+ PlayerMail.PAGE_CNT + ";" } ;
         let self = this ;
         this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false), eRpcFuncID.Func_ExcuteSql, arg ,( result : Object )=>{
@@ -335,6 +339,7 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
         this.sysAutoProcessOfflineEvent();
         let self = this ;
         this.mails.forEach(( m : MailData )=>{ if ( m.id > self.mMaxMailID ){ self.mMaxMailID = m.id ; } }) ;
+        this.mails.sort( (a,b)=>a.recivedTime - b.recivedTime ) ;
         this.startTimerCheckGlobalMail();
         this.sendMaxMailID();
     }
@@ -448,6 +453,15 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
         {
             XLogger.debug("why new recieved mail id < curMaxMailID  id = " + mail.id + " curMaxMailID = " + this.mMaxMailID ) ;
             return ;
+        }
+
+        if ( this.mails.length > 10 )
+        {
+            while ( this.mails[0].recivedTime < (Date.now() -  SVR_ARG.mailKeepTime ) )
+            {
+                this.mails.shift();
+                XLogger.debug( "remove old mails uid = " + this.mPlayer.uid ) ;
+            }
         }
     }
 }

@@ -420,6 +420,12 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
    
         let argModify = {} ;argModify[key.uid] = uid ; argModify[key.matchID] = this.matchID ; argModify[key.isAdd] = 0 ;
         rpc.invokeRpc(eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_ModifySignedMatch , argModify ) ;
+        this.onPlayerCanncelEnroll( uid , isSystem );
+    }
+
+    onPlayerCanncelEnroll( uid : number,isSystem : boolean )
+    {
+        XLogger.debug( "on player canncel enroll" ) ;
     }
 
     createMatchLaw() : IMatchLaw
