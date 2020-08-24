@@ -4,6 +4,7 @@ import { PingHuStrategy } from './../Robot/deskModule/PingHuStrategy';
 import { eMJCardType } from './../shared/mjData/MJDefine';
 import { MJCardData } from './../shared/mjData/MJCardData';
 import { clone, cloneDeep, now, countBy } from 'lodash';
+import { cookie } from 'request';
 // import { MatchCfg } from './../shared/MatchConfigData';
 // import { MailData, eMailState } from './../shared/playerData/PlayerMailData';
 // import { XLogger } from './../common/Logger';
@@ -328,3 +329,18 @@ console.log( vany ) ;
 
 let p = HuChecker.getInstance().checkTing([20,21,22,35,37,52,52,53,54,55,57]) ;
 console.log( JSON.stringify(p) ) ;
+
+let chex = 1000 ;
+console.log(chex.toString(8));
+
+let lex = "a11" ;
+let pn = parseInt(lex) ;
+if ( pn == null )
+{
+    console.log( "123" ) ;
+}
+console.log( "pn = " + pn ) ;
+console.log('\x1B[36m%s\x1B[0m', "hello") ;
+
+console.log('\x1B[33m%s\x1b[0m:', "hello");
+console.log('\x1B[31m%s\x1B[39m:', "hello");  //'\x1B[31m', '\x1B[39m'

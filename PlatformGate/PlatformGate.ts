@@ -83,7 +83,7 @@ export class PlatformGate extends IServerApp
         // must invoker res.end();
         this.getRpc().invokeRpc(port, targetID, cmd, arg, ( result : Object )=>{ 
             let str = JSON.stringify(result||{}) ;
-            res.write( JSON.stringify(str)) ; 
+            res.write( str ) ; 
             res.end() ; 
             XLogger.debug( `respone cmd = ${ eRpcFuncID[cmd] } , detail = ${str} ` ) ;
         } );

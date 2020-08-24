@@ -49,7 +49,7 @@ export class XLogger
     {
         if ( SVR_ARG.useConsoleLog )
         {
-            console.info( XLogger.timeStr() + str  );
+            console.info( '\x1B[32m%s\x1B[39m', XLogger.timeStr() + str  );
         }
         else
         {
@@ -66,7 +66,7 @@ export class XLogger
 
         if ( SVR_ARG.useConsoleLog )
         {
-            console.info( XLogger.timeStr() + str );
+            console.info( '\x1B[33m%s\x1b[0m:' ,XLogger.timeStr() + str );
         }
         else
         {
@@ -78,7 +78,7 @@ export class XLogger
     {
         if ( SVR_ARG.useConsoleLog )
         {
-            console.error( XLogger.timeStr() + str );
+            console.error( '\x1B[31m%s\x1B[39m:',XLogger.timeStr() + str );
         }
         else
         {

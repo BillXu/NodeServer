@@ -694,10 +694,10 @@ export class MatchLaw implements IMatchLaw
                     break ;
                 }
 
-                let cnt = cntPerDesk ;
                 let vPlayesTmp = [] ;
                 let deskID = vDesks[deskIdx++] ;
-                while ( cnt-- > 0 && idx < vPlayer.length )
+                let vTellPlayers : MatchPlayer[]= [] ;
+                while ( vPlayesTmp.length < cntPerDesk && idx < vPlayer.length )
                 {
                     let p = vPlayer[idx++];
                     p.stayDeskID = deskID;
@@ -707,26 +707,12 @@ export class MatchLaw implements IMatchLaw
                     js[key.score] = p.score ;
                     js[key.isRobot ] = p.isRobot ? 1 : 0 ;
                     vPlayesTmp.push(js) ;
-
-                    // send msg to enter room 
-                    if ( p.sessionID != 0 )
-                    {
-                        XLogger.debug( "inform player enter match desk, uid = " + p.uid + " deskID = " + deskID ) ;
-                        let msg = {} ;
-                        msg[key.deskID] = deskID;
-                        msg[key.port] = self.cfg.gameType;
-                        msg[key.token] = p.token;
-                        self.mMatch.sendMsgToClient(p.sessionID, eMsgType.MSG_INFORM_PLAYER_ENTER_MATCH_DESK, msg ) ;
-                    }
-                    else
-                    {
-                        XLogger.debug( "player not online , do not inform enter room uid = " + p.uid ) ;
-                    }
+                    vTellPlayers.push(p);
                 }
 
                 if ( vPlayesTmp.length != cntPerDesk )
                 {
-                    XLogger.warn( "a desk is not full cnt = " + vPlayesTmp.length + " total cnt = " + vPlayer.length + " matchID = " + self.matchID ) ;
+                    XLogger.error( "a desk is not full cnt = " + vPlayesTmp.length + " total cnt = " + vPlayer.length + " matchID = " + self.matchID ) ;
                 }
 
                 // put to desk ;
@@ -734,7 +720,25 @@ export class MatchLaw implements IMatchLaw
                 argt[key.deskID] = deskID ;
                 argt[key.players] = vPlayesTmp ;
                 XLogger.debug( "rpc call put player to desk matchID = " + self.matchID + " deskID = " + deskID + " lawIdx = " + self.getIdx() + " players = " + JSON.stringify(vPlayesTmp) ) ;
-                rpc.invokeRpc(self.gamePort, deskID, eRpcFuncID.Func_PushPlayersToDesk, argt ) ;
+                rpc.invokeRpc(self.gamePort, deskID, eRpcFuncID.Func_PushPlayersToDesk, argt,()=>{
+                    for ( let po of vTellPlayers )
+                    {
+                        // send msg to enter room 
+                        if ( po.sessionID != 0 )
+                        {
+                            XLogger.debug( "inform player enter match desk, uid = " + po.uid + " deskID = " + deskID ) ;
+                            let msg = {} ;
+                            msg[key.deskID] = deskID;
+                            msg[key.port] = self.cfg.gameType;
+                            msg[key.token] = po.token;
+                            self.mMatch.sendMsgToClient(po.sessionID, eMsgType.MSG_INFORM_PLAYER_ENTER_MATCH_DESK, msg ) ;
+                        }
+                        else
+                        {
+                            XLogger.debug( "player not online , so do not inform playe enter game uid = " + po.uid ) ;
+                        }
+                    }
+                } ) ;
             }
 
         } ) ;

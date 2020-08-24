@@ -122,6 +122,17 @@ export enum eRpcFuncID
     Http_ReqCenterSvrInfo,
     // arg : { null }
     // result : { svrGroups : {port : eMsgPort , maxCnt : number, vSvr : { idx : 23 , ip : "192.168.1.1", isConnected : 1 }[] }[] } 
+    Http_Register,
+    // arg : { account : "" , nickeName : "", headIcon : "", type : 0 , sex : 0 , ip : "" }
+    // ret : { ret : 0 , uid : 2345 , account : "223"  }
+    // type : 0 weixin , 1 phone 
+    // sex : 0 male , 1 female.
+    // ret : 0 means duplicate account , 1 create baseData error ;
+    Http_BindInviteCode,
+    // arg : { isFirst : 0 , uid : 23 , inviterUID : 234 }
+    // ret : { ret : 0 } 
+    // isFirst : 1 will send sys prize , 0 not send prize 
+    // ret : 0 success , 1 uid not exsit , 2 inviter not exsit , 3 already have inviter ;
     HttpEnd = 500,
     Func_Max,
 }

@@ -11,10 +11,66 @@ export class MatchRepeatTime extends Match
 {
     protected mRepeatTimer : NodeJS.Timeout = null ;
     protected mNextStartTime : number = 0 ;
-    
+    protected mStartTimer : NodeJS.Timeout = null ;
+
     init( cfg : MatchCfg , matchID : number ,mgr : MatchMgr ) : void
     {
         super.init(cfg, matchID, mgr ) ;
+
+        ///----
+        if ( this.mCfg.startTime != null && this.mCfg.startTime.length > 5 )
+        {
+            let startSignDate = new Date(this.mCfg.startTime) ;
+            let t = startSignDate.getTime() - Date.now() ;
+            if ( t < 0 )
+            {
+                XLogger.debug( "reapeat match is erriler than now , syn the same day cfgID = " + this.mCfgID ) ;
+                let now = new Date();
+                startSignDate.setDate(now.getDate()) ;
+                startSignDate.setMonth(now.getMonth()) ;
+                startSignDate.setFullYear(now.getFullYear()) ;
+                t = startSignDate.getTime() - Date.now() ;
+                if ( t < 0 )
+                {
+                    XLogger.debug( "reapeat match is erriler than now , syn the next day cfgID = " + this.mCfgID ) ;
+                    startSignDate.setDate(now.getDate() + 1 ) ;
+                    t = startSignDate.getTime() - Date.now() ;
+                }
+            }
+    
+            if ( t < 0  )
+            {
+                XLogger.error( "start time is eralier than now , repate match , so direct open state matchID = " + this.matchID + " startTime = " + this.mCfg.startTime + " cfgID = " + this.mCfg.cfgID ) ;
+                return ;
+            }
+            else
+            {
+                this.mNextStartTime = startSignDate.valueOf();
+                let self = this;
+                this.mStartTimer = setTimeout(() => {
+                    XLogger.debug( "reach start time , startId matchID = " + self.matchID + " cfgID = " + self.mCfg.cfgID ) ;
+                    self.mStartTimer = null ;
+                    self.startEnterBattle();
+                    // start repeat 
+                    self.setupReapt();
+                }, t );
+            }
+            ///---
+        }
+        else
+        {
+            this.setupReapt();
+        }
+    }
+
+    protected setupReapt()
+    {
+        if ( null != this.mRepeatTimer )
+        {
+            XLogger.error( "can not invoker setupReapt more than once , bug , cfgID = " + this.mCfgID ) ;
+            clearInterval(this.mRepeatTimer) ;
+            this.mRepeatTimer = null ;
+        }
 
         let self = this ;
         self.mNextStartTime = Date.now() + self.mCfg.repeatTime * 60* 1000 ; 

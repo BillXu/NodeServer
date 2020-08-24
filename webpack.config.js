@@ -18,6 +18,7 @@ module.exports = {
           robotDispach : "./build/RobotDispatchServer/index.js",
           shMJ : "./build/SHMJServer/index.js",
           robot : "./build/Robot/index.js",
+          platform : "./build/PlatformGate/index.js",
 },
 
   target: 'node',

@@ -74,10 +74,10 @@ export class DBSvr extends IServerApp
                 }
     
                 let js = {} ;
-                js[key.ret] = 0 ;
-                js["result"] = result[0][0]["curMaxUID"] ;
+                js[key.ret] = result[0][0]["ret"] ;
+                js["uid"] = result[0][0]["curMaxUID"] ;
                 rpc.pushDelayResult(reqSieralNum, js ) ;
-                XLogger.debug( "respone dely result rpc  sieral = " + reqSieralNum + " register ok result = " + JSON.stringify(js) ) ;
+                XLogger.debug( "respone dely result rpc  sieral = " + reqSieralNum + " register result = " + JSON.stringify(js) ) ;
             } ) ;
             return null ;
         } ) ;

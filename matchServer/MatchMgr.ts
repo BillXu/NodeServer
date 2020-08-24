@@ -139,6 +139,7 @@ export class MatchMgr extends IModule
                         let ms = self.mMatchs.values();
                         ms.forEach(m=>m.onRefreshCfg(loader.getConfigByID(m.getCfgID()))) ;
                     } ) ;
+                    outResult[key.ret] = 0 ;
                 }
                 break;
             case eRpcFuncID.Http_SetMatchState:

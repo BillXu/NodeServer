@@ -1,3 +1,4 @@
+import { merge } from 'lodash';
 import { key } from './../shared/KeyDefine';
 import { ePlayerNetState } from './../common/commonDefine';
 import { eRpcFuncID } from './../common/Rpc/RpcFuncID';
@@ -380,6 +381,27 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
                     msgTransfer["msg"] = arg;
                     this.mNetForClients.brocastMsg(eMsgType.MSG_TRANSER_DATA, msgTransfer) ;
                     outResult["ret"] = 0 ;
+                }
+                break;
+            case eRpcFuncID.Http_Register:
+                {
+                    // arg : { account : "" , nickeName : "", headIcon : "", type : 0 , sex : 0 , ip : "" }
+                    let argReg = {} ;
+                    argReg[key.account] = arg[key.account] ;
+                    argReg[key.nickeName] = arg[key.nickeName] ;
+                    argReg[key.headIcon] = arg[key.headIcon] ;
+                    argReg[key.type] = arg[key.type] ;
+                    argReg[key.sex] = arg[key.sex] ;
+                    argReg[key.ip] = arg[key.ip] ;
+                    let self = this ;
+                    XLogger.debug("http invoke rpc register detail = " + JSON.stringify(arg) ) ;
+                    this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DB , Math.ceil( Math.random() * 1000 )  % 1000, eRpcFuncID.Func_Register, argReg,( result : Object )=>{
+                        let ret = result[key.ret] ;
+                        XLogger.debug( "http register result " + ( ret == 0 ? "success" : "failed" ) + " result : " + JSON.stringify(result||{}) ) ;            
+                        result[key.account] = argReg[key.account] ;
+                        self.getRpc().pushDelayResult(sieral, result) ;
+                    } ) ;
+                    outResult[key.rpcDelay] = 1 ;
                 }
                 break;
             default:

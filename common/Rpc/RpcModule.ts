@@ -1,3 +1,4 @@
+import { key } from './../../shared/KeyDefine';
 import { IServerApp } from './../IServerApp';
 import { XLogger } from './../Logger';
 import  HashMap  from 'hashmap';
@@ -252,7 +253,8 @@ export class RpcModule extends IModule
             let svrRpcOutResult = {} ;
             if ( this.getSvrApp().onRpcCall(funcID, msg["arg"] , sieralNum, svrRpcOutResult ) )
             {
-                this.responeRpcCall( svrRpcOutResult, sieralNum, orgPort, orgID ) ;
+                let result = svrRpcOutResult[key.rpcDelay] ? null : svrRpcOutResult;
+                this.responeRpcCall( result, sieralNum, orgPort, orgID ) ;
                 return true;
             }
             

@@ -1,6 +1,7 @@
 export class key
 {
     static msgID : string = "msgID";
+    static rpcDelay : string = "rpcDelay";
     static uid = "uid" ;
     static nickeName = "nickeName";
     static headIcon = "headIcon";
