@@ -12,6 +12,7 @@ export enum eMsgPort
 	ID_MSG_PORT_MJSH, // shang hai ma jiang ;
 	ID_MSG_PORT_R,
 	ID_MSG_PORT_PLATFORM,
+	ID_MSG_PORT_LOG_DB,
 	ID_MSG_PORT_ALL_SERVER,
 	ID_MSG_PORT_MAX,
 };
@@ -143,6 +144,11 @@ export enum eMsgType
 	MSG_BROCAST_NOTICE,
 	// svr : { notice : "this is a string" , endTime : 234 , type : 0 }
 	
+	MSG_BIND_INVITE_CODE,
+	// client: { inviteUID : 23 }
+	// ret : { ret : 0 , items : IItem } ;
+	// ret : 0 success , 1 already binded code , 2  invalid invite code 
+
 	MSG_PLAYER_REQ_MATCH_LIST = 200,
 	// client : { type : eMatchType }
 	// svr : { type : eMatchType, matchs : [ { matchData } , ...  ] }

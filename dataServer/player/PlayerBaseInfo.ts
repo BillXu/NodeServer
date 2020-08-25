@@ -1,3 +1,4 @@
+import { PlayerMgr } from './../PlayerMgr';
 import { MailModule } from './../MailModule';
 import { IItem, Item } from './../../shared/IMoney';
 import { eItemType } from './../../shared/SharedDefine';
@@ -18,6 +19,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
     protected mNetState : ePlayerNetState = ePlayerNetState.eState_Online ;
     protected mLastCheckGlobalMailID : number = -1 ;
     treeCDEndTime : number = 0 ;
+    protected mInviteCnt : number = 0 ;
     protected mIsRobot : boolean  = false ;
 
     get isLoaded() : boolean
@@ -46,6 +48,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
     {
         let js = super.toJson();
         js[key.treeCDEndTime] = this.treeCDEndTime ;
+        js[key.inviteCnt] = this.mInviteCnt;
         return js ;
     }
 
@@ -53,6 +56,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
     {
         super.parse(js) ;
         this.treeCDEndTime = js[key.treeCDEndTime] * 1000;
+        this.mInviteCnt = js[key.inviteCnt] ;
     }
 
     init( player : Player , ip : string ) : void 
@@ -89,7 +93,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         {
             case eMsgType.MSG_PLAYER_UPDATE_INFO:
                 {
-                    if ( this.nickName == msg[key.nickeName] && this.sex == msg[key.sex] && this.headIconUrl == msg[key.headIcon] )
+                    if ( this.nickName == msg[key.nickeName] && this.sex == msg[key.sex] && this.headIconUrl == msg[key.headIconUrl] )
                     {
                         XLogger.debug( "info is the same no need to modify uid = " + this.mPlayer.uid ) ;
                         msg[key.ret] = 0 ;
@@ -99,7 +103,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
 
                     this.nickName = msg[key.nickeName];
                     this.sex = msg[key.sex] ;
-                    this.headIconUrl = msg[key.headIcon] ;
+                    this.headIconUrl = msg[key.headIconUrl] ;
 
                     msg[key.ret] = 0 ;
                     this.mPlayer.sendMsgToClient(msgID, msg ) ;
@@ -140,6 +144,89 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     this.mPlayer.sendMsgToClient(msgID, msg) ;  
                 }
                 break ;
+            case eMsgType.MSG_BIND_INVITE_CODE:
+                {
+                    if ( this.inviter != 0 )
+                    {
+                        msg[key.ret] = 1 ;
+                        this.mPlayer.sendMsgToClient(msgID, msg) ;
+                        break ;
+                    }
+                    let inviterUID = msg["inviteUID"] ;
+                    let self = this ;
+                    let mgr = this.mPlayer.mgr as PlayerMgr;
+                    let rpc = this.mPlayer.getRpc();
+                    let checkInvitor = new Promise<any>( relove =>{
+                        if ( 0 == inviterUID )
+                        {
+                            relove(2);
+                            return ;
+                        }
+                        let p = mgr.getPlayerByUID(inviterUID, true ) ;
+                        if ( p )
+                        {
+                            relove(0);
+                            return ;
+                        }
+                        let argSql = { sql : "select uid from playerData where uid = " + inviterUID + " limit 1;" } ;
+                        rpc.invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false), eRpcFuncID.Func_ExcuteSql, argSql,( result : Object )=>{
+                            if ( result[key.ret] != 0 || (result["result"] as Object[]).length <= 0  )
+                            {
+                                XLogger.debug( "check inviter error uid = " + inviterUID ) ;
+                                relove(2);
+                                return ;
+                            }
+                            relove(0);
+                        } ) ;
+                    });
+                    checkInvitor.then(ret=>{
+                        XLogger.debug( "bind invite code ret = " + ret + " uid = " + self.uid + " inviteUID = " + inviterUID ) ;
+                        if ( ret != 0 )
+                        {   
+                            msg[key.ret] = ret ;
+                            self.mPlayer.sendMsgToClient(msgID, msg) ;
+                            return ;
+                        }
+
+                        if ( self.inviter != 0 )
+                        {
+                            XLogger.debug( "send bind code msg too quick ? uid = " + self.uid ) ;
+                            msg[key.ret] = 1 ;
+                            self.mPlayer.sendMsgToClient(msgID, msg) ;
+                            return ;
+                        }
+                        self.inviter = inviterUID ;
+                        self.saveUpdateToDB([key.inviterUID], [inviterUID] ) ;
+
+                        // give prize ;
+                        let vItem : Item[] = [] ;
+                        let item = new Item();
+                        item.type = eItemType.eItem_Diamond;
+                        item.cnt = 100 ;
+                        vItem.push(item);
+                        MailModule.sendNormalMail(inviterUID, "", `您邀请的玩家【 ${self.nickName} ( uid : ${self.uid}) 】进入游戏了`, vItem ) ;
+                        XLogger.debug( "invite player to give prize uid = " + self.uid + " inviterUID = " + inviterUID ) ;
+
+                        // give prize to self ;
+                        item.type = eItemType.eItem_Diamond;
+                        item.cnt = 200 ;
+
+                        vItem.length = 0 ;
+                        vItem.push(item) ;
+
+                        item = new Item();
+                        item.type = eItemType.eItem_ReliveTicket;
+                        item.cnt = 2 ;
+                        vItem.push(item) ;
+
+                        msg[key.ret] = 0 ;
+                        msg[key.items] = vItem;
+                        self.mPlayer.sendMsgToClient(msgID, msg) ;
+                        vItem.forEach( v=> self.onModifyMoney(v) ) ;
+                        XLogger.debug( "bind invite code , give prize to self = " + JSON.stringify(vItem) + " uid = " + self.uid + " inviteID = " + inviterUID )  ;
+                    }) ;
+                } 
+                break;
             default:
                 return false ;
         }
@@ -368,12 +455,13 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     XLogger.debug( "stop complie remove unuse var , so print r = " + r  ) ;
                 }
                 break ;
-            case eRpcFuncID.Func_MatchReward:
+            case eRpcFuncID.Func_MatchResult:
                 {
-                    // arg : { uid : 235 , rankIdx : 2 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , matchName : "adkfja" }
+                    // arg : { uid : 235 , lawIdx : 0 , rankIdx : 2 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , matchName : "adkfja" }
                     XLogger.debug( "recieved match reward rankIdx = " + arg[key.rankIdx] + " uid = " + this.uid + " cfgID = " + arg[key.cfgID] ) ;
                     let vRwards : IItem[] = arg[key.reward] ;
                     let mid = arg[key.matchID] ;
+                    this.saveMatchResultToLog(vRwards, mid, arg[key.cfgID], arg[key.lawIdx], arg[key.rankIdx] );
                     if ( vRwards == null )
                     {
                         XLogger.warn( "player do not get reward uid = " + this.uid + " matchID = " + mid ) ;
@@ -390,7 +478,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                             }
                             else
                             {
-                                this.recievedRealGoodReward(m, mid, arg[key.cfgID], arg[key.matchName] ) ;
+                                this.recievedRealGoodReward(m, mid, arg[key.cfgID],arg[key.lawIdx],arg[key.rankIdx] ) ;
                             } 
                         }
 
@@ -476,6 +564,22 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     return result ;
                 }
                 break ;
+            case eRpcFuncID.Func_BeInvited:
+                {
+                    // arg : { uid : 23 , inviterUID : 23 }
+                    XLogger.debug( "be invited , inivte uid = " + arg["inviterUID"] ) ;
+                    this.inviter = arg["inviterUID"];
+                    this.saveUpdateToDB([key.inviterUID], [ this.inviter]) ;
+                }
+                break;
+            case eRpcFuncID.Func_IncreateInvitorCnt:
+                {
+                    // arg : { uid : 23 , beInviterUID : 23 }
+                    XLogger.debug( "increate cnt beInvite = " + arg["beInviterUID"] ) ;
+                    ++this.mInviteCnt;
+                    this.saveUpdateToDB([key.inviteCnt], [ this.mInviteCnt]) ;
+                }
+                break;
             case eRpcFuncID.Http_ModifyItem:
                 {
                     // arg : { uid : 23 , offset : Item }  // cnt < 0 , means decrease ,
@@ -551,9 +655,28 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, { sql : sql } ) ;
     }
 
-    recievedRealGoodReward( item : IItem , matchID : number , cfgID : number , matchName : string )
+    protected recievedRealGoodReward( item : IItem , matchID : number , cfgID : number , lawIdx : number , rankIdx : number )
     {
-        XLogger.debug( "recieved real good reward , please save to db uid = " + this.uid + " matchName = " + matchName + " item type = " + eItemType[item.type] ) ;
+        XLogger.debug( "recieved real good reward , please save to db uid = " + this.uid + " item type = " + eItemType[item.type] ) ;
+        if ( this.mIsRobot )
+        {
+            return ;
+        }
+
+        let arg = {
+            sql : `insert into logGoods set uid = ${this.uid} , itemType = ${item.type} , cnt = ${item.cnt} , matchID = ${matchID} ,cfgID = ${cfgID}, lawIdx = ${lawIdx} , rankIdx = ${rankIdx} ;`,
+        } ;
+        this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_LOG_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, arg ) ;
+    }
+
+    protected saveMatchResultToLog( rewards : IItem[] , matchID : number , cfgID : number , lawIdx : number , rankIdx : number )
+    {
+        let strRe = JSON.stringify(rewards||{}) ;
+        let isR = this.mIsRobot ? 1 : 0 ;
+        let arg = {
+            sql : `insert into logMatchResult set uid = ${this.uid} , rewards = '${strRe}', matchID = ${matchID} ,cfgID = ${cfgID}, lawIdx = ${lawIdx} , rankIdx = ${rankIdx}, isRobot = ${isR} ;`,
+        } ;
+        this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_LOG_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, arg ) ;
     }
 
     onModifyMoney( item : IItem , isSaveDB : boolean = true  ) : boolean 

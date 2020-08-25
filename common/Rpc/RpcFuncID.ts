@@ -42,8 +42,8 @@ export enum eRpcFuncID
     // arg { uid : 234 , matchID : 234 , isAdd : 0 }
     Func_InformNotice,
     // arg : { uid : 234 , notice : "2345" }
-    Func_MatchReward,
-    // arg : { uid : 235 , rankIdx : 2 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , isBoLeMode : 0 , matchName : "adkfja" }
+    Func_MatchResult,
+    // arg : { uid : 235 , rankIdx : 2 , lawIdx : 0 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , isBoLeMode : 0 , matchName : "adkfja" }
     Func_MatchReqRelive,
     // arg : { uid : 23 , fee : IItem , matchID : 23 , cfgID : 234 }
     // result : { ret : 1 }
@@ -72,6 +72,12 @@ export enum eRpcFuncID
     // arg { uid : 23 , deskID : 234 , port : eMsgPort , isSet : 0 }
     // arg { ret : 0 }
     // ret : 0 success , 1 already in other deskID ;
+    Func_IncreateInvitorCnt,
+    // arg : { uid : 23 , beInviterUID : 23 }
+    // result : {};
+    Func_BeInvited,
+    // arg : { uid : 23 , inviterUID : 23 }
+    // result {} 
     HttpBegin = 100,
 
     Http_ReqPlayerInfo,  // port : data
@@ -123,13 +129,13 @@ export enum eRpcFuncID
     // arg : { null }
     // result : { svrGroups : {port : eMsgPort , maxCnt : number, vSvr : { idx : 23 , ip : "192.168.1.1", isConnected : 1 }[] }[] } 
     Http_Register,
-    // arg : { account : "" , nickeName : "", headIcon : "", type : 0 , sex : 0 , ip : "" }
+    // arg : { account : "" , nickeName : "", headIconUrl : "", type : 0 , sex : 0 , ip : "" }
     // ret : { ret : 0 , uid : 2345 , account : "223"  }
     // type : 0 weixin , 1 phone 
     // sex : 0 male , 1 female.
     // ret : 0 means duplicate account , 1 create baseData error ;
     Http_BindInviteCode,
-    // arg : { isFirst : 0 , uid : 23 , inviterUID : 234 }
+    // arg : { isFirst : 0 , uid : 23 , nickeName : "heello", inviterUID : 234 }
     // ret : { ret : 0 } 
     // isFirst : 1 will send sys prize , 0 not send prize 
     // ret : 0 success , 1 uid not exsit , 2 inviter not exsit , 3 already have inviter ;

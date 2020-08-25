@@ -161,7 +161,7 @@ export class MatchMgr extends IModule
                         outResult[key.ret] = 0 ;
                         break ;
                     }
-
+                    outResult[key.ret] = 0 ;
                     (match as Match).mState = arg[key.state] ;
                 }
                 break;

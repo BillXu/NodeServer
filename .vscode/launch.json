@@ -98,6 +98,20 @@
           //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
           "outFiles": ["${workspaceFolder}/build/**/*.js"]
       },
+
+      {
+  
+        "type": "node",
+  
+        "request": "launch",
+  
+        "name": "LogSvr",
+  
+        "program": "${workspaceFolder}/LogServer/index.ts",
+        "preLaunchTask": "tsc: build - LogServer/tsconfig.json",
+        //"preLaunchTask": "tsc: watch - gateServer/tsconfig.json",
+        "outFiles": ["${workspaceFolder}/build/**/*.js"]
+      },
         
         {
   

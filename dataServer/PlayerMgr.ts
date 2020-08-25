@@ -1,5 +1,6 @@
+import { Item } from './../shared/IMoney';
 import { SVR_ARG } from './../common/ServerDefine';
-import { merge, remove } from 'lodash';
+import { merge, remove, random } from 'lodash';
 import { MailModule } from './MailModule';
 import { key } from './../shared/KeyDefine';
 import { DataSvr } from './DataSvr';
@@ -12,7 +13,7 @@ import { IModule } from '../common/IModule';
 import { IServerApp } from '../common/IServerApp';
 import { Player } from './player/Player';
 import { eRpcFuncID } from '../common/Rpc/RpcFuncID';
-import { eMailType } from '../shared/SharedDefine';
+import { eMailType, eItemType } from '../shared/SharedDefine';
 export class PlayerMgr extends IModule implements IPlayerMgr 
 {
     static MODUEL_NAME : string = "PlayerMgr" ;
@@ -130,6 +131,67 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                     merge(outResult,js) ;
                 }
                 break;
+            case eRpcFuncID.Http_BindInviteCode:
+                {
+                    // arg : { isFirst : 0 , uid : 23 , inviterUID : 234 }
+                    let isFirst = arg["isFirst"] == 1 ;
+                    let uid = arg[key.uid] ;
+                    let inviterUID = arg[key.uid] ;
+                    let nickName = arg[key.nickeName] ;
+                    let self = this ;
+                    outResult[key.rpcDelay] = 1 ;
+                    this.checkBindInviterCode(uid, inviterUID, isFirst).then(ret=>{
+                        arg[key.ret] = ret;
+                        self.getSvrApp().getRpc().pushDelayResult(sieral, arg );
+                        XLogger.debug( "check bind code result = " + ret + " uid = " + uid + " inviteID = " + inviterUID ) ;
+                        if ( ret == 0 ) // do can bind ;
+                        {
+                            // give prize and increase id ; if first;
+                            if ( isFirst && inviterUID != 0 )
+                            {
+                                let vItem : Item[] = [] ;
+                                let item = new Item();
+                                item.type = eItemType.eItem_Diamond;
+                                item.cnt = 100 ;
+                                vItem.push(item);
+                                MailModule.sendNormalMail(inviterUID, "", `您邀请的玩家【 ${nickName} ( uid : ${uid}) 】进入游戏了`, vItem ) ;
+                                XLogger.debug( "invite player to give prize uid = " + uid + " inviterUID = " + inviterUID ) ;
+                            }
+
+                            // do set code ;
+                            XLogger.debug( "tell set inviteID uid = " + uid + " inviteID = " + inviterUID ) ;
+                            let argBeInvite = {} ;
+                            argBeInvite[key.uid] = uid ;
+                            argBeInvite["inviterUID"] = inviterUID;
+                            self.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_BeInvited, argBeInvite );
+
+                            // gvie prize 
+                            let vItem : Item[] = [] ;
+                            let item = new Item();
+                            item.type = eItemType.eItem_Diamond;
+                            item.cnt = 200 ;
+                            vItem.push(item);
+
+                            item = new Item();
+                            item.type = eItemType.eItem_ReliveTicket;
+                            item.cnt = 2 ;
+                            vItem.push(item);
+                            MailModule.sendNormalMail(inviterUID, "", `请查收您的新人礼包，祝你游戏愉快！`, vItem ) ;
+                            XLogger.debug( "invite player to give prize uid = " + uid + " inviterUID = " + inviterUID ) ;
+                        
+                            // do increate invite cnt ;
+                            if ( inviterUID != 0 )
+                            {
+                                XLogger.debug( "tell increate inviteCnt" ) ;
+                                let increateInviteCnt = {} ;
+                                increateInviteCnt[key.uid] = inviterUID ;
+                                increateInviteCnt["beInviterUID"] = uid;
+                                self.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DATA, inviterUID, eRpcFuncID.Func_IncreateInvitorCnt, increateInviteCnt );
+                            }
+                        }
+                    }) ;
+                }
+                break;
             default:
                 let uid : number = arg[key.uid];
                 if ( uid != null )
@@ -151,6 +213,104 @@ export class PlayerMgr extends IModule implements IPlayerMgr
         return true ;
     }
     // self function
+    checkBindInviterCode( uid : number , inviterUID : number , isFirst : boolean ) : Promise<any>
+    {
+        let self = this ;
+        let checkInvitor = new Promise<any>(( relove , reject )=>{
+            if ( 0 == inviterUID )
+            {
+                if ( isFirst )
+                {
+                    XLogger.debug( "clear bind code can not set isFirst = true uid = " + uid ) ;
+                    reject(5);
+                }
+                else
+                {
+                    XLogger.debug( "means clear bind code " );
+                    relove();
+                }
+                return ;
+            }
+            let p = self.getPlayerByUID(inviterUID, true ) ;
+            if ( p )
+            {
+                relove();
+                return ;
+            }
+            let argSql = { sql : "select uid from playerData where uid = " + inviterUID + " limit 1;" } ;
+            self.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false), eRpcFuncID.Func_ExcuteSql, argSql,( result : Object )=>{
+                if ( result[key.ret] != 0 || (result["result"] as Object[]).length <= 0  )
+                {
+                    XLogger.debug( "check inviter error uid = " + inviterUID ) ;
+                    reject(3);
+                    return ;
+                }
+                relove();
+            } ) ;
+        });
+
+       let checkUID = new Promise<any>(( resolve , reject )=>{
+            let pt = self.getPlayerByUID(uid, true ) ;
+            if ( pt != null )
+            {
+                if (  pt.getBaseInfo().inviter != 0 && isFirst )
+                {
+                    XLogger.debug( "already have inviter for uid = " + uid ) ;
+                    reject(2);
+                    return ;
+                }
+
+                if ( pt.getBaseInfo().inviter == inviterUID )
+                {
+                    XLogger.debug( "duplicate bind code = " + inviterUID + " uid = " + uid );
+                    reject(2);
+                    return ;
+                }
+                resolve()
+                return;
+            }
+
+            let argSql = { sql : "select inviterUID from playerData where uid = " + uid + " limit 1;" } ;
+            self.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DB, random(100,false), eRpcFuncID.Func_ExcuteSql, argSql,( result : Object )=>{
+                if ( result[key.ret] != 0 || (result["result"] as Object[]).length <= 0  )
+                {
+                    XLogger.debug( "check target error uid = " + uid ) ;
+                    reject(1);
+                    return ;
+                }
+
+                if ( result["result"][0]["inviterUID"] != 0 && isFirst )
+                {
+                    XLogger.debug( "already have inviter for uid = " + uid ) ;
+                    reject(2);
+                    return ;
+                }
+
+                if ( result["result"][0]["inviterUID"] == inviterUID )
+                {
+                    XLogger.debug( "11 duplicate bind code = " + inviterUID + " uid = " + uid );
+                    reject(2);
+                    return ;
+                }
+                resolve();
+            } ) ;
+        } );
+
+        return new Promise( relove=>{
+            Promise.all([checkInvitor,checkUID]).then(()=>{
+                setTimeout(() => {
+                    relove(0);
+                }, 70 );
+            },
+            failed=>{
+                setTimeout(() => {
+                    relove(failed);
+                }, 70 );
+            }) ;
+        });
+    }
+
+
     installRPCTask()
     {
         let rpc = this.getSvrApp().getRpc();
@@ -162,6 +322,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             let ip = arg["ip"] ;
             let player = self.mPlayers.get(uid) ;
             XLogger.debug("recived rpc, player do login sessionID = " + sessionID + "uid = " + uid ) ;
+            let loginType = 1 ;
             if ( player != null )
             {
                 if ( player.sessionID == sessionID )
@@ -179,6 +340,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 argOther["sessionID"] = preSessionID ;
                 argOther["uid"] = player.uid ;
                 rpc.invokeRpc(eMsgPort.ID_MSG_PORT_GATE, preSessionID, eRpcFuncID.Func_OtherLogin, argOther ) ;
+                loginType = 2 ;
             }
             else
             {
@@ -199,6 +361,10 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 self.mPlayers.set(uid, player) ;
             }
             ( self.getSvrApp() as DataSvr ).onPlayerLogin(uid) ;
+
+            // save to log
+            let sql = `insert into logLogin set uid = ${uid}, ip = ${ip} ,loginType = ${loginType} ;`;
+            rpc.invokeRpc(eMsgPort.ID_MSG_PORT_LOG_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, { sql : sql } ) ;
             self.state();
             return js ;
         } ) ;
@@ -230,6 +396,15 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                 else
                 {
                     player.onUpdateNetState( state,arg["ip"] ) ;
+                }
+
+                if ( ePlayerNetState.eState_Online == state || ePlayerNetState.eState_WaitingReconnect == state )
+                {
+                    // save to log
+                    let loginType = ePlayerNetState.eState_Online == state ? 3 : 4 ;
+                    let ip = arg["ip"] || "empty" ;
+                    let sql = `insert into logLogin set uid = ${uid}, ip = ${ip} ,loginType = ${loginType} ;`;
+                    rpc.invokeRpc(eMsgPort.ID_MSG_PORT_LOG_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, { sql : sql } ) ;
                 }
                 
             }
@@ -356,17 +531,17 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             return {} ;
         } ) ;
 
-        rpc.registerRPC(eRpcFuncID.Func_MatchReward, ( sierNum : number, arg : Object )=>{
-            // arg : { uid : 235 , rankIdx : 2 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , matchName : "adkfja" }
+        rpc.registerRPC(eRpcFuncID.Func_MatchResult, ( sierNum : number, arg : Object )=>{
+            // arg : { uid : 235 , lawIdx : 0 , rankIdx : 2 ,  reward : IItem[] , matchID : 2345, cfgID : 234 , matchName : "adkfja" }
             let uid = arg[key.uid] ;
             let p = self.getPlayerByUID(uid, true ) ;
             if ( !p )
             {
-                MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_MatchReward, arg : arg } ) ; 
+                MailModule.sendOfflineEventMail(uid,eMailType.eMail_RpcCall,{ funcID : eRpcFuncID.Func_MatchResult, arg : arg } ) ; 
                 return {} ;
             }
 
-            let js = p.onRPCCall( eRpcFuncID.Func_MatchReward , arg) ;
+            let js = p.onRPCCall( eRpcFuncID.Func_MatchResult , arg) ;
             return js ;
         } ) ;
     } 

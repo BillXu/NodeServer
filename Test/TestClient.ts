@@ -5,6 +5,7 @@ import { eMJCardType } from './../shared/mjData/MJDefine';
 import { MJCardData } from './../shared/mjData/MJCardData';
 import { clone, cloneDeep, now, countBy } from 'lodash';
 import { cookie } from 'request';
+import { promises } from 'fs';
 // import { MatchCfg } from './../shared/MatchConfigData';
 // import { MailData, eMailState } from './../shared/playerData/PlayerMailData';
 // import { XLogger } from './../common/Logger';
@@ -344,3 +345,14 @@ console.log('\x1B[36m%s\x1B[0m', "hello") ;
 
 console.log('\x1B[33m%s\x1b[0m:', "hello");
 console.log('\x1B[31m%s\x1B[39m:', "hello");  //'\x1B[31m', '\x1B[39m'
+let pr = new Promise<any>(( resolve )=>{
+    setTimeout(() => {
+        console.log("hellow") ;
+        resolve(100);
+    }, 1000);
+});
+pr.then(v=>{ 
+    console.log(v) ; 
+ 
+    return new Promise<any>(s=>{ s( "hello" ) ; return 3; }); 
+} ).then(v=>{ console.log( "last point  " + v ) ; })

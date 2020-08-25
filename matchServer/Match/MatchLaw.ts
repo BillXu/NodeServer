@@ -572,27 +572,23 @@ export class MatchLaw implements IMatchLaw
          
          // give prize ; // tell data svr ;
          let rewards = this.cfg.getRewardItemByIdx(player.rankIdx) ;
-         if ( rewards != null )
+         if ( this.mRoundCfg.canRelive && rewards != null)
          {
-             if ( this.mRoundCfg.canRelive )
-             {
-                 XLogger.error( "this round can relive , can not get reward when lose cfgID = " + this.cfg.cfgID + " roundIdx = " + this.mRoundCfg.idx ) ;
-             }
-             else
-             {
-                // arg : { uid : 235 , rankIdx : 2 ,  reward : IItem[] , isBoLeMode : 0 , matchID : 2345, cfgID : 234 , matchName : "adfffs" }
-                let argR = {} ;
-                argR[key.uid] = player.uid ;
-                argR[key.rankIdx] = player.rankIdx ;
-                argR[key.reward] = rewards.rewards; 
-                argR[key.matchID] = this.matchID ;
-                argR[key.cfgID] = this.cfg.cfgID ;
-                argR[key.matchName] = this.cfg.name ;
-                argR[key.isBoLeMode] = this.cfg.isBoLeMode ? 1 : 0 ;
-                this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, player.uid, eRpcFuncID.Func_MatchReward, argR ) ;
-             }
-
+             XLogger.error( "this round can relive , can not get reward when lose cfgID = " + this.cfg.cfgID + " roundIdx = " + this.mRoundCfg.idx ) ;
          }
+         let argR = {} ;
+         argR[key.uid] = player.uid ;
+         argR[key.rankIdx] = player.rankIdx ;
+         if ( null != rewards )
+         {
+            argR[key.reward] = rewards.rewards; 
+         }
+         argR[key.matchID] = this.matchID ;
+         argR[key.cfgID] = this.cfg.cfgID ;
+         argR[key.matchName] = this.cfg.name ;
+         argR[key.lawIdx] = this.mLawIdx ;
+         argR[key.isBoLeMode] = this.cfg.isBoLeMode ? 1 : 0 ;
+         this.getRpc().invokeRpc( eMsgPort.ID_MSG_PORT_DATA, player.uid, eRpcFuncID.Func_MatchResult, argR ) ;
 
          XLogger.debug( `player match result uid = ${player.uid} rankIdx = ${player.rankIdx } state = ${ eMathPlayerState[player.state] }  matchID = ${this.matchID}  reward = ${JSON.stringify(rewards||{})} ` ) ;
          // send msg info client , if can relive , must not give prize ;

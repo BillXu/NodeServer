@@ -13,7 +13,7 @@ export class PlayerSimpleInfo implements IShareData
         let js = {} ;
         js[key.uid] = this.uid ;
         js[key.nickeName] = this.nickName;
-        js[key.headIcon] = this.headIconUrl;
+        js[key.headIconUrl] = this.headIconUrl;
         js[key.sex] = this.sex;
         return js ;
     }
@@ -22,7 +22,7 @@ export class PlayerSimpleInfo implements IShareData
     {
         this.uid = js[key.uid] ;
         this.nickName = js[key.nickeName] ;
-        this.headIconUrl = js[key.headIcon];
+        this.headIconUrl = js[key.headIconUrl];
         this.sex = js[key.sex];
     }
 }

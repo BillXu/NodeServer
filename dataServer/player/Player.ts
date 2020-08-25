@@ -19,6 +19,10 @@ export class Player
     protected mSessionID : number = 0 ;
     protected mUID : number = 0 ;
     protected mCompents : IPlayerCompent[] = [] ;
+    get mgr () : IPlayerMgr
+    {
+        return this.mMgr;
+    }
     
     get uid() : number
     {

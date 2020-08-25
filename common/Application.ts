@@ -55,6 +55,15 @@ let jsCfg =
         pwd : "realbull",
         db : "game",
     },
+
+    logDB : 
+    {
+        centerIP : "ws://localhost:3000",
+        dbhost : "localhost",
+        user : "root",
+        pwd : "realbull",
+        db : "game",
+    },
 }
 
 export class Application
@@ -132,6 +141,8 @@ export class Application
             case eMsgPort.ID_MSG_PORT_PLATFORM:
                 return "data";
                 return "platform" ;
+            case eMsgPort.ID_MSG_PORT_LOG_DB:
+                return "logDB";
             default:
                 XLogger.error( "unknown svr type to get cfg port = " + eMsgPort[port] + " use data svr" );
                 return "data" ;

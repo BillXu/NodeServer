@@ -1,4 +1,4 @@
-import { merge } from 'lodash';
+import { merge, random } from 'lodash';
 import { key } from './../shared/KeyDefine';
 import { ePlayerNetState } from './../common/commonDefine';
 import { eRpcFuncID } from './../common/Rpc/RpcFuncID';
@@ -277,7 +277,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
         let arg = {} ;
         arg[key.account] = jsRegInfo[key.account] ;
         arg[key.nickeName] = jsRegInfo[key.nickeName] ;
-        arg[key.headIcon] = jsRegInfo[key.headIcon] ;
+        arg[key.headIconUrl] = jsRegInfo[key.headIconUrl] ;
         arg[key.type] = jsRegInfo[key.type] ;
         arg[key.sex] = jsRegInfo[key.sex] ;
         arg[key.ip] = this.mNetForClients.getSessionIP( nSessionID ) ;
@@ -287,7 +287,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
             let ret = result[key.ret] ;
             XLogger.debug( "sessionID = " + nSessionID + " register " + ( ret == 0 ? "success" : "failed" )  ) ;
             jsRegInfo["ret"] = ret ;
-            delete jsRegInfo[key.nickeName] ; delete jsRegInfo[key.headIcon] ;
+            delete jsRegInfo[key.nickeName] ; delete jsRegInfo[key.headIconUrl] ;
 
 
             let msgTransfer = {} ;
@@ -298,6 +298,12 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
             msgTransfer["orgID"] = this.mNet.getSessionID();
             msgTransfer["msg"] = jsRegInfo;
             self.mNetForClients.sendMsg(nSessionID, eMsgType.MSG_TRANSER_DATA, msgTransfer ) ;
+            
+            if ( 0 == ret && jsRegInfo["isRobot"] == null )
+            {
+                let sql = `insert into logRegister set uid = ${result[key.uid]} , ip = ${arg[key.ip]} , type = ${arg[key.type]} ; ` ;
+                self.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_LOG_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, { sql : sql } ) ;
+            }
             // if ( 0 == ret )
             // {
             //     self.mSessionIDmapUID.set( nSessionID, result["uid"] ) ;
@@ -385,11 +391,11 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
                 break;
             case eRpcFuncID.Http_Register:
                 {
-                    // arg : { account : "" , nickeName : "", headIcon : "", type : 0 , sex : 0 , ip : "" }
+                    // arg : { account : "" , nickeName : "", headIconUrl : "", type : 0 , sex : 0 , ip : "" }
                     let argReg = {} ;
                     argReg[key.account] = arg[key.account] ;
                     argReg[key.nickeName] = arg[key.nickeName] ;
-                    argReg[key.headIcon] = arg[key.headIcon] ;
+                    argReg[key.headIconUrl] = arg[key.headIconUrl] ;
                     argReg[key.type] = arg[key.type] ;
                     argReg[key.sex] = arg[key.sex] ;
                     argReg[key.ip] = arg[key.ip] ;

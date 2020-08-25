@@ -177,6 +177,9 @@ export class PrizeWheel extends IModule
                     else if ( 2 == type ) // video 
                     {
                         XLogger.debug("playr saw vidio uid = " + targetID ) ;
+                        // save to log
+                        let sql = `insert into logSeeAd set uid = ${player.uid}, adPos = 1 ;`;
+                        this.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_LOG_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, { sql : sql } ) ;
                     }
                     this.onSpin(type,player) ;
                 }

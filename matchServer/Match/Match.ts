@@ -293,6 +293,7 @@ export class Match extends MatchData implements IMatch , IMatchLawDelegate
 
     onHttpVisitInfo( info : Object ) : void 
     {
+        this.onVisitInfo(info);
        // result: { openTime : string , signed : { cnt : 243 , players : { uid:23, enrollTime : number }[] } , laws : number[] }
         let vPlayers : Object[] = [] ;
         let ps = this.mEnrollPlayers.values();

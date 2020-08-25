@@ -4,7 +4,7 @@ export class key
     static rpcDelay : string = "rpcDelay";
     static uid = "uid" ;
     static nickeName = "nickeName";
-    static headIcon = "headIcon";
+    static headIconUrl = "headIconUrl";
     static diamond = "diamond" ;
     static type = "type" ;
     static sessionID = "sessionID" ;
@@ -16,6 +16,7 @@ export class key
     static result = "result" ;
     static sex = "sex";
     static inviterUID = "inviterUID";
+    static inviteCnt = "inviteCnt" ;
     static sieralNum = "sieralNum" ;
     static targetID = "targetID" ;
     static reqUID = "reqUID" ;

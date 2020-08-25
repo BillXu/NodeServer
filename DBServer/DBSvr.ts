@@ -63,7 +63,7 @@ export class DBSvr extends IServerApp
         rpc.registerRPC( eRpcFuncID.Func_Register, ( reqSieralNum : number , arg : Object )=>{
             // arg : { account : "dfagadf" , type : eAccountType , nickeName : "name" , headIconUrl : "http://www.baidu.com" ,sex : eSex , ip : "192.168.1.23" }
             XLogger.debug( "recived rpc , player register account = " + arg[key.account] + " sieral = " + reqSieralNum ) ;
-            mysql.query( "call register(?,?,?,?,?,?);",[arg[key.account],arg[key.type],arg[key.nickeName],arg[key.headIcon],arg[key.sex],arg[key.ip]],(err : MysqlError ,result : any )=>{
+            mysql.query( "call register(?,?,?,?,?,?);",[arg[key.account],arg[key.type],arg[key.nickeName],arg[key.headIconUrl],arg[key.sex],arg[key.ip]],(err : MysqlError ,result : any )=>{
                 if ( err != null )
                 {
                     let js = {} ;
@@ -75,7 +75,7 @@ export class DBSvr extends IServerApp
     
                 let js = {} ;
                 js[key.ret] = result[0][0]["ret"] ;
-                js["uid"] = result[0][0]["curMaxUID"] ;
+                js[key.uid] = result[0][0]["curMaxUID"] ;
                 rpc.pushDelayResult(reqSieralNum, js ) ;
                 XLogger.debug( "respone dely result rpc  sieral = " + reqSieralNum + " register result = " + JSON.stringify(js) ) ;
             } ) ;
