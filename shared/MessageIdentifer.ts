@@ -146,8 +146,16 @@ export enum eMsgType
 	
 	MSG_BIND_INVITE_CODE,
 	// client: { inviteUID : 23 }
-	// ret : { ret : 0 , items : IItem } ;
+	// svr : { ret : 0 , items : IItem } ;
 	// ret : 0 success , 1 already binded code , 2  invalid invite code 
+	MSG_VERIFY_REAL_IDENTIFY,
+	// client : { name : "zg" , ID : "123442312423124" }
+	// svr : { ret : 0 , reward : Item }
+	// ret : 0 success , 1 error , 2 already verified  ;
+	MSG_LOGIN_REWARD,
+	// client : { dayIdx : 0 }
+	// svr : { ret : 0 , dayIdx : 0 }
+	// ret : 0 success , 1 already get reward , 2 dayIdx error ;
 
 	MSG_PLAYER_REQ_MATCH_LIST = 200,
 	// client : { type : eMatchType }

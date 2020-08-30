@@ -1,8 +1,8 @@
 import { SVR_ARG } from './../common/ServerDefine';
 import { RobotClient } from './RobotClient';
 let cnt = 200;
-////setInterval( ()=>{
-    let h = 15 ;
+setInterval( ()=>{
+    let h = 20 ;
     while ( h -- && cnt-- >0 )
     {
         let p = new RobotClient();
@@ -14,5 +14,5 @@ let cnt = 200;
         p.init("acc9411"+cnt, SVR_ARG.gateForRoBot ) ;
     }
     console.log( "---------------");
-//},1900 ) ;
+},3900 ) ;
 

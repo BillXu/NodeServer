@@ -139,6 +139,9 @@ export enum eRpcFuncID
     // ret : { ret : 0 } 
     // isFirst : 1 will send sys prize , 0 not send prize 
     // ret : 0 success , 1 uid not exsit , 2 inviter not exsit , 3 already have inviter ;
+    Http_ReloadCheckInCfg,
+    // arg{ url? : string  }
+    // ret { 0 } ;
     HttpEnd = 500,
     Func_Max,
 }

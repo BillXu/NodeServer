@@ -11,6 +11,16 @@ export enum eMailState
     eState_Max,
 }
 
+export enum eMailReasonFlag
+{
+    eDefault ,
+    eInvitePlayer,
+    eBeInvited,
+    eMatchFeeReturnBack,
+    eHttpSend,
+    eMax,
+}
+
 export class MailData implements IShareData
 {
     id : number  = 0;
@@ -21,6 +31,7 @@ export class MailData implements IShareData
     content : string = "";
     state : eMailState = eMailState.eState_Unread;
     items : IItem [] = null ;
+    flag : eMailReasonFlag = eMailReasonFlag.eDefault ;
 
     toJson() : Object 
     {
@@ -32,6 +43,7 @@ export class MailData implements IShareData
         jsm[key.content] = this.content ;
         jsm[key.state] = this.state ;
         jsm[key.senderID] = this.senderID;
+        jsm[key.flag ] = this.flag ;
         if ( this.items != null )
         {
             jsm[key.items] = JSON.stringify(this.items);
@@ -52,6 +64,7 @@ export class MailData implements IShareData
         this.content = jsm[key.content];
         this.state = jsm[key.state];
         this.senderID = jsm[key.senderID] ;
+        this.flag = jsm[key.flag] ;
         if ( jsm[key.items] != null && jsm[key.items].length > 3 )
         {
             this.items = JSON.parse( jsm[key.items] ) ;

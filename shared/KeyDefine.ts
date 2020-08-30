@@ -29,6 +29,7 @@ export class key
     static title = "title" ;
     static cnt = "cnt" ;
     static senderID = "senderID" ;
+    static flag = "flag" ;
     static maxID = "maxID" ;
     static level = "level" ;
     static leftCD = "leftCD";
@@ -115,4 +116,7 @@ export class key
     static rewards = "rewards" ;
     static canRelive = "canRelive" ;
     static freeWheelTime = "freeWheelTime";
+    static cardID = "cardID" ;
+    static continueLoginDayCnt = "continueLoginDayCnt" ;
+    static lastLoginRewardTime = "lastLoginRewardTime" ;
 }

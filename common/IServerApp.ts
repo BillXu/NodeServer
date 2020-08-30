@@ -268,6 +268,6 @@ export abstract class IServerApp implements INetworkDelegate , IServer
 
     sendHttpRequest( cmd : eNotifyPlatformCmd , arg : Object ,callBack? : RequestCallback , url : string = SVR_ARG.notifyUrl )
     {
-        request.post(SVR_ARG.notifyUrl,{ json : { cmd : cmd , data : arg , timeout : 2000 }}, callBack) ;
+        request.post( url,{ form : { cmd : cmd , data : arg }, timeout : 2000 , json : true }, callBack) ;
     }
 }

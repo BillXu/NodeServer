@@ -1,3 +1,4 @@
+import { ePlayerMoneyLogReason } from './../common/commonDefine';
 import { eRpcFuncID } from './../common/Rpc/RpcFuncID';
 import { random } from 'lodash';
 import { SVR_ARG } from './../common/ServerDefine';
@@ -117,7 +118,7 @@ export class PrizeWheel extends IModule
         }
         else
         {
-            XLogger.error( "rquest match cfg failed , net work issue" ) ;
+            XLogger.error( "rquest prizeWheel cfg failed , net work issue" ) ;
         }
     }
 
@@ -254,6 +255,7 @@ export class PrizeWheel extends IModule
             it.type = eItemType.eItem_Diamond ;
             it.cnt = -1 * G_ARG.WHEEL_SPIN_DIAMOND ;
             player.getBaseInfo().onModifyMoney(it,false );
+            player.getBaseInfo().saveLogMoney(it, ePlayerMoneyLogReason.ePrizeWheel_Fee );
         }
         else if ( 1 == nType )
         {
@@ -263,6 +265,7 @@ export class PrizeWheel extends IModule
         }
         // do give item to player ;
         player.getBaseInfo().onModifyMoney( witem.item,true );
+        player.getBaseInfo().saveLogMoney( witem.item, ePlayerMoneyLogReason.ePrizeWheel_Get );
         let msg = {} ;
         msg[key.ret] = 0 ;
         msg["pos"] = witem.pos;

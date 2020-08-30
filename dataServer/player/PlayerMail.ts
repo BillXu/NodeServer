@@ -3,12 +3,12 @@ import { IItem } from './../../shared/IMoney';
 import { eItemType } from './../../shared/SharedDefine';
 import { key } from './../../shared/KeyDefine';
 import { XLogger } from './../../common/Logger';
-import { random, remove } from 'lodash';
+import { random, remove, clone } from 'lodash';
 import { Player } from './Player';
 import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
-import { ePlayerNetState } from './../../common/commonDefine';
+import { ePlayerNetState, ePlayerMoneyLogReason } from './../../common/commonDefine';
 import { IPlayerCompent } from './IPlayerCompent';
-import { PlayerMailData, MailData, eMailState } from './../../shared/playerData/PlayerMailData';
+import { PlayerMailData, MailData, eMailState, eMailReasonFlag } from './../../shared/playerData/PlayerMailData';
 import { eRpcFuncID } from '../../common/Rpc/RpcFuncID';
 import { eMailType } from '../../shared/SharedDefine';
 import { MailModule } from '../MailModule';
@@ -169,7 +169,7 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
                                 ret = 3 ;
                                 break ;
                             }
-                            this.gotItemsInMail(items) ;
+                            this.gotItemsInMail( items,mls.flag ,mls.id ) ;
                         }
                         break ;
                     case eMailState.eState_Read:
@@ -232,22 +232,49 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
     }
 
     // self function 
-    protected gotItemsInMail( mails : IItem [] )
+    protected gotItemsInMail( mails : IItem [] , flag : eMailReasonFlag , mailID : number  )
     {
         if ( null == mails )
         {
             return ;
         }
         
+        let logReason = 0 ;
+        switch ( flag )
+        {
+            case eMailReasonFlag.eInvitePlayer:
+                {
+                    logReason = ePlayerMoneyLogReason.eInvite;
+                }
+                break;
+            case eMailReasonFlag.eBeInvited:
+                {
+                    logReason = ePlayerMoneyLogReason.eBeInvited;
+                }
+                break;
+            case eMailReasonFlag.eMatchFeeReturnBack:
+                {
+                    logReason = ePlayerMoneyLogReason.eMatchFeeBack ;
+                }
+                break ;
+            case eMailReasonFlag.eHttpSend:
+                {
+                    logReason = ePlayerMoneyLogReason.eHttpSendMail ;
+                }
+                break;
+            default:
+                XLogger.warn("unknown flag for mail got") ;
+        }
         for ( let m of mails )
         {
             if ( eItemType.eItem_Money > m.type )
             {
                 this.mPlayer.getBaseInfo().onModifyMoney(m) ;
+                this.mPlayer.getBaseInfo().saveLogMoney(m, logReason,"",{ mailID : mailID } ) ;
             }
             else
             {
-                XLogger.warn( "a not money item type from mail type = " + m.type + " cnt = " + m.cnt + " uid = " + this.mPlayer.uid );
+                XLogger.warn( "a not money item type from mail type = " + eItemType[m.type] + " cnt = " + m.cnt + " uid = " + this.mPlayer.uid );
             }
         }
         
@@ -423,6 +450,7 @@ export class PlayerMail extends PlayerMailData implements IPlayerCompent
             mail.content = g.id + "" ;
             mail.type = eMailType.eMail_SysRefForState ;
             mail.recivedTime = g.recivedTime ;
+            mail.items = clone(g.items) ; // do not clone deep ;
             this.mails.push(mail) ;
             this.mMaxMailID = mail.id ;
             MailModule.saveMailToDB(this.mPlayer.uid, mail ) ;

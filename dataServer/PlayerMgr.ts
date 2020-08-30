@@ -1,3 +1,4 @@
+import { S_CFG } from './../shared/SharedDefine';
 import { Item } from './../shared/IMoney';
 import { SVR_ARG } from './../common/ServerDefine';
 import { merge, remove, random } from 'lodash';
@@ -14,6 +15,8 @@ import { IServerApp } from '../common/IServerApp';
 import { Player } from './player/Player';
 import { eRpcFuncID } from '../common/Rpc/RpcFuncID';
 import { eMailType, eItemType } from '../shared/SharedDefine';
+import { eMailReasonFlag } from '../shared/playerData/PlayerMailData';
+import { eNotifyPlatformCmd } from '../common/MgrPlatformCmd';
 export class PlayerMgr extends IModule implements IPlayerMgr 
 {
     static MODUEL_NAME : string = "PlayerMgr" ;
@@ -149,12 +152,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                             // give prize and increase id ; if first;
                             if ( isFirst && inviterUID != 0 )
                             {
-                                let vItem : Item[] = [] ;
-                                let item = new Item();
-                                item.type = eItemType.eItem_Diamond;
-                                item.cnt = 100 ;
-                                vItem.push(item);
-                                MailModule.sendNormalMail(inviterUID, "", `您邀请的玩家【 ${nickName} ( uid : ${uid}) 】进入游戏了`, vItem ) ;
+                                MailModule.sendNormalMail(inviterUID, "", `您邀请的玩家【 ${nickName} ( uid : ${uid}) 】进入游戏了`, S_CFG.vInviteReward ,eMailReasonFlag.eInvitePlayer) ;
                                 XLogger.debug( "invite player to give prize uid = " + uid + " inviterUID = " + inviterUID ) ;
                             }
 
@@ -166,17 +164,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                             self.getSvrApp().getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_DATA, uid, eRpcFuncID.Func_BeInvited, argBeInvite );
 
                             // gvie prize 
-                            let vItem : Item[] = [] ;
-                            let item = new Item();
-                            item.type = eItemType.eItem_Diamond;
-                            item.cnt = 200 ;
-                            vItem.push(item);
-
-                            item = new Item();
-                            item.type = eItemType.eItem_ReliveTicket;
-                            item.cnt = 2 ;
-                            vItem.push(item);
-                            MailModule.sendNormalMail(inviterUID, "", `请查收您的新人礼包，祝你游戏愉快！`, vItem ) ;
+                            MailModule.sendNormalMail(inviterUID, "", `请查收您的新人礼包，祝你游戏愉快！`, S_CFG.vBeInviteReward,eMailReasonFlag.eBeInvited ) ;
                             XLogger.debug( "invite player to give prize uid = " + uid + " inviterUID = " + inviterUID ) ;
                         
                             // do increate invite cnt ;
@@ -362,8 +350,10 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             }
             ( self.getSvrApp() as DataSvr ).onPlayerLogin(uid) ;
 
+            // inform platform 
+            this.sendHttpRequest(eNotifyPlatformCmd.eLogin, { uid : uid, ip : ip } ) ;
             // save to log
-            let sql = `insert into logLogin set uid = ${uid}, ip = ${ip} ,loginType = ${loginType} ;`;
+            let sql = `insert into logLogin set uid = ${uid}, ip = '${ip}' ,loginType = ${loginType} ;`;
             rpc.invokeRpc(eMsgPort.ID_MSG_PORT_LOG_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, { sql : sql } ) ;
             self.state();
             return js ;
@@ -403,10 +393,12 @@ export class PlayerMgr extends IModule implements IPlayerMgr
                     // save to log
                     let loginType = ePlayerNetState.eState_Online == state ? 3 : 4 ;
                     let ip = arg["ip"] || "empty" ;
-                    let sql = `insert into logLogin set uid = ${uid}, ip = ${ip} ,loginType = ${loginType} ;`;
+                    let sql = `insert into logLogin set uid = ${uid}, ip = '${ip}' ,loginType = ${loginType} ;`;
                     rpc.invokeRpc(eMsgPort.ID_MSG_PORT_LOG_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, { sql : sql } ) ;
+
+                    // inform platform 
+                    this.sendHttpRequest( ePlayerNetState.eState_Online == state ? eNotifyPlatformCmd.eLogin : eNotifyPlatformCmd.eLogout, { uid : uid, ip : ip } ) ;
                 }
-                
             }
 
             if ( null != player && ePlayerNetState.eState_Disconnected == state && player.sessionID == sessionID )
@@ -483,7 +475,7 @@ export class PlayerMgr extends IModule implements IPlayerMgr
             // arg : { uid : 2345, matchID : 323 , fee : IItem ,notice : "descript why this option" }
             let uid = arg[key.uid] ;
             XLogger.debug( "send a mail to player sign out matchID = " + arg[key.matchID] + " uid = " + uid ) ;
-            MailModule.sendNormalMail(uid, "", arg[key.notice],[ arg[key.fee] ] ) ;
+            MailModule.sendNormalMail(uid, "", arg[key.notice],[ arg[key.fee] ],eMailReasonFlag.eMatchFeeReturnBack  ) ;
             return {} ;
         } ) ;
 

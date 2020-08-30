@@ -1,3 +1,6 @@
+import { key } from './../shared/KeyDefine';
+import { eRpcFuncID } from './../common/Rpc/RpcFuncID';
+import { CheckInCfgLoader } from './player/CheckInCfgLoader';
 import { PrizeWheel } from './PrizeWheel';
 import { MailModule } from './MailModule';
 import { XLogger } from './../common/Logger';
@@ -16,6 +19,7 @@ export class DataSvr extends IServerApp
         this.registerModule( new PlayerSimpleInfoCacher() ) ;
         this.registerModule( new MailModule() ) ;
         this.registerModule( new PrizeWheel() ) ;
+        CheckInCfgLoader.getInstance().loadConfig();
     }
 
     getLocalPortType() : eMsgPort
@@ -32,5 +36,16 @@ export class DataSvr extends IServerApp
     {
         XLogger.debug( "onPlayerLogin uid = " + uid ) ;
         (this.getModule(PlayerSimpleInfoCacher.MODULE_NAME) as PlayerSimpleInfoCacher).onPlayerLogin(uid) ;
+    }
+
+    onRpcCall( funcID : eRpcFuncID , arg : Object , sieral : number , outResult : Object ) : boolean
+    {
+        if ( funcID == eRpcFuncID.Http_ReloadCheckInCfg )
+        {
+            CheckInCfgLoader.getInstance().loadConfig(arg["url"]) ;
+            outResult[key.ret] = 0 ;
+            return true;
+        }
+        return super.onRpcCall(funcID, arg, sieral, outResult) ;
     }
 }

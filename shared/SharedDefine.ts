@@ -1,3 +1,4 @@
+import { IItem, Item } from './IMoney';
 export enum eAccountType
 {
     eAccount_Wechat,
@@ -91,4 +92,11 @@ export class G_ARG
     static TIME_QUICK_MATCH_WAIT : number = 4 ;
     static WHEEL_SPIN_DIAMOND : number = 20;
     static WHEEL_FREE_TIME_INTERVAL : number = 60*60*5 ; // 5 hours ; 
+}
+
+export class S_CFG
+{
+    static vInviteReward : IItem[] = [ Item.createItem( eItemType.eItem_Diamond, 200) ] ;
+    static vBeInviteReward : IItem[] = [ Item.createItem( eItemType.eItem_Diamond, 200) ] ;
+    static vRealVerifyReward : IItem = Item.createItem( eItemType.eItem_Diamond, 200) ;
 }

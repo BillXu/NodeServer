@@ -16,6 +16,9 @@ export class PlayerBaseData extends PlayerSimpleInfo
     freePrizeWheelTime : number = 0 ;
     stayDeskID : number = 0 ;
     stayDeskPort : eMsgPort = eMsgPort.ID_MSG_PORT_MAX ;
+    cardID : string = "" ;
+    continueLoginDayCnt : number = 0 ;
+    lastLoginRewardTime : number = 0 ;
     // share Data func ;
     toJson() : Object 
     {
@@ -25,14 +28,17 @@ export class PlayerBaseData extends PlayerSimpleInfo
         js[key.ip] = this.ip ;
         js[key.treeLevel] = this.treeLevel ;
         js[key.fertilizer] = this.fertilizer ;
-        js[key.playingMatchIDs] = JSON.stringify(this.playingMatchIDs) ;
+        js[key.playingMatchIDs] = JSON.stringify(this.playingMatchIDs||[]) ;
         js[key.reliveTicket] = this.reliveTicket  ;
         js[key.redBag] = this.redBag;
         js[key.honour] = this.honour;
-        js[key.signedMatches] = JSON.stringify( this.signedMatches ) ;
+        js[key.signedMatches] = JSON.stringify( this.signedMatches||[] ) ;
         js[key.freeWheelTime] = this.freePrizeWheelTime ;
         js[key.stayDeskID] = this.stayDeskID;
         js[key.stayDeskPort] = this.stayDeskPort;
+        js[key.lastLoginRewardTime] = ( this.lastLoginRewardTime / 1000 ).toFixed(0);
+        js[key.continueLoginDayCnt] = this.continueLoginDayCnt ;
+        js[key.cardID] = this.cardID.length > 3 ? "1" : "" ;
         return js ;
     }
 
@@ -50,6 +56,9 @@ export class PlayerBaseData extends PlayerSimpleInfo
         this.stayDeskPort = js[key.stayDeskPort] || 0  ;
         this.stayDeskID = js[key.stayDeskID] || 0  ;
         this.freePrizeWheelTime = js[key.freeWheelTime] ;
+        this.lastLoginRewardTime = js[key.lastLoginRewardTime] * 1000 ;
+        this.continueLoginDayCnt = js[key.continueLoginDayCnt] ;
+        this.cardID = js[key.cardID] || "";
         if ( js[key.playingMatchIDs] != null && (js[key.playingMatchIDs] as string).length > 2 )
         {
             this.playingMatchIDs = JSON.parse(js[key.playingMatchIDs]) ;

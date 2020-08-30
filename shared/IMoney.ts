@@ -23,4 +23,12 @@ export class Item implements IItem
         js["cnt"] = this.cnt;
         return js ;
     }
+
+    static createItem( type : eItemType , cnt : number ) : Item
+    {
+        let it =new Item();
+        it.type = type ;
+        it.cnt = cnt ;
+        return it ;
+    }
 }

@@ -19,6 +19,7 @@ module.exports = {
           shMJ : "./build/SHMJServer/index.js",
           robot : "./build/Robot/index.js",
           platform : "./build/PlatformGate/index.js",
+          log : "./build/LogServer/index.js",
 },
 
   target: 'node',

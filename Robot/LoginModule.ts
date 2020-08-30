@@ -89,7 +89,7 @@ export class LoginModule extends IClientModule
         msg[key.account] = this.mAccount ;
         msg[key.type] = eAccountType.eAccount_Wechat ;
         msg[key.nickeName] = this.mAccount ;
-        msg[key.headIcon] = "defaultIcon" ;
+        msg[key.headIconUrl] = "defaultIcon" ;
         msg[key.sex] = eSex.eSex_Female ;
         this.sendMsg( eMsgType.MSG_PLAYER_REGISTER, msg, eMsgPort.ID_MSG_PORT_GATE, 0 ) ;
     }

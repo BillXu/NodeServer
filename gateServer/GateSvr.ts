@@ -301,7 +301,7 @@ export class GateSvr extends IServerApp implements IServerNetworkDelegate
             
             if ( 0 == ret && jsRegInfo["isRobot"] == null )
             {
-                let sql = `insert into logRegister set uid = ${result[key.uid]} , ip = ${arg[key.ip]} , type = ${arg[key.type]} ; ` ;
+                let sql = `insert into logRegister set uid = ${result[key.uid]} , ip = '${arg[key.ip]}' , type = ${arg[key.type]} ; ` ;
                 self.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_LOG_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, { sql : sql } ) ;
             }
             // if ( 0 == ret )

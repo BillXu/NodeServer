@@ -7,7 +7,7 @@ import HashMap  from 'hashmap';
 import { eRpcFuncID } from './../common/Rpc/RpcFuncID';
 import { random } from 'lodash';
 import { key } from './../shared/KeyDefine';
-import { MailData, eMailState } from './../shared/playerData/PlayerMailData';
+import { MailData, eMailState, eMailReasonFlag } from './../shared/playerData/PlayerMailData';
 import { eMsgType, eMsgPort } from './../shared/MessageIdentifer';
 import { IModule } from "../common/IModule";
 import { IServerApp } from '../common/IServerApp';
@@ -130,7 +130,7 @@ export class MailModule extends IModule
                             vItems.push(p);
                         }
                     }
-                    MailModule.sendNormalMail(arg[key.uid], "", arg[key.notice] , vItems );
+                    MailModule.sendNormalMail(arg[key.uid], "", arg[key.notice] , vItems,eMailReasonFlag.eHttpSend );
                 }
                 break ;
             default:
@@ -177,7 +177,7 @@ export class MailModule extends IModule
         XLogger.debug( "finish load mailModule mails cnt = " + this.mails.count() ) ;
     }
 
-    static sendNormalMail( targetID : number , titile : string , content : string , mails? : IItem [] )
+    static sendNormalMail( targetID : number , titile : string , content : string , mails? : IItem [], flag? : eMailReasonFlag )
     {
         let pmail = new MailData();
         pmail.id = this.s_Mail.generateMailID();
@@ -188,6 +188,10 @@ export class MailModule extends IModule
         pmail.state = eMailState.eState_Unread ;
         pmail.title = titile ;
         pmail.type = eMailType.eMial_Normal ;
+        if ( flag )
+        {
+            pmail.flag = flag;
+        }
         
         MailModule.sendMail(targetID, pmail ) ;
     }
@@ -263,6 +267,7 @@ export class MailModule extends IModule
         let arg = { sql : "insert into playerMail set " 
         + key.id + " = " + mail.id + ", "
         + key.uid + " = " + ownerUID + ", "
+        + key.flag + " = " + mail.flag + ", "
         + key.type + " = " + mail.type + " ,"
         + key.content + " = '" + mail.content + "', "
         + key.items + " = '" + ( (mail.items == null || mail.items.length  <= 0 ) ? "" : JSON.stringify(mail.items) ) + "', "

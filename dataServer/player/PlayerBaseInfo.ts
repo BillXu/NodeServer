@@ -1,16 +1,20 @@
+import { CheckInCfgLoader } from './CheckInCfgLoader';
 import { PlayerMgr } from './../PlayerMgr';
 import { MailModule } from './../MailModule';
 import { IItem, Item } from './../../shared/IMoney';
-import { eItemType } from './../../shared/SharedDefine';
+import { eItemType, S_CFG } from './../../shared/SharedDefine';
 import { key } from './../../shared/KeyDefine';
 import { XLogger } from './../../common/Logger';
-import { ePlayerNetState } from './../../common/commonDefine';
+import { ePlayerNetState, ePlayerMoneyLogReason } from './../../common/commonDefine';
 import { eMsgType, eMsgPort } from './../../shared/MessageIdentifer';
 import { IPlayerCompent } from './IPlayerCompent';
 import { PlayerBaseData } from './../../shared/playerData/PlayerBaseData';
 import { Player } from './Player';
 import { random, remove } from 'lodash';
 import { eRpcFuncID } from '../../common/Rpc/RpcFuncID';
+import { eMailReasonFlag } from '../../shared/playerData/PlayerMailData';
+import { eNotifyPlatformCmd } from '../../common/MgrPlatformCmd';
+import request from 'request';
 export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
 {
     static s_Name : string = "PlayerBaseInfo" ;
@@ -114,8 +118,13 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                 break ;
             case eMsgType.MSG_PLAYER_REFRESH_MONEY:
                 {
+                    let msg = {} ;
                     msg[key.diamond] = this.diamond ;
-                    this.mPlayer.sendMsgToClient(msgID, msg) ;
+                    msg[key.fertilizer] = this.fertilizer ;
+                    msg[key.reliveTicket] = this.reliveTicket ;
+                    msg[key.honour] = this.honour;
+                    msg[key.redBag] = this.redBag;
+                    this.mPlayer.sendMsgToClient(eMsgType.MSG_PLAYER_REFRESH_MONEY, msg )  ;
                 }
                 break;
             case eMsgType.MSG_PLAYER_BASE_DATA:
@@ -199,33 +208,109 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                         self.saveUpdateToDB([key.inviterUID], [inviterUID] ) ;
 
                         // give prize ;
-                        let vItem : Item[] = [] ;
-                        let item = new Item();
-                        item.type = eItemType.eItem_Diamond;
-                        item.cnt = 100 ;
-                        vItem.push(item);
-                        MailModule.sendNormalMail(inviterUID, "", `您邀请的玩家【 ${self.nickName} ( uid : ${self.uid}) 】进入游戏了`, vItem ) ;
+                        MailModule.sendNormalMail(inviterUID, "", `您邀请的玩家【 ${self.nickName} ( uid : ${self.uid}) 】进入游戏了`, S_CFG.vInviteReward ,eMailReasonFlag.eInvitePlayer ) ;
                         XLogger.debug( "invite player to give prize uid = " + self.uid + " inviterUID = " + inviterUID ) ;
 
                         // give prize to self ;
-                        item.type = eItemType.eItem_Diamond;
-                        item.cnt = 200 ;
-
-                        vItem.length = 0 ;
-                        vItem.push(item) ;
-
-                        item = new Item();
-                        item.type = eItemType.eItem_ReliveTicket;
-                        item.cnt = 2 ;
-                        vItem.push(item) ;
-
                         msg[key.ret] = 0 ;
-                        msg[key.items] = vItem;
+                        msg[key.items] = S_CFG.vBeInviteReward;
                         self.mPlayer.sendMsgToClient(msgID, msg) ;
-                        vItem.forEach( v=> self.onModifyMoney(v) ) ;
-                        XLogger.debug( "bind invite code , give prize to self = " + JSON.stringify(vItem) + " uid = " + self.uid + " inviteID = " + inviterUID )  ;
+                        S_CFG.vBeInviteReward.forEach( v=> self.onModifyMoney(v) ) ;
+                        S_CFG.vBeInviteReward.forEach( v=> self.saveLogMoney(v,ePlayerMoneyLogReason.eBeInvited ) ) ;
+                        XLogger.debug( "bind invite code , give prize to self = " + JSON.stringify(S_CFG.vBeInviteReward) + " uid = " + self.uid + " inviteID = " + inviterUID )  ;
                     }) ;
                 } 
+                break;
+            case eMsgType.MSG_VERIFY_REAL_IDENTIFY:
+                {
+                    if ( this.cardID.length > 0 )
+                    {
+                        this.mPlayer.sendMsgToClient(msgID, {ret:2} ) ;
+                        XLogger.debug( "already verified real identify, uid = " + this.uid ) ;
+                        break ;
+                    }
+
+                    let self = this ;
+                    // uid:uid, name:name, cardNo:cardNo
+                    this.mPlayer.mgr.sendHttpRequest( eNotifyPlatformCmd.eRealIdentifyVerify, { uid : this.uid, name : msg["name"], cardNo : msg["ID"] },( error: any, response: request.Response, body: any )=>{
+                        if (!error && response.statusCode == 200) {
+                            XLogger.info("real verify = " + body ) ;
+                            if ( body["msg"] != null )
+                            {
+                                XLogger.debug( "real verify error = " + body["msg"] + " name = " + msg["name"]) ;
+                            }
+                            let c = body ;
+                            if ( c[key.ret] != 0 )
+                            {
+                                self.mPlayer.sendMsgToClient(msgID, { ret : c[key.ret] } ) ;
+                                return ;
+                            }
+
+                            self.cardID = msg["ID"] ;
+                            self.mPlayer.sendMsgToClient(msgID, { ret : 0, reward : S_CFG.vRealVerifyReward } ) ;
+                            self.onModifyMoney( S_CFG.vRealVerifyReward );
+                            self.saveLogMoney( S_CFG.vRealVerifyReward, ePlayerMoneyLogReason.eRealVerify );
+                            self.saveUpdateToDB([key.cardID,"name"],[self.cardID,msg["name"]] );
+                            XLogger.debug( "verify ok" ) ;  
+                        }
+                        else
+                        {
+                            XLogger.error( "real verify interface error" ) ;
+                            self.mPlayer.sendMsgToClient(msgID, { ret : 3 } ) ;
+                        }
+                    } ) ;
+                }
+                break;
+            case eMsgType.MSG_LOGIN_REWARD:
+                {
+                    // check is got today ;
+                    let now = new Date();
+                    let last : Date = null ;
+                    if ( this.lastLoginRewardTime != 0 )
+                    {
+                        last = new Date(this.lastLoginRewardTime);
+                        if ( last.getDate() == now.getDate() && last.getMonth() == now.getMonth() )
+                        {
+                            this.mPlayer.sendMsgToClient(msgID, {ret:1} ) ;
+                            break ;
+                        }
+                    }
+                    // check day idx ;
+                    if ( last != null )
+                    {
+                        last.setDate(last.getDate() + 1 ); // next ;
+                        if ( last.getDate() != now.getDate() || last.getMonth() != now.getMonth() ) // do continue
+                        {
+                            this.continueLoginDayCnt = 0 ;
+                        }
+                    }
+                    else
+                    {
+                        this.continueLoginDayCnt = 0 ;
+                    }
+
+                    let curDayIdx = this.continueLoginDayCnt ;
+                    let maxDayIdx = CheckInCfgLoader.getInstance().getCfgItemCnt() - 1 ;
+                    if ( curDayIdx > maxDayIdx )
+                    {
+                        curDayIdx = maxDayIdx ;
+                    }
+
+                    let dayIdx = msg["dayIdx"];
+                    if ( dayIdx > curDayIdx )
+                    {
+                        this.mPlayer.sendMsgToClient(msgID, {ret:2} ) ;
+                        break ;
+                    }
+                    let vItem = CheckInCfgLoader.getInstance().getRewardForDayIdx(curDayIdx) ;
+                    this.mPlayer.sendMsgToClient(msgID, {ret:0} ) ;
+                    let self = this ;
+                    vItem.forEach(v=>{ self.onModifyMoney(v) ; self.saveLogMoney(v, ePlayerMoneyLogReason.eCheckIn ) ; }) ;
+                    this.lastLoginRewardTime = now.valueOf();
+                    ++this.continueLoginDayCnt;
+                    let lt = parseInt( Math.floor(this.lastLoginRewardTime/1000).toFixed(0) ) ;
+                    this.saveUpdateToDB([key.lastLoginRewardTime,key.continueLoginDayCnt], [lt,this.continueLoginDayCnt] ) ;
+                }
                 break;
             default:
                 return false ;
@@ -423,6 +508,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     arg[key.ret] = this.onModifyMoney( fee, true ) ? 0 : 2 ;
                     if ( arg[key.ret] == 0 )
                     {
+                        this.saveLogMoney(fee, ePlayerMoneyLogReason.eMatchFee ) ;
                         XLogger.debug( "enroll successed , uid = " + this.uid + " matchID = " + arg[key.matchID] ) ;
                     }
                     else
@@ -475,6 +561,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                             {
                                 moneyDirty = true ;
                                 this.onModifyMoney( m,false ) ;
+                                this.saveLogMoney(m, ePlayerMoneyLogReason.eMatchReward,null,{ matchID : mid, cfgID : arg[key.cfgID], lawIdx : arg[key.lawIdx] ,rankIdx : arg[key.rankIdx] } ) ;
                             }
                             else
                             {
@@ -509,6 +596,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     let fee : IItem = arg[key.fee] ;
                     XLogger.debug( "recieved relive failed back fee , cfgID = " + arg[key.cfgID] + " cnt = " + fee.cnt + " type = " + eItemType[fee.type] ) ;
                     this.onModifyMoney( fee, true );
+                    this.saveLogMoney(fee, ePlayerMoneyLogReason.eReliveFeeReturnBack , null, { matchID : arg[key.matchID] , cfgID : arg[key.cfgID] } ) ;
                 }
                 break;
             case eRpcFuncID.Func_MatchReqRelive:
@@ -519,6 +607,7 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                     arg[key.ret] = this.onModifyMoney( fee, true ) ? 0 : 1 ;
                     if ( arg[key.ret] == 0 )
                     {
+                        this.saveLogMoney(fee, ePlayerMoneyLogReason.eReliveFee , null, { matchID : arg[key.matchID] , cfgID : arg[key.cfgID] } ) ;
                         XLogger.debug( "relive successed , uid = " + this.uid + " matchID = " + arg[key.matchID] ) ;
                     }
                     XLogger.debug( "player relive deduction money uid = " + this.uid + " result = " + ( arg[key.ret] == 0  ? " success " : " failed "  ) + " detail : " + JSON.stringify(arg) );
@@ -592,7 +681,11 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
                         return { ret : 1 , error : "only support money modify" } ;
                     }
 
-                    this.onModifyMoney(item) ;
+                    if ( this.onModifyMoney(item) )
+                    {
+                        this.saveLogMoney(item, ePlayerMoneyLogReason.eHttpModify , null, { matchID : arg[key.matchID] , cfgID : arg[key.cfgID] } ) ;
+                    }
+                    
                     switch ( item.type )
                     {
                         case eItemType.eItem_Diamond:
@@ -644,11 +737,11 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
         {
             if ( idx == 0 )
             {
-                sql += " " + keys[idx] + " =  " + values[idx] ;
+                sql += " " + keys[idx] + " =  " + `'${values[idx]}'` ;
             }
             else
             {
-                sql += " , " + keys[idx] + " =  " + values[idx] ;
+                sql += " , " + keys[idx] + " =  " + `'${values[idx]}'` ;
             }
         }
         sql += " where uid = " + this.uid + " limit 1 ;" ;
@@ -677,6 +770,41 @@ export class PlayerBaseInfo extends PlayerBaseData implements IPlayerCompent
             sql : `insert into logMatchResult set uid = ${this.uid} , rewards = '${strRe}', matchID = ${matchID} ,cfgID = ${cfgID}, lawIdx = ${lawIdx} , rankIdx = ${rankIdx}, isRobot = ${isR} ;`,
         } ;
         this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_LOG_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, arg ) ;
+    }
+
+    saveLogMoney( itemOffset : IItem, reason : number,rmark? : string , data? : Object )
+    {
+        let rmk = rmark || "" ;
+        let usd = JSON.stringify( data || {} ) ;
+        let final = 0 ;
+        switch ( itemOffset.type )
+        {
+            case eItemType.eItem_ReliveTicket:
+                {
+                    final = this.reliveTicket;
+                }
+                break;
+            case eItemType.eItem_Diamond:
+                {
+                    final = this.diamond;
+                }
+                break;
+            case eItemType.eItem_Honour:
+                {
+                    final = this.honour;
+                }
+                break;
+            case eItemType.eItem_RedBag:
+                {
+                    final = this.redBag;
+                }
+                break;
+            default:
+                XLogger.error( "unknown money type = " + eItemType[itemOffset.type] + " for save log ") ;
+                return ;
+        }
+        let sql = `insert into logMoneyRecorder set uid = ${this.uid} , itemType = ${itemOffset.type} , offset = ${itemOffset.cnt} , final = ${final} , reason = ${reason}, remark = '${rmk}', userData = '${usd} ';` ;
+        this.mPlayer.getRpc().invokeRpc(eMsgPort.ID_MSG_PORT_LOG_DB, random( 100,false ), eRpcFuncID.Func_ExcuteSql, {sql : sql} ) ;
     }
 
     onModifyMoney( item : IItem , isSaveDB : boolean = true  ) : boolean 
